@@ -38,10 +38,7 @@ bot.deleteWebHook().then(() => {
     // Обработчик команды /tasks
     bot.onText(/^\/tasks$/, (msg) => tasksHandler.handleTasksCommand(bot, msg));
     
-    // Обработчик callback queries для задач
-    bot.on('callback_query', async (callbackQuery) => {
-      await handleCallbackQuery(bot, callbackQuery);
-    });
+    // Callback queries обрабатываются в commands.js и report.js
     
     // Обработчик текстовых сообщений для создания задач
     bot.on('message', async (msg) => {

@@ -26,21 +26,26 @@ async function handleTasksCommand(bot, msgOrQuery) {
       console.log('WARNING: userId has USER_ prefix, this should not happen');
     }
     
-    // Временно комментируем проверку пользователя
+    // Проверяем пользователя
     let user = null;
     try {
       user = await getUser(actualUserId);
     } catch (userError) {
       console.error('Error getting user:', userError);
-      // Продолжаем без проверки пользователя временно
     }
     
-    /*
     if (!user) {
-      await bot.sendMessage(chatId, '❌ Пользователь не найден. Пожалуйста, зарегистрируйтесь через /start');
+      const errorMsg = '❌ Пользователь не найден. Пожалуйста, зарегистрируйтесь через /start';
+      if (isCallback) {
+        await bot.editMessageText(errorMsg, {
+          chat_id: chatId,
+          message_id: msgOrQuery.message.message_id
+        });
+      } else {
+        await bot.sendMessage(chatId, errorMsg);
+      }
       return;
     }
-    */
     
     // Проверяем, является ли пользователь менеджером
     const isManager = userId === BORIS_ID;
