@@ -8,16 +8,18 @@ async function handleCallbackQuery(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
+  // Пропускаем основные callback'ы, которые обрабатываются в commands.js
+  const mainCallbacks = ['tasks_menu', 'help', 'my_stats', 'report_history', 'send_report'];
+  if (mainCallbacks.includes(data)) {
+    return; // Пропускаем, так как они обрабатываются в commands.js
+  }
+  
   try {
     // Отправляем подтверждение получения callback
     await bot.answerCallbackQuery(callbackQuery.id);
     
     // Обработка callback'ов для задач
-    if (data === 'tasks_menu') {
-      const { handleTasksCommand } = require('./tasks');
-      await handleTasksCommand(bot, callbackQuery.message);
-      return;
-    }
+    // tasks_menu обрабатывается в commands.js
     
     if (data === 'new_task') {
       await handleNewTask(bot, callbackQuery);
