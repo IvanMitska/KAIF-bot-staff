@@ -10,16 +10,23 @@ async function handleTasksCommand(bot, msgOrQuery) {
   const chatId = isCallback ? msgOrQuery.message.chat.id : msgOrQuery.chat.id;
   const userId = isCallback ? msgOrQuery.from.id : msgOrQuery.from.id;
   
-  console.log('Raw msgOrQuery:', JSON.stringify(msgOrQuery, null, 2));
+  // Удаляем лишнее логирование для продакшена
+  // console.log('Raw msgOrQuery:', JSON.stringify(msgOrQuery, null, 2));
   
   try {
     console.log('handleTasksCommand called');
     console.log('isCallback:', isCallback);
     console.log('chatId:', chatId);
     console.log('userId:', userId);
-    console.log('from object:', msgOrQuery.from);
+    console.log('userId type:', typeof userId);
     
-    const user = await getUser(userId);
+    // Проверяем, не является ли userId строкой с префиксом
+    let actualUserId = userId;
+    if (typeof userId === 'string' && userId.startsWith('USER_')) {
+      console.log('WARNING: userId has USER_ prefix, this should not happen');
+    }
+    
+    const user = await getUser(actualUserId);
     if (!user) {
       await bot.sendMessage(chatId, '❌ Пользователь не найден. Пожалуйста, зарегистрируйтесь через /start');
       return;

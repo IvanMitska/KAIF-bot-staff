@@ -45,7 +45,11 @@ const notionService = {
 
   async getUserByTelegramId(telegramId) {
     try {
-      console.log('Querying Notion for user with Telegram ID:', telegramId);
+      // Преобразуем ID в число, если это строка
+      const numericId = typeof telegramId === 'string' ? parseInt(telegramId, 10) : telegramId;
+      
+      console.log('Querying Notion for user with Telegram ID:', numericId);
+      console.log('Original telegramId:', telegramId, 'type:', typeof telegramId);
       console.log('Using database ID:', USERS_DB_ID);
       
       const response = await notion.databases.query({
@@ -53,7 +57,7 @@ const notionService = {
         filter: {
           property: 'Telegram ID',
           title: {
-            equals: telegramId.toString()
+            equals: numericId.toString()
           }
         }
       });
