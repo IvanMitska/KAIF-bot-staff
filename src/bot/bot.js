@@ -49,8 +49,9 @@ bot.deleteWebHook().then(() => {
         const taskFlowHandled = await handleTaskCreationFlow(bot, msg);
         if (taskFlowHandled) return;
         
-        const taskCompletionHandled = await handleTaskCompletion(bot, msg);
-        if (taskCompletionHandled) return;
+        // Временно отключено для деплоя
+        // const taskCompletionHandled = await handleTaskCompletion(bot, msg);
+        // if (taskCompletionHandled) return;
       }
     });
     
