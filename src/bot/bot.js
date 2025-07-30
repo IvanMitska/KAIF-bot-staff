@@ -4,7 +4,8 @@ const reportHandler = require('./handlers/report');
 const commandsHandler = require('./handlers/commands');
 const tasksHandler = require('./handlers/tasks');
 const { handleCallbackQuery } = require('./handlers/callbackHandler');
-const { handleTaskCreationFlow, handleTaskCompletion } = require('./handlers/taskCreation');
+const { handleTaskCreationFlow } = require('./handlers/taskCreation');
+const { handleTaskCompletion } = require('./handlers/taskList');
 const schedulerService = require('../services/schedulerService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
