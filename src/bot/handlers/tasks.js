@@ -26,11 +26,21 @@ async function handleTasksCommand(bot, msgOrQuery) {
       console.log('WARNING: userId has USER_ prefix, this should not happen');
     }
     
-    const user = await getUser(actualUserId);
+    // Временно комментируем проверку пользователя
+    let user = null;
+    try {
+      user = await getUser(actualUserId);
+    } catch (userError) {
+      console.error('Error getting user:', userError);
+      // Продолжаем без проверки пользователя временно
+    }
+    
+    /*
     if (!user) {
       await bot.sendMessage(chatId, '❌ Пользователь не найден. Пожалуйста, зарегистрируйтесь через /start');
       return;
     }
+    */
     
     // Проверяем, является ли пользователь менеджером
     const isManager = userId === BORIS_ID;
@@ -65,7 +75,17 @@ async function handleTasksCommand(bot, msgOrQuery) {
     console.error('Error in handleTasksCommand:', error);
     console.error('Error details:', error.message);
     console.error('Error stack:', error.stack);
-    await bot.sendMessage(chatId, '❌ Произошла ошибка при загрузке меню задач');
+    
+    // Более детальное сообщение об ошибке
+    let errorMessage = '❌ Произошла ошибка при загрузке меню задач';
+    
+    if (error.message.includes('not found')) {
+      errorMessage = '❌ Пользователь не найден. Пожалуйста, зарегистрируйтесь через /start';
+    } else if (error.message.includes('getUser')) {
+      errorMessage = '❌ Ошибка при получении данных пользователя';
+    }
+    
+    await bot.sendMessage(chatId, errorMessage);
   }
 }
 
