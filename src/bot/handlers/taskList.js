@@ -3,7 +3,7 @@ const { taskKeyboards } = require('../keyboards/taskKeyboards');
 const { userStates } = require('../state');
 const moment = require('moment-timezone');
 
-const BORIS_ID = 385436658;
+const MANAGER_IDS = [385436658, 1734337242]; // Борис и Иван
 
 async function handleMyTasks(bot, callbackQuery, statusFilter = null) {
   const chatId = callbackQuery.message.chat.id;
@@ -44,7 +44,7 @@ async function handleAllTasks(bot, callbackQuery, statusFilter = null) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
-  if (userId !== BORIS_ID) {
+  if (!MANAGER_IDS.includes(userId)) {
     await bot.sendMessage(chatId, '❌ Только менеджер может просматривать все задачи');
     return;
   }
@@ -95,7 +95,7 @@ async function handleTaskDetails(bot, callbackQuery, taskId) {
   const userId = callbackQuery.from.id;
   
   try {
-    const isManager = userId === BORIS_ID;
+    const isManager = MANAGER_IDS.includes(userId);
     const tasks = isManager ? await getAllTasks() : await getTasksByAssignee(userId);
     const task = tasks.find(t => t.id === taskId);
     
@@ -176,10 +176,15 @@ async function handleTaskStatusUpdate(bot, callbackQuery, action, taskId) {
     // Уведомляем менеджера
     if (newStatus === 'В работе') {
       const user = await getUser(userId);
-      await bot.sendMessage(
-        BORIS_ID,
-        `🔔 ${user.name} взял в работу задачу "${task.title}"`
-      );
+      // Уведомляем всех менеджеров
+      for (const managerId of MANAGER_IDS) {
+        if (managerId !== userId) { // Не отправляем себе
+          await bot.sendMessage(
+            managerId,
+            `🔔 ${user.name} взял в работу задачу "${task.title}"`
+          );
+        }
+      }
     }
   } catch (error) {
     console.error('Error updating task status:', error);
@@ -209,7 +214,10 @@ async function handleTaskCompletion(bot, msg) {
     const user = await getUser(userId);
     const notificationText = `🎉 ${user.name} выполнил задачу "${state.taskTitle}"${comment ? `\n\n💬 Комментарий: ${comment}` : ''}`;
     
-    await bot.sendMessage(BORIS_ID, notificationText);
+    // Уведомляем всех менеджеров о выполнении
+    for (const managerId of MANAGER_IDS) {
+      await bot.sendMessage(managerId, notificationText);
+    }
     
     delete userStates[userId];
     return true;

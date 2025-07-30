@@ -2,7 +2,7 @@ const { getUser } = require('../../services/notionService');
 const { taskKeyboards } = require('../keyboards/taskKeyboards');
 const { userStates } = require('../state');
 
-const BORIS_ID = 385436658; // ID менеджера Бориса
+const MANAGER_IDS = [385436658, 1734337242]; // ID менеджеров: Борис и Иван
 
 async function handleTasksCommand(bot, msgOrQuery) {
   // Поддержка как обычных сообщений, так и callback query
@@ -48,7 +48,7 @@ async function handleTasksCommand(bot, msgOrQuery) {
     }
     
     // Проверяем, является ли пользователь менеджером
-    const isManager = userId === BORIS_ID;
+    const isManager = MANAGER_IDS.includes(actualUserId);
     
     const messageText = isManager 
       ? '📋 Управление задачами\n\nВыберите действие:'
@@ -98,14 +98,14 @@ async function handleNewTask(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
-  if (userId !== BORIS_ID) {
+  if (!MANAGER_IDS.includes(userId)) {
     await bot.sendMessage(chatId, '❌ Только менеджер может создавать задачи');
     return;
   }
   
   // Получаем список сотрудников
   const users = await getAllUsers();
-  const employees = users.filter(u => u.telegramId !== BORIS_ID);
+  const employees = users.filter(u => !MANAGER_IDS.includes(u.telegramId));
   
   if (employees.length === 0) {
     await bot.sendMessage(chatId, '❌ Нет зарегистрированных сотрудников');
