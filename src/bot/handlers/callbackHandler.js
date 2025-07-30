@@ -8,10 +8,9 @@ async function handleCallbackQuery(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
-  // Пропускаем основные callback'ы, которые обрабатываются в commands.js
-  const mainCallbacks = ['tasks_menu', 'help', 'my_stats', 'report_history', 'send_report'];
-  if (mainCallbacks.includes(data)) {
-    return; // Пропускаем, так как они обрабатываются в commands.js
+  // Пропускаем только tasks_menu, так как он обрабатывается в commands.js
+  if (data === 'tasks_menu') {
+    return;
   }
   
   try {
