@@ -1,6 +1,7 @@
 const { handleNewTask } = require('./tasks');
 const { handleEmployeeSelection, handlePrioritySelection, confirmTaskCreation } = require('./taskCreation');
 const { handleMyTasks, handleAllTasks, handleTaskDetails, handleTaskStatusUpdate } = require('./taskList');
+const { handleQuickTaskMenu, handleQuickTaskEmployee } = require('./quickTaskMenu');
 const { userStates } = require('../state');
 
 async function handleCallbackQuery(bot, callbackQuery) {
@@ -19,6 +20,19 @@ async function handleCallbackQuery(bot, callbackQuery) {
     
     // Обработка callback'ов для задач
     // tasks_menu обрабатывается в commands.js
+    
+    if (data === 'quick_task_menu') {
+      await handleQuickTaskMenu(bot, callbackQuery);
+      return;
+    }
+    
+    if (data.startsWith('quick_task_')) {
+      const employeeId = parseInt(data.replace('quick_task_', ''));
+      if (!isNaN(employeeId)) {
+        await handleQuickTaskEmployee(bot, callbackQuery, employeeId);
+        return;
+      }
+    }
     
     if (data === 'new_task') {
       await handleNewTask(bot, callbackQuery);

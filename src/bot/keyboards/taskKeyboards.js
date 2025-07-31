@@ -1,6 +1,7 @@
 const taskKeyboards = {
   managerMenu: () => ({
     inline_keyboard: [
+      [{ text: '⚡ Быстрая задача', callback_data: 'quick_task_menu' }],
       [{ text: '➕ Создать задачу', callback_data: 'new_task' }],
       [{ text: '📋 Все задачи', callback_data: 'all_tasks' }],
       [{ text: '✅ Выполненные', callback_data: 'completed_tasks' }],
