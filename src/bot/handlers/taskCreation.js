@@ -13,48 +13,46 @@ async function handleTaskCreationFlow(bot, msg) {
   
   try {
     switch (state.step) {
-      case 'input_title':
-        state.taskData.title = text;
-        state.step = 'input_description';
-        await bot.sendMessage(
-          chatId,
-          '📝 Введите описание задачи:\n\n(Опишите, что нужно сделать)'
-        );
-        return true;
+      case 'input_task':
+        // Парсим всю информацию из одного сообщения
+        const parsedData = parseTaskMessage(text);
         
-      case 'input_description':
+        // Автоматически создаем название из первых слов
+        state.taskData.title = text.slice(0, 50) + (text.length > 50 ? '...' : '');
         state.taskData.description = text;
-        state.step = 'select_priority';
+        state.taskData.priority = parsedData.priority;
+        state.taskData.deadline = parsedData.deadline;
+        
+        // Сразу создаем задачу
+        const creator = await getUser(userId);
+        state.taskData.creatorId = userId;
+        state.taskData.creatorName = creator.name;
+        
+        await createTask(state.taskData);
+        
+        const deadlineText = moment(state.taskData.deadline).tz('Asia/Bangkok').format('DD.MM.YYYY');
         await bot.sendMessage(
           chatId,
-          '⚡ Выберите приоритет задачи:',
-          { reply_markup: taskKeyboards.taskPriority() }
+          `✅ Задача создана!\n\n` +
+          `👤 *Исполнитель:* ${state.taskData.assigneeName}\n` +
+          `📝 *Задача:* ${state.taskData.title}\n` +
+          `⚡ *Приоритет:* ${getPriorityEmoji(state.taskData.priority)} ${state.taskData.priority}\n` +
+          `📅 *Срок:* ${deadlineText}`,
+          { parse_mode: 'Markdown' }
         );
-        return true;
         
-      case 'input_deadline':
-        // Парсим дату
-        const deadline = parseDeadline(text);
-        if (!deadline) {
-          await bot.sendMessage(
-            chatId,
-            '❌ Неверный формат даты. Попробуйте еще раз.\n\nПримеры:\n- 25.12\n- 25.12.2024\n- завтра\n- через 3 дня'
-          );
-          return true;
-        }
-        
-        state.taskData.deadline = deadline;
-        
-        // Показываем итоговую информацию
-        const summary = formatTaskSummary(state.taskData);
+        // Уведомляем исполнителя
         await bot.sendMessage(
-          chatId,
-          summary,
-          { 
-            reply_markup: taskKeyboards.confirmTaskCreation(),
-            parse_mode: 'HTML'
-          }
+          state.taskData.assigneeId,
+          `🔔 *Новая задача от ${creator.name}!*\n\n` +
+          `📝 ${state.taskData.description}\n` +
+          `⚡ *Приоритет:* ${state.taskData.priority}\n` +
+          `📅 *Срок:* ${deadlineText}\n\n` +
+          `Используйте /tasks для управления`,
+          { parse_mode: 'Markdown' }
         );
+        
+        delete userStates[userId];
         return true;
     }
   } catch (error) {
@@ -83,13 +81,20 @@ async function handleEmployeeSelection(bot, callbackQuery, employeeId) {
     // Сохраняем данные сотрудника
     state.taskData.assigneeId = employeeId;
     state.taskData.assigneeName = employee.name;
-    state.step = 'input_title';
+    state.step = 'input_task';
     
     await bot.editMessageText(
-      `👤 Сотрудник: ${employee.name}\n\n💼 Введите название задачи:`,
+      `👤 *Сотрудник:* ${employee.name}\n\n` +
+      `📝 *Напишите задачу в одном сообщении*\n\n` +
+      `Можете указать срок словами:\n` +
+      `• "сделать отчет завтра"\n` +
+      `• "подготовить презентацию через 3 дня"\n` +
+      `• "провести встречу в пятницу"\n\n` +
+      `Для важных задач добавьте: срочно, важно`,
       {
         chat_id: chatId,
-        message_id: callbackQuery.message.message_id
+        message_id: callbackQuery.message.message_id,
+        parse_mode: 'Markdown'
       }
     );
   } catch (error) {
@@ -98,108 +103,75 @@ async function handleEmployeeSelection(bot, callbackQuery, employeeId) {
   }
 }
 
+// Функция больше не нужна, так как приоритет определяется автоматически
 async function handlePrioritySelection(bot, callbackQuery, priority) {
-  const chatId = callbackQuery.message.chat.id;
-  const userId = callbackQuery.from.id;
-  const state = userStates[userId];
-  
-  if (!state || state.state !== 'creating_task') return;
-  
-  const priorityMap = {
-    'high': 'Высокий',
-    'medium': 'Средний', 
-    'low': 'Низкий'
-  };
-  
-  state.taskData.priority = priorityMap[priority];
-  state.step = 'input_deadline';
-  
-  await bot.editMessageText(
-    `📅 Укажите срок выполнения:\n\nФорматы:\n- ДД.ММ (например: 25.12)\n- ДД.ММ.ГГГГ (например: 25.12.2024)\n- "завтра"\n- "через N дней" (например: через 3 дня)`,
-    {
-      chat_id: chatId,
-      message_id: callbackQuery.message.message_id
-    }
-  );
+  // Deprecated - priority is now parsed automatically
+  return;
 }
 
+// Функция больше не нужна, так как задача создается сразу после ввода текста
 async function confirmTaskCreation(bot, callbackQuery) {
-  const chatId = callbackQuery.message.chat.id;
-  const userId = callbackQuery.from.id;
-  const state = userStates[userId];
-  
-  if (!state || state.state !== 'creating_task') return;
-  
-  try {
-    // Получаем данные создателя
-    const creator = await getUser(userId);
-    state.taskData.creatorId = userId;
-    state.taskData.creatorName = creator.name;
-    
-    // Создаем задачу в Notion
-    await createTask(state.taskData);
-    
-    await bot.editMessageText(
-      '✅ Задача успешно создана и отправлена сотруднику!',
-      {
-        chat_id: chatId,
-        message_id: callbackQuery.message.message_id
-      }
-    );
-    
-    // Отправляем уведомление исполнителю
-    const assigneeId = state.taskData.assigneeId;
-    const notificationText = `🔔 <b>Новая задача!</b>
+  // Deprecated - task is created immediately after input
+  return;
+}
 
-<b>От:</b> ${state.taskData.creatorName}
-<b>Задача:</b> ${state.taskData.title}
-<b>Описание:</b> ${state.taskData.description}
-<b>Приоритет:</b> ${getPriorityEmoji(state.taskData.priority)} ${state.taskData.priority}
-<b>Срок:</b> ${formatDate(state.taskData.deadline)}
-
-Используйте /tasks для просмотра всех задач`;
-    
-    await bot.sendMessage(assigneeId, notificationText, { parse_mode: 'HTML' });
-    
-    // Очищаем состояние
-    delete userStates[userId];
-  } catch (error) {
-    console.error('Error creating task:', error);
-    await bot.sendMessage(chatId, '❌ Ошибка при создании задачи. Попробуйте еще раз.');
+function parseTaskMessage(text) {
+  const bangkokTz = 'Asia/Bangkok';
+  const now = moment.tz(bangkokTz);
+  const lowerText = text.toLowerCase();
+  
+  // Определяем приоритет
+  let priority = 'Средний';
+  if (lowerText.includes('срочно') || lowerText.includes('важно') || lowerText.includes('urgent')) {
+    priority = 'Высокий';
+  } else if (lowerText.includes('не срочно') || lowerText.includes('потом')) {
+    priority = 'Низкий';
   }
+  
+  // Определяем дату
+  let deadline = now.add(1, 'day').endOf('day').toISOString(); // По умолчанию - завтра
+  
+  if (lowerText.includes('сегодня') || lowerText.includes('today')) {
+    deadline = now.endOf('day').toISOString();
+  } else if (lowerText.includes('завтра') || lowerText.includes('tomorrow')) {
+    deadline = now.add(1, 'day').endOf('day').toISOString();
+  } else if (lowerText.includes('послезавтра')) {
+    deadline = now.add(2, 'days').endOf('day').toISOString();
+  } else if (lowerText.includes('через неделю') || lowerText.includes('next week')) {
+    deadline = now.add(7, 'days').endOf('day').toISOString();
+  } else if (lowerText.includes('на этой неделе') || lowerText.includes('this week')) {
+    deadline = now.endOf('week').toISOString();
+  } else {
+    // Проверяем "через X дней"
+    const daysMatch = lowerText.match(/через\s+(\d+)\s+д[ен][нье]/);
+    if (daysMatch) {
+      deadline = now.add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
+    } else {
+      // Проверяем дни недели
+      const weekdays = {
+        'понедельник': 1, 'вторник': 2, 'среда': 3, 'четверг': 4, 
+        'пятницу': 5, 'пятница': 5, 'субботу': 6, 'суббота': 6, 'воскресенье': 0
+      };
+      for (const [day, num] of Object.entries(weekdays)) {
+        if (lowerText.includes(day)) {
+          const targetDay = now.clone().day(num);
+          if (targetDay.isBefore(now)) {
+            targetDay.add(1, 'week');
+          }
+          deadline = targetDay.endOf('day').toISOString();
+          break;
+        }
+      }
+    }
+  }
+  
+  return { priority, deadline };
 }
 
 function parseDeadline(text) {
-  const bangkokTz = 'Asia/Bangkok';
-  const now = moment.tz(bangkokTz);
-  
-  // Обрабатываем относительные даты
-  if (text.toLowerCase() === 'завтра') {
-    return now.add(1, 'day').startOf('day').toISOString();
-  }
-  
-  const daysMatch = text.match(/через\s+(\d+)\s+д/i);
-  if (daysMatch) {
-    const days = parseInt(daysMatch[1]);
-    return now.add(days, 'days').startOf('day').toISOString();
-  }
-  
-  // Пробуем разобрать дату в формате ДД.ММ или ДД.ММ.ГГГГ
-  const parts = text.split('.');
-  if (parts.length === 2 || parts.length === 3) {
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // Месяцы в JS начинаются с 0
-    const year = parts.length === 3 ? parseInt(parts[2]) : now.year();
-    
-    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-      const date = moment.tz({ year, month, day }, bangkokTz);
-      if (date.isValid()) {
-        return date.startOf('day').toISOString();
-      }
-    }
-  }
-  
-  return null;
+  // Deprecated - use parseTaskMessage instead
+  const parsed = parseTaskMessage(text);
+  return parsed.deadline;
 }
 
 function formatTaskSummary(taskData) {

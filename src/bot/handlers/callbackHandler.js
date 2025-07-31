@@ -57,16 +57,8 @@ async function handleCallbackQuery(bot, callbackQuery) {
       return;
     }
     
-    if (data.startsWith('priority_')) {
-      const priority = data.replace('priority_', '');
-      await handlePrioritySelection(bot, callbackQuery, priority);
-      return;
-    }
-    
-    if (data === 'confirm_create_task') {
-      await confirmTaskCreation(bot, callbackQuery);
-      return;
-    }
+    // Обработчики приоритета и подтверждения больше не нужны
+    // так как задача создается в 2 шага
     
     if (data === 'cancel_task') {
       delete userStates[userId];
