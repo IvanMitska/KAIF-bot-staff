@@ -23,27 +23,27 @@ function parseTaskDate(text) {
   
   // Проверяем ключевые слова
   if (lowerText.includes('сегодня') || lowerText.includes('today')) {
-    return now.endOf('day').toISOString();
+    return now.clone().endOf('day').toISOString();
   }
   if (lowerText.includes('завтра') || lowerText.includes('tomorrow')) {
-    return now.add(1, 'day').endOf('day').toISOString();
+    return now.clone().add(1, 'day').endOf('day').toISOString();
   }
   if (lowerText.includes('послезавтра')) {
-    return now.add(2, 'days').endOf('day').toISOString();
+    return now.clone().add(2, 'days').endOf('day').toISOString();
   }
   if (lowerText.includes('через неделю') || lowerText.includes('next week')) {
-    return now.add(7, 'days').endOf('day').toISOString();
+    return now.clone().add(7, 'days').endOf('day').toISOString();
   }
   
   // Проверяем "через X дней"
   const daysMatch = lowerText.match(/через\s+(\d+)\s+д[ен][нье]/);
   if (daysMatch) {
-    return now.add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
+    return now.clone().add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
   }
   
   // Проверяем "на этой неделе"
   if (lowerText.includes('на этой неделе') || lowerText.includes('this week')) {
-    return now.endOf('week').toISOString();
+    return now.clone().endOf('week').toISOString();
   }
   
   // Проверяем "в понедельник", "во вторник" и т.д.
@@ -62,7 +62,7 @@ function parseTaskDate(text) {
   }
   
   // По умолчанию - завтра
-  return now.add(1, 'day').endOf('day').toISOString();
+  return now.clone().add(1, 'day').endOf('day').toISOString();
 }
 
 // Определение приоритета по ключевым словам

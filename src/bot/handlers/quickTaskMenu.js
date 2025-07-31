@@ -1,36 +1,38 @@
 const { getUser, getUsers, createTask } = require('../../services/notionService');
 const moment = require('moment-timezone');
 
-// Быстрое создание задачи для часто используемых сотрудников
-const QUICK_EMPLOYEES = [
-  { id: 1734337242, name: 'Иван' },
-  { id: 1151085087, name: 'Сотрудник 1' },
-  { id: 726915228, name: 'Сотрудник 2' },
-  { id: 642664990, name: 'Сотрудник 3' },
-  { id: 5937587032, name: 'Сотрудник 4' }
-];
-
 // Создание inline клавиатуры для быстрых задач
-function quickTaskKeyboard() {
+async function quickTaskKeyboard() {
   const keyboard = {
     inline_keyboard: []
   };
   
-  // Добавляем кнопки для быстрого создания задач
-  QUICK_EMPLOYEES.forEach(emp => {
+  try {
+    // Получаем всех пользователей из базы
+    const users = await getUsers();
+    
+    // Фильтруем только сотрудников (исключаем менеджеров)
+    const MANAGER_IDS = [385436658, 1734337242];
+    const employees = users.filter(u => !MANAGER_IDS.includes(u.telegramId));
+    
+    // Добавляем кнопки для первых 5 сотрудников
+    employees.slice(0, 5).forEach(emp => {
+      keyboard.inline_keyboard.push([
+        { text: `📝 ${emp.name}`, callback_data: `quick_task_${emp.telegramId}` }
+      ]);
+    });
+    
+    // Кнопка для обычного создания
     keyboard.inline_keyboard.push([
-      { text: `📝 Задача для ${emp.name}`, callback_data: `quick_task_${emp.id}` }
+      { text: '➕ Другой сотрудник', callback_data: 'new_task' }
     ]);
-  });
-  
-  // Кнопка для обычного создания
-  keyboard.inline_keyboard.push([
-    { text: '➕ Другой сотрудник', callback_data: 'new_task' }
-  ]);
-  
-  keyboard.inline_keyboard.push([
-    { text: '◀️ Назад', callback_data: 'back_to_menu' }
-  ]);
+    
+    keyboard.inline_keyboard.push([
+      { text: '◀️ Назад', callback_data: 'back_to_menu' }
+    ]);
+  } catch (error) {
+    console.error('Error creating quick task keyboard:', error);
+  }
   
   return keyboard;
 }
@@ -50,14 +52,15 @@ async function handleQuickTaskMenu(bot, callbackQuery) {
     return;
   }
   
+  const keyboard = await quickTaskKeyboard();
+  
   await bot.editMessageText(
     '⚡ *Быстрое создание задачи*\n\n' +
-    'Выберите сотрудника или используйте команду:\n' +
-    '`/task @username текст задачи завтра`',
+    'Выберите сотрудника:',
     {
       chat_id: chatId,
       message_id: callbackQuery.message.message_id,
-      reply_markup: quickTaskKeyboard(),
+      reply_markup: keyboard,
       parse_mode: 'Markdown'
     }
   );
@@ -138,7 +141,7 @@ async function handleQuickTaskInput(bot, msg) {
     const deadlineText = moment(taskData.deadline).tz('Asia/Bangkok').format('DD.MM.YYYY');
     await bot.sendMessage(
       chatId,
-      `✅ Готово за 15 секунд!\n\n` +
+      `✅ Задача создана!\n\n` +
       `👤 ${state.employeeName}\n` +
       `📝 ${taskData.title}\n` +
       `⚡ ${taskData.priority}\n` +
@@ -182,20 +185,20 @@ function parseQuickTask(text) {
   }
   
   // Дата (по умолчанию - завтра)
-  let deadline = now.add(1, 'day').endOf('day').toISOString();
+  let deadline = now.clone().add(1, 'day').endOf('day').toISOString();
   
   if (lowerText.includes('сегодня')) {
-    deadline = now.endOf('day').toISOString();
+    deadline = now.clone().endOf('day').toISOString();
   } else if (lowerText.includes('завтра')) {
-    deadline = now.add(1, 'day').endOf('day').toISOString();
+    deadline = now.clone().add(1, 'day').endOf('day').toISOString();
   } else if (lowerText.includes('послезавтра')) {
-    deadline = now.add(2, 'days').endOf('day').toISOString();
+    deadline = now.clone().add(2, 'days').endOf('day').toISOString();
   } else if (lowerText.includes('через неделю')) {
-    deadline = now.add(7, 'days').endOf('day').toISOString();
+    deadline = now.clone().add(7, 'days').endOf('day').toISOString();
   } else {
     const daysMatch = lowerText.match(/через\s+(\d+)\s+д[ень|ня|ней]/);
     if (daysMatch) {
-      deadline = now.add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
+      deadline = now.clone().add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
     }
   }
   

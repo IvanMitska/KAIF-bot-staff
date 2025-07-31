@@ -129,23 +129,23 @@ function parseTaskMessage(text) {
   }
   
   // Определяем дату
-  let deadline = now.add(1, 'day').endOf('day').toISOString(); // По умолчанию - завтра
+  let deadline = now.clone().add(1, 'day').endOf('day').toISOString(); // По умолчанию - завтра
   
   if (lowerText.includes('сегодня') || lowerText.includes('today')) {
-    deadline = now.endOf('day').toISOString();
+    deadline = now.clone().endOf('day').toISOString();
   } else if (lowerText.includes('завтра') || lowerText.includes('tomorrow')) {
-    deadline = now.add(1, 'day').endOf('day').toISOString();
+    deadline = now.clone().add(1, 'day').endOf('day').toISOString();
   } else if (lowerText.includes('послезавтра')) {
-    deadline = now.add(2, 'days').endOf('day').toISOString();
+    deadline = now.clone().add(2, 'days').endOf('day').toISOString();
   } else if (lowerText.includes('через неделю') || lowerText.includes('next week')) {
-    deadline = now.add(7, 'days').endOf('day').toISOString();
+    deadline = now.clone().add(7, 'days').endOf('day').toISOString();
   } else if (lowerText.includes('на этой неделе') || lowerText.includes('this week')) {
-    deadline = now.endOf('week').toISOString();
+    deadline = now.clone().endOf('week').toISOString();
   } else {
     // Проверяем "через X дней"
     const daysMatch = lowerText.match(/через\s+(\d+)\s+д[ен][нье]/);
     if (daysMatch) {
-      deadline = now.add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
+      deadline = now.clone().add(parseInt(daysMatch[1]), 'days').endOf('day').toISOString();
     } else {
       // Проверяем дни недели
       const weekdays = {
