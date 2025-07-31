@@ -6,6 +6,7 @@ const tasksHandler = require('./handlers/tasks');
 const { handleCallbackQuery } = require('./handlers/callbackHandler');
 const { handleTaskCreationFlow } = require('./handlers/taskCreation');
 const { handleTaskCompletion } = require('./handlers/taskList');
+const { handleQuickTask } = require('./handlers/quickTask');
 const schedulerService = require('../services/schedulerService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -37,6 +38,9 @@ bot.deleteWebHook().then(() => {
     
     // Обработчик команды /tasks
     bot.onText(/^\/tasks$/, (msg) => tasksHandler.handleTasksCommand(bot, msg));
+    
+    // Быстрое создание задач
+    bot.onText(/^\/task(\s+.+)?$/, (msg) => handleQuickTask(bot, msg));
     
     // Обработчик callback queries для задач (кроме tasks_menu, который в commands.js)
     bot.on('callback_query', async (callbackQuery) => {
