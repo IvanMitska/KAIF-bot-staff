@@ -350,6 +350,9 @@ const notionService = {
         select: { equals: status }
       } : undefined;
 
+      console.log('Getting all tasks with status:', status);
+      console.log('Filter:', JSON.stringify(filter, null, 2));
+
       const response = await notion.databases.query({
         database_id: TASKS_DB_ID,
         filter: filter,
@@ -360,6 +363,14 @@ const notionService = {
           }
         ]
       });
+
+      console.log('Found tasks:', response.results.length);
+      
+      if (response.results.length > 0) {
+        console.log('Task statuses:', response.results.map(task => 
+          task.properties['Статус'].select?.name || 'No status'
+        ));
+      }
 
       return response.results.map(task => ({
         id: task.id,
@@ -379,6 +390,8 @@ const notionService = {
 
   async updateTaskStatus(taskId, status, comment = null) {
     try {
+      console.log('Updating task status:', { taskId, status, comment });
+      
       const properties = {
         'Статус': {
           select: { name: status }
@@ -397,11 +410,14 @@ const notionService = {
         };
       }
 
+      console.log('Update properties:', JSON.stringify(properties, null, 2));
+
       const response = await notion.pages.update({
         page_id: taskId,
         properties: properties
       });
 
+      console.log('Task updated successfully');
       return response;
     } catch (error) {
       console.error('Notion update task status error:', error);

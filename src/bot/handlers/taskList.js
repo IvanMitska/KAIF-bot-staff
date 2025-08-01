@@ -57,6 +57,9 @@ async function handleAllTasks(bot, callbackQuery, statusFilter = null) {
     };
     
     const status = statusMap[callbackQuery.data] || null;
+    console.log('Manager viewing tasks - callback data:', callbackQuery.data);
+    console.log('Mapped status:', status);
+    
     const tasks = await getAllTasks(status);
     
     if (tasks.length === 0) {
