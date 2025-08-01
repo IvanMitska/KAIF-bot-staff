@@ -168,6 +168,7 @@ async function handleTaskStatusUpdate(bot, callbackQuery, action, taskId) {
     }
     
     // Обновляем статус
+    console.log(`Updating task status: ${taskId} -> ${newStatus}`);
     await updateTaskStatus(taskId, newStatus);
     
     await bot.answerCallbackQuery(callbackQuery.id, {
@@ -181,13 +182,19 @@ async function handleTaskStatusUpdate(bot, callbackQuery, action, taskId) {
     // Уведомляем менеджера
     if (newStatus === 'В работе') {
       const user = await getUser(userId);
+      console.log('Notifying managers about task start:', task.title);
       // Уведомляем всех менеджеров
       for (const managerId of MANAGER_IDS) {
         if (managerId !== userId) { // Не отправляем себе
-          await bot.sendMessage(
-            managerId,
-            `🔔 ${user.name} взял в работу задачу "${task.title}"`
-          );
+          try {
+            await bot.sendMessage(
+              managerId,
+              `🔔 ${user.name} взял в работу задачу "${task.title}"`
+            );
+            console.log(`Notified manager ${managerId} about task start`);
+          } catch (notifyError) {
+            console.error(`Failed to notify manager ${managerId}:`, notifyError);
+          }
         }
       }
     }
@@ -223,9 +230,16 @@ async function handleTaskCompletion(bot, msg) {
     const user = await getUser(userId);
     const notificationText = `🎉 ${user.name} выполнил задачу "${state.taskTitle}"${comment ? `\n\n💬 Комментарий: ${comment}` : ''}`;
     
+    console.log('Sending notifications to managers:', MANAGER_IDS);
+    
     // Уведомляем всех менеджеров о выполнении
     for (const managerId of MANAGER_IDS) {
-      await bot.sendMessage(managerId, notificationText);
+      try {
+        await bot.sendMessage(managerId, notificationText);
+        console.log(`Notification sent to manager ${managerId}`);
+      } catch (notifyError) {
+        console.error(`Failed to notify manager ${managerId}:`, notifyError);
+      }
     }
     
     delete userStates[userId];

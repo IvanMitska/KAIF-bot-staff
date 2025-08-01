@@ -486,18 +486,62 @@ const notionService = {
       console.log('\n=== DEBUG: ALL TASKS IN DATABASE ===');
       console.log('Total tasks:', response.results.length);
       
+      // Группируем задачи по статусам
+      const tasksByStatus = {};
+      
       response.results.forEach((task, index) => {
+        const status = task.properties['Статус'].select?.name || 'No status';
+        const assigneeId = task.properties['Исполнитель ID'].number || 'No ID';
+        
+        if (!tasksByStatus[status]) {
+          tasksByStatus[status] = [];
+        }
+        
+        tasksByStatus[status].push({
+          title: task.properties['Название'].rich_text[0]?.text.content || 'No title',
+          assignee: task.properties['Исполнитель'].rich_text[0]?.text.content || 'No assignee',
+          assigneeId: assigneeId,
+          id: task.id
+        });
+        
         console.log(`\nTask ${index + 1}:`);
+        console.log('- ID:', task.id);
         console.log('- Title:', task.properties['Название'].rich_text[0]?.text.content || 'No title');
-        console.log('- Status:', task.properties['Статус'].select?.name || 'No status');
+        console.log('- Status:', status);
+        console.log('- Status object:', JSON.stringify(task.properties['Статус'].select));
         console.log('- Assignee:', task.properties['Исполнитель'].rich_text[0]?.text.content || 'No assignee');
-        console.log('- Assignee ID:', task.properties['Исполнитель ID'].number || 'No ID');
+        console.log('- Assignee ID:', assigneeId);
       });
+      
+      console.log('\n=== TASKS BY STATUS ===');
+      Object.entries(tasksByStatus).forEach(([status, tasks]) => {
+        console.log(`\n${status}: ${tasks.length} tasks`);
+        tasks.forEach(task => {
+          console.log(`  - ${task.title} (Assignee: ${task.assignee}, ID: ${task.assigneeId})`);
+        });
+      });
+      
       console.log('=== END DEBUG ===\n');
 
       return response.results;
     } catch (error) {
       console.error('Debug error:', error);
+      throw error;
+    }
+  },
+
+  // Функция для проверки конкретной задачи
+  async debugGetTaskById(taskId) {
+    try {
+      const task = await notion.pages.retrieve({ page_id: taskId });
+      console.log('\n=== DEBUG: TASK DETAILS ===');
+      console.log('Task ID:', taskId);
+      console.log('Status:', task.properties['Статус']?.select?.name);
+      console.log('Full status object:', JSON.stringify(task.properties['Статус'], null, 2));
+      console.log('=== END DEBUG ===\n');
+      return task;
+    } catch (error) {
+      console.error('Debug task error:', error);
       throw error;
     }
   }
