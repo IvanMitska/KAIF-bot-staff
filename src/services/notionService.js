@@ -556,6 +556,42 @@ const notionService = {
     }
   },
 
+  // Функция для принудительного обновления статуса задачи
+  async forceUpdateTaskStatus(taskId, newStatus) {
+    try {
+      console.log(`\n=== FORCE UPDATE TASK STATUS ===`);
+      console.log(`Task ID: ${taskId}`);
+      console.log(`New Status: ${newStatus}`);
+      
+      // Сначала получаем текущий статус
+      const task = await notion.pages.retrieve({ page_id: taskId });
+      const currentStatus = task.properties['Статус']?.select?.name;
+      console.log(`Current Status: ${currentStatus}`);
+      
+      // Обновляем статус
+      const response = await notion.pages.update({
+        page_id: taskId,
+        properties: {
+          'Статус': {
+            select: { name: newStatus }
+          }
+        }
+      });
+      
+      // Проверяем результат
+      const updatedTask = await notion.pages.retrieve({ page_id: taskId });
+      const finalStatus = updatedTask.properties['Статус']?.select?.name;
+      console.log(`Final Status: ${finalStatus}`);
+      console.log(`Update successful: ${finalStatus === newStatus}`);
+      console.log(`=== END FORCE UPDATE ===\n`);
+      
+      return finalStatus === newStatus;
+    } catch (error) {
+      console.error('Force update error:', error);
+      return false;
+    }
+  },
+
   // Функция для проверки подключения к базе данных задач
   async testTasksDatabase() {
     try {

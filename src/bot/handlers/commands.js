@@ -128,12 +128,94 @@ module.exports = (bot) => {
     }
     
     try {
-      const { debugGetAllTasks } = require('../../services/notionService');
-      await debugGetAllTasks();
-      await bot.sendMessage(chatId, '📊 Информация о всех задачах выведена в консоль');
+      const { getAllTasks } = require('../../services/notionService');
+      
+      // Получаем все задачи без фильтра
+      const allTasks = await getAllTasks();
+      
+      // Группируем по статусам
+      const tasksByStatus = {};
+      allTasks.forEach(task => {
+        const status = task.status || 'Без статуса';
+        if (!tasksByStatus[status]) {
+          tasksByStatus[status] = 0;
+        }
+        tasksByStatus[status]++;
+      });
+      
+      let message = '📊 *Статистика задач по статусам:*\n\n';
+      Object.entries(tasksByStatus).forEach(([status, count]) => {
+        message += `${status}: ${count} задач\n`;
+      });
+      
+      message += `\n*Всего задач:* ${allTasks.length}`;
+      
+      await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      
+      // Также выводим в консоль
+      console.log('\n=== TASKS BY STATUS ===');
+      console.log(tasksByStatus);
+      console.log('Total tasks:', allTasks.length);
+      
+      // Показываем первые 3 задачи для примера
+      console.log('\nFirst 3 tasks:');
+      allTasks.slice(0, 3).forEach(task => {
+        console.log(`- "${task.title}" - Status: "${task.status}"`);
+      });
+      
     } catch (error) {
       console.error('Debug error:', error);
       bot.sendMessage(chatId, '❌ Ошибка при выполнении отладки');
+    }
+  });
+
+  // Команда для проверки статусов задач
+  bot.onText(/\/check_statuses/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      const { getAllTasks } = require('../../services/notionService');
+      
+      // Проверяем конкретные статусы
+      console.log('\n=== CHECKING SPECIFIC STATUSES ===');
+      
+      const inProgressTasks = await getAllTasks('В работе');
+      console.log(`Tasks with status "В работе": ${inProgressTasks.length}`);
+      
+      const completedTasks = await getAllTasks('Выполнена');
+      console.log(`Tasks with status "Выполнена": ${completedTasks.length}`);
+      
+      const newTasks = await getAllTasks('Новая');
+      console.log(`Tasks with status "Новая": ${newTasks.length}`);
+      
+      // Получаем все задачи для сравнения
+      const allTasks = await getAllTasks();
+      console.log(`All tasks total: ${allTasks.length}`);
+      
+      // Выводим уникальные статусы
+      const uniqueStatuses = [...new Set(allTasks.map(t => t.status))];
+      console.log('Unique statuses in database:', uniqueStatuses);
+      console.log('=== END CHECK ===\n');
+      
+      let message = '🔍 *Проверка статусов:*\n\n';
+      message += `В работе: ${inProgressTasks.length}\n`;
+      message += `Выполнена: ${completedTasks.length}\n`;
+      message += `Новая: ${newTasks.length}\n`;
+      message += `Всего: ${allTasks.length}\n\n`;
+      message += `*Уникальные статусы:*\n${uniqueStatuses.join(', ')}`;
+      
+      await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      
+    } catch (error) {
+      console.error('Check statuses error:', error);
+      bot.sendMessage(chatId, '❌ Ошибка при проверке статусов');
     }
   });
 
