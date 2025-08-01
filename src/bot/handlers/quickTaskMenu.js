@@ -2,7 +2,7 @@ const { getUser, getUsers, createTask } = require('../../services/notionService'
 const moment = require('moment-timezone');
 
 // Создание inline клавиатуры для быстрых задач
-async function quickTaskKeyboard() {
+async function quickTaskKeyboard(userId) {
   const keyboard = {
     inline_keyboard: []
   };
@@ -11,20 +11,19 @@ async function quickTaskKeyboard() {
     // Получаем всех пользователей из базы
     const users = await getUsers();
     
-    // Фильтруем только сотрудников (исключаем менеджеров)
-    const MANAGER_IDS = [385436658, 1734337242];
-    const employees = users.filter(u => !MANAGER_IDS.includes(u.telegramId));
+    // Фильтруем пользователей - исключаем только самого себя
+    const availableUsers = users.filter(u => u.telegramId !== userId);
     
-    // Добавляем кнопки для первых 5 сотрудников
-    employees.slice(0, 5).forEach(emp => {
+    // Добавляем кнопки для первых 5 пользователей
+    availableUsers.slice(0, 5).forEach(user => {
       keyboard.inline_keyboard.push([
-        { text: `📝 ${emp.name}`, callback_data: `quick_task_${emp.telegramId}` }
+        { text: `📝 ${user.name}`, callback_data: `quick_task_${user.telegramId}` }
       ]);
     });
     
     // Кнопка для обычного создания
     keyboard.inline_keyboard.push([
-      { text: '➕ Другой сотрудник', callback_data: 'new_task' }
+      { text: '➕ Другой пользователь', callback_data: 'new_task' }
     ]);
     
     keyboard.inline_keyboard.push([
@@ -52,11 +51,11 @@ async function handleQuickTaskMenu(bot, callbackQuery) {
     return;
   }
   
-  const keyboard = await quickTaskKeyboard();
+  const keyboard = await quickTaskKeyboard(userId);
   
   await bot.editMessageText(
     '⚡ *Быстрое создание задачи*\n\n' +
-    'Выберите сотрудника:',
+    'Выберите пользователя для назначения задачи:',
     {
       chat_id: chatId,
       message_id: callbackQuery.message.message_id,

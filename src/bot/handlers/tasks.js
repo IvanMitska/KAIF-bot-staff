@@ -103,12 +103,13 @@ async function handleNewTask(bot, callbackQuery) {
     return;
   }
   
-  // Получаем список сотрудников
+  // Получаем список всех пользователей (включая менеджеров)
   const users = await getAllUsers();
-  const employees = users.filter(u => !MANAGER_IDS.includes(u.telegramId));
+  // Исключаем только самого себя из списка
+  const availableUsers = users.filter(u => u.telegramId !== userId);
   
-  if (employees.length === 0) {
-    await bot.sendMessage(chatId, '❌ Нет зарегистрированных сотрудников');
+  if (availableUsers.length === 0) {
+    await bot.sendMessage(chatId, '❌ Нет доступных пользователей для назначения задач');
     return;
   }
   
@@ -124,7 +125,7 @@ async function handleNewTask(bot, callbackQuery) {
     {
       chat_id: chatId,
       message_id: callbackQuery.message.message_id,
-      reply_markup: taskKeyboards.selectEmployee(employees)
+      reply_markup: taskKeyboards.selectEmployee(availableUsers)
     }
   );
 }
