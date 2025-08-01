@@ -50,7 +50,16 @@ module.exports = (bot) => {
         const isManager = MANAGER_IDS.includes(userId);
         
         // Отправляем приветствие с кнопкой Web App
-        const webAppUrl = process.env.WEBAPP_URL || `https://${process.env.RAILWAY_STATIC_URL || 'localhost:3000'}`;
+        let webAppUrl = process.env.WEBAPP_URL;
+        
+        // Автоматическое определение URL для Railway
+        if (!webAppUrl && process.env.RAILWAY_STATIC_URL) {
+          webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}`;
+        } else if (!webAppUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
+          webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+        } else if (!webAppUrl) {
+          webAppUrl = 'http://localhost:3001';
+        }
         
         await bot.sendMessage(chatId, 
           `С возвращением, ${existingUser.name}! 👋\n\n` +

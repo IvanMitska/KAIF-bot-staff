@@ -5,7 +5,7 @@ const notionService = require('../src/services/notionService');
 const userService = require('../src/services/userService');
 
 const app = express();
-const PORT = process.env.WEBAPP_PORT || 3000;
+const PORT = process.env.WEBAPP_PORT || 3001;
 
 // Middleware
 app.use(express.json());
