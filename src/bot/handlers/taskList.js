@@ -48,6 +48,8 @@ async function handleAllTasks(bot, callbackQuery, statusFilter = null) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
+  console.log('handleAllTasks called with callback data:', callbackQuery.data);
+  
   if (!MANAGER_IDS.includes(userId)) {
     await bot.sendMessage(chatId, '❌ Только менеджер может просматривать все задачи');
     return;

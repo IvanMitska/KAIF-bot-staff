@@ -428,6 +428,12 @@ module.exports = (bot) => {
         await bot.answerCallbackQuery(callbackQuery.id);
         await handleTasksCommand(bot, callbackQuery);
         return; // Важно: выходим, чтобы не вызвать answerCallbackQuery дважды
+        
+      default:
+        // Если это не наши callback'и, пропускаем обработку
+        // чтобы их мог обработать callbackHandler
+        console.log('Commands handler skipping callback:', data);
+        return;
     }
 
     bot.answerCallbackQuery(callbackQuery.id);
