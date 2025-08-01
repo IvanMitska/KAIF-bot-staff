@@ -58,8 +58,7 @@ async function handleReplyKeyboard(bot, msg) {
           let message = '👥 *Список сотрудников:*\n\n';
           
           users.forEach((user, index) => {
-            const roleEmoji = MANAGER_IDS.includes(user.telegramId) ? '👑' : '👤';
-            message += `${index + 1}. ${roleEmoji} ${user.name} - ${user.position}\n`;
+            message += `${index + 1}. 👤 ${user.name} - ${user.position}\n`;
           });
           
           await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });

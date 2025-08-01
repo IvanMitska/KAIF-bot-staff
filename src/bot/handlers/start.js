@@ -49,12 +49,14 @@ module.exports = (bot) => {
         const MANAGER_IDS = [385436658, 1734337242];
         const isManager = MANAGER_IDS.includes(userId);
         
+        // Отправляем сообщение с inline клавиатурой
         await bot.sendMessage(chatId, `С возвращением, ${existingUser.name}! 👋`, {
-          reply_markup: {
-            ...keyboards.mainMenu(),
-            keyboard: isManager ? replyKeyboards.managerMenuKeyboard().keyboard : replyKeyboards.mainMenuKeyboard().keyboard,
-            resize_keyboard: true
-          }
+          reply_markup: keyboards.mainMenu()
+        });
+        
+        // Отправляем отдельное сообщение для установки reply клавиатуры
+        await bot.sendMessage(chatId, 'Выберите действие:', {
+          reply_markup: isManager ? replyKeyboards.managerMenuKeyboard() : replyKeyboards.mainMenuKeyboard()
         });
         // Удаляем состояние регистрации если есть
         registrationStates.delete(userId);
