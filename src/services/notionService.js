@@ -337,19 +337,27 @@ const notionService = {
         ));
       }
 
-      return response.results.map(task => ({
-        id: task.id,
-        taskId: task.properties['ID'].title[0]?.text.content,
-        title: task.properties['Название'].rich_text[0]?.text.content || '',
-        description: task.properties['Описание'].rich_text[0]?.text.content || '',
-        status: task.properties['Статус'].select?.name || 'Новая',
-        priority: task.properties['Приоритет'].select?.name || 'Средний',
-        createdDate: task.properties['Дата создания'].date?.start,
-        deadline: task.properties['Срок выполнения'].date?.start,
-        creatorName: task.properties['Постановщик'].rich_text[0]?.text.content || ''
-      }));
+      return response.results.map(task => {
+        try {
+          return {
+            id: task.id,
+            taskId: task.properties['ID']?.title?.[0]?.text?.content || 'NO_ID',
+            title: task.properties['Название']?.rich_text?.[0]?.text?.content || '',
+            description: task.properties['Описание']?.rich_text?.[0]?.text?.content || '',
+            status: task.properties['Статус']?.select?.name || 'Новая',
+            priority: task.properties['Приоритет']?.select?.name || 'Средний',
+            createdDate: task.properties['Дата создания']?.date?.start,
+            deadline: task.properties['Срок выполнения']?.date?.start,
+            creatorName: task.properties['Постановщик']?.rich_text?.[0]?.text?.content || ''
+          };
+        } catch (mapError) {
+          console.error('Error mapping assignee task:', task.id, mapError);
+          return null;
+        }
+      }).filter(task => task !== null);
     } catch (error) {
       console.error('Notion get tasks by assignee error:', error);
+      console.error('Error details:', error.message);
       throw error;
     }
   },
@@ -382,37 +390,27 @@ const notionService = {
           task.properties['Статус'].select?.name || 'No status'
         ));
       }
-      
-      // Логируем все задачи без фильтра для отладки
-      if (status === 'Выполнена') {
-        const allTasksResponse = await notion.databases.query({
-          database_id: TASKS_DB_ID,
-          sorts: [
-            {
-              property: 'Дата создания',
-              direction: 'descending'
-            }
-          ]
-        });
-        console.log('All tasks in DB:', allTasksResponse.results.length);
-        console.log('All statuses in DB:', allTasksResponse.results.map(task => ({
-          title: task.properties['Название'].rich_text[0]?.text.content || '',
-          status: task.properties['Статус'].select?.name || 'No status'
-        })));
-      }
 
-      return response.results.map(task => ({
-        id: task.id,
-        taskId: task.properties['ID'].title[0]?.text.content,
-        title: task.properties['Название'].rich_text[0]?.text.content || '',
-        assigneeName: task.properties['Исполнитель'].rich_text[0]?.text.content || '',
-        status: task.properties['Статус'].select?.name || 'Новая',
-        priority: task.properties['Приоритет'].select?.name || 'Средний',
-        createdDate: task.properties['Дата создания'].date?.start,
-        deadline: task.properties['Срок выполнения'].date?.start
-      }));
+      return response.results.map(task => {
+        try {
+          return {
+            id: task.id,
+            taskId: task.properties['ID']?.title?.[0]?.text?.content || 'NO_ID',
+            title: task.properties['Название']?.rich_text?.[0]?.text?.content || '',
+            assigneeName: task.properties['Исполнитель']?.rich_text?.[0]?.text?.content || '',
+            status: task.properties['Статус']?.select?.name || 'Новая',
+            priority: task.properties['Приоритет']?.select?.name || 'Средний',
+            createdDate: task.properties['Дата создания']?.date?.start,
+            deadline: task.properties['Срок выполнения']?.date?.start
+          };
+        } catch (mapError) {
+          console.error('Error mapping task:', task.id, mapError);
+          return null;
+        }
+      }).filter(task => task !== null);
     } catch (error) {
       console.error('Notion get all tasks error:', error);
+      console.error('Error details:', error.message);
       throw error;
     }
   },
