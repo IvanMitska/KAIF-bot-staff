@@ -38,11 +38,9 @@ bot.deleteWebHook().then(() => {
     commandsHandler(bot);
     reportHandler(bot);
     
-    // Обработчик команды /tasks
-    bot.onText(/^\/tasks$/, (msg) => tasksHandler.handleTasksCommand(bot, msg));
-    
-    // Быстрое создание задач
-    bot.onText(/^\/task(\s+.+)?$/, (msg) => handleQuickTask(bot, msg));
+    // Команды убраны - весь функционал доступен через кнопки интерфейса
+    // /tasks - доступно через кнопку "✅ Задачи"
+    // /task - доступно через кнопку "⚡ Быстрая задача"
     
     // Единый централизованный обработчик всех callback queries
     bot.on('callback_query', async (callbackQuery) => {
