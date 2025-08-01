@@ -7,7 +7,8 @@ const mainMenuKeyboard = () => ({
     ['✅ Задачи', '❓ Помощь']
   ],
   resize_keyboard: true,
-  persistent: true
+  persistent: true,
+  one_time_keyboard: false
 });
 
 const managerMenuKeyboard = () => ({
@@ -18,7 +19,8 @@ const managerMenuKeyboard = () => ({
     ['👥 Сотрудники', '❓ Помощь']
   ],
   resize_keyboard: true,
-  persistent: true
+  persistent: true,
+  one_time_keyboard: false
 });
 
 module.exports = {

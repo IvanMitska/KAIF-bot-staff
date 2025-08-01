@@ -3,7 +3,7 @@ const startHandler = require('./handlers/start');
 const reportHandler = require('./handlers/report');
 const commandsHandler = require('./handlers/commands');
 const tasksHandler = require('./handlers/tasks');
-const { handleCallbackQuery } = require('./handlers/callbackHandler');
+const mainCallbackHandler = require('./handlers/mainCallbackHandler');
 const { handleTaskCreationFlow } = require('./handlers/taskCreation');
 const { handleTaskCompletion } = require('./handlers/taskList');
 const { handleQuickTask } = require('./handlers/quickTask');
@@ -44,9 +44,9 @@ bot.deleteWebHook().then(() => {
     // Быстрое создание задач
     bot.onText(/^\/task(\s+.+)?$/, (msg) => handleQuickTask(bot, msg));
     
-    // Обработчик callback queries для задач (кроме tasks_menu, который в commands.js)
+    // Единый централизованный обработчик всех callback queries
     bot.on('callback_query', async (callbackQuery) => {
-      await handleCallbackQuery(bot, callbackQuery);
+      await mainCallbackHandler(bot, callbackQuery);
     });
     
     // Обработчик текстовых сообщений для создания задач

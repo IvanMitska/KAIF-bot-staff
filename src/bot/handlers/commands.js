@@ -446,123 +446,56 @@ module.exports = (bot) => {
     }
   });
 
-  // Обработчик callback_query для основных кнопок
-  bot.on('callback_query', async (callbackQuery) => {
-    const chatId = callbackQuery.message.chat.id;
-    const userId = callbackQuery.from.id;
-    const data = callbackQuery.data;
-
-    console.log('Commands callback handler - data:', data, 'userId:', userId);
-
-    switch (data) {
-      case 'help':
-        // Отправляем справку напрямую
-        const helpText = 
-          '📖 *Доступные команды:*\n\n' +
-          '/start - Начать работу с ботом\n' +
-          '/help - Показать это сообщение\n' +
-          '/status - Проверить статус отчета за сегодня\n' +
-          '/history - Показать последние 5 отчетов\n' +
-          '/profile - Информация о вашем профиле\n\n' +
-          '*Как работает бот:*\n' +
-          '1. Каждый день в 20:00 вы получите напоминание\n' +
-          '2. Нажмите "Отправить отчет" и заполните форму\n' +
-          '3. Отчет автоматически сохранится в Notion\n\n' +
-          '_Если у вас есть вопросы, обратитесь к администратору_';
-        
-        bot.sendMessage(chatId, helpText, {
-          parse_mode: 'Markdown',
-          reply_markup: keyboards.mainMenu()
-        });
-        break;
-        
-      case 'my_stats':
-        try {
-          const user = await userService.getUserByTelegramId(userId);
-          if (user) {
-            const reports = await notionService.getUserReports(userId, 7);
-            const completedThisWeek = reports.filter(r => r.status === 'Отправлен').length;
-            
-            await bot.sendMessage(chatId,
-              '📊 *Ваша статистика за неделю:*\n\n' +
-              `Отправлено отчетов: ${completedThisWeek} из 7\n` +
-              `Процент выполнения: ${Math.round(completedThisWeek / 7 * 100)}%`,
-              {
-                parse_mode: 'Markdown',
-                reply_markup: keyboards.mainMenu()
-              }
-            );
-          } else {
-            bot.sendMessage(chatId, 'Пожалуйста, сначала зарегистрируйтесь с помощью /start');
-          }
-        } catch (error) {
-          console.error('Stats error:', error);
-          bot.sendMessage(chatId, 'Произошла ошибка при получении статистики.');
-        }
-        break;
-        
-      case 'report_history':
-        try {
-          const user = await userService.getUserByTelegramId(userId);
-          if (!user) {
-            bot.sendMessage(chatId, 'Пожалуйста, сначала зарегистрируйтесь с помощью команды /start');
-            return;
-          }
-
-          const reports = await notionService.getUserReports(userId, 5);
-          
-          if (reports.length === 0) {
-            bot.sendMessage(chatId, 
-              '📋 У вас пока нет отчетов.',
-              { reply_markup: keyboards.mainMenu() }
-            );
-          } else {
-            let historyText = '📋 *Ваши последние отчеты:*\n\n';
-            
-            reports.forEach((report, index) => {
-              const date = moment(report.date).format('DD.MM.YYYY');
-              const statusEmoji = report.status === 'Отправлен' ? '✅' : '❌';
-              
-              historyText += `${statusEmoji} *${date}*\n`;
-              historyText += `├ Что сделал: ${report.whatDone.substring(0, 50)}${report.whatDone.length > 50 ? '...' : ''}\n`;
-              historyText += `├ Проблемы: ${report.problems.substring(0, 50)}${report.problems.length > 50 ? '...' : ''}\n`;
-              historyText += `└ Цели: ${report.goals.substring(0, 50)}${report.goals.length > 50 ? '...' : ''}\n\n`;
-            });
-
-            bot.sendMessage(chatId, historyText, {
-              parse_mode: 'Markdown',
-              reply_markup: keyboards.mainMenu()
-            });
-          }
-        } catch (error) {
-          console.error('History error:', error);
-          bot.sendMessage(chatId, 'Произошла ошибка при получении истории.');
-        }
-        break;
-        
-      case 'remind_later':
-        await schedulerService.handleRemindLater(bot, chatId, userId);
-        break;
-        
-      case 'tasks_menu':
-        // Передаем управление в обработчик задач
-        try {
-          const { handleTasksCommand } = require('./tasks');
-          await bot.answerCallbackQuery(callbackQuery.id);
-          await handleTasksCommand(bot, callbackQuery);
-        } catch (error) {
-          console.error('Error handling tasks_menu:', error);
-          await bot.sendMessage(chatId, '❌ Произошла ошибка при загрузке меню задач');
-        }
-        return; // Важно: выходим, чтобы не вызвать answerCallbackQuery дважды
-        
-      default:
-        // Если это не наши callback'и, пропускаем обработку
-        // чтобы их мог обработать callbackHandler
-        console.log('Commands handler skipping callback:', data);
-        return;
+  // Команда для проверки статусов задач
+  bot.onText(/\/check_task_statuses/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
     }
-
-    bot.answerCallbackQuery(callbackQuery.id);
+    
+    try {
+      const { getAllTasks } = require('../../services/notionService');
+      
+      // Получаем все задачи без фильтра
+      const allTasks = await getAllTasks();
+      
+      // Группируем по статусам
+      const statusGroups = {};
+      allTasks.forEach(task => {
+        const status = task.status || 'Без статуса';
+        if (!statusGroups[status]) {
+          statusGroups[status] = 0;
+        }
+        statusGroups[status]++;
+      });
+      
+      let message = '📊 *Статистика задач по статусам:*\n\n';
+      message += `Всего задач: ${allTasks.length}\n\n`;
+      
+      Object.entries(statusGroups).forEach(([status, count]) => {
+        message += `${status}: ${count} задач\n`;
+      });
+      
+      // Проверяем конкретные статусы
+      message += '\n*Проверка конкретных статусов:*\n';
+      const statuses = ['Новая', 'В работе', 'Выполнена'];
+      
+      for (const status of statuses) {
+        const tasksWithStatus = await getAllTasks(status);
+        message += `"${status}": ${tasksWithStatus.length} задач\n`;
+      }
+      
+      await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      
+    } catch (error) {
+      console.error('Check task statuses error:', error);
+      await bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
+    }
   });
+
+  // Обработчик callback_query перенесен в mainCallbackHandler.js
 };

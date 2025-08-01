@@ -62,24 +62,8 @@ async function handleMessageInput(bot, msg) {
 }
 
 module.exports = (bot) => {
-  bot.on('callback_query', async (callbackQuery) => {
-    const chatId = callbackQuery.message.chat.id;
-    const userId = callbackQuery.from.id;
-    const data = callbackQuery.data;
-
-    if (data === 'send_report') {
-      await startReportSession(bot, chatId, userId);
-    } else if (data.startsWith('report_')) {
-      await handleReportFlow(bot, chatId, userId, data, callbackQuery.message.message_id);
-    } else if (data.startsWith('edit_')) {
-      await handleReportEdit(bot, chatId, userId, data, callbackQuery.message.message_id);
-    }
-
-    bot.answerCallbackQuery(callbackQuery.id);
-  });
-
-  // НЕ регистрируем общий обработчик сообщений здесь
-  // Вместо этого будем обрабатывать ввод только когда пользователь в процессе создания отчета
+  // Обработчик callback_query перенесен в mainCallbackHandler.js
+  // Обработка report callbacks происходит через handleReportFlow и handleReportEdit
 };
 
 async function startReportSession(bot, chatId, userId) {
@@ -373,3 +357,6 @@ async function getLastBotMessageId(bot, chatId) {
 // Экспортируем функции
 module.exports.handleMessageInput = handleMessageInput;
 module.exports.handleReportCommand = handleReportCommand;
+module.exports.startReportSession = startReportSession;
+module.exports.handleReportFlow = handleReportFlow;
+module.exports.handleReportEdit = handleReportEdit;

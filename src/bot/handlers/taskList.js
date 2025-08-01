@@ -40,7 +40,15 @@ async function handleMyTasks(bot, callbackQuery, statusFilter = null) {
     console.error('Error getting tasks for employee:', error);
     console.error('User ID:', userId);
     console.error('Status filter:', statusFilter);
-    await bot.sendMessage(chatId, '❌ Ошибка при загрузке задач. Пожалуйста, обратитесь к администратору.');
+    console.error('Error details:', error.message);
+    await bot.editMessageText(
+      '❌ Ошибка при загрузке задач. Пожалуйста, обратитесь к администратору.',
+      {
+        chat_id: chatId,
+        message_id: callbackQuery.message.message_id,
+        reply_markup: taskKeyboards.employeeMenu()
+      }
+    );
   }
 }
 
@@ -67,11 +75,13 @@ async function handleAllTasks(bot, callbackQuery, statusFilter = null) {
     console.log('Mapped status:', status);
     
     const tasks = await getAllTasks(status);
+    console.log('Retrieved tasks count:', tasks.length);
     
     if (tasks.length === 0) {
       const statusText = status ? ` со статусом "${status}"` : '';
+      console.log('No tasks found with status:', status);
       await bot.editMessageText(
-        `📋 Нет задач${statusText}`,
+        `📋 Нет задач${statusText}\n\n_Попробуйте просмотреть все задачи_`,
         {
           chat_id: chatId,
           message_id: callbackQuery.message.message_id,
