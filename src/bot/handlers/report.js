@@ -6,6 +6,43 @@ const security = require('../../utils/security');
 
 const reportSessions = new Map();
 
+// Функция для обработки команды отчета
+async function handleReportCommand(bot, msg) {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  
+  try {
+    const user = await userService.getUserByTelegramId(userId);
+    if (!user) {
+      await bot.sendMessage(chatId, 'Пожалуйста, сначала зарегистрируйтесь через /start');
+      return;
+    }
+    
+    // Проверяем, есть ли отчет за сегодня
+    const todayReport = await notionService.getTodayReport(userId);
+    
+    if (todayReport) {
+      await bot.sendMessage(chatId,
+        '✅ Вы уже отправили отчет за сегодня.\n\n' +
+        'Следующий отчет можно будет отправить завтра.',
+        {
+          reply_markup: keyboards.mainMenu()
+        }
+      );
+    } else {
+      // Начинаем процесс создания отчета
+      bot.emit('callback_query', {
+        from: { id: userId },
+        message: { chat: { id: chatId }, message_id: msg.message_id },
+        data: 'send_report'
+      });
+    }
+  } catch (error) {
+    console.error('Report command error:', error);
+    await bot.sendMessage(chatId, 'Произошла ошибка. Попробуйте позже.');
+  }
+}
+
 // Экспортируем функцию для обработки сообщений
 async function handleMessageInput(bot, msg) {
   // Игнорируем команды
@@ -333,5 +370,6 @@ async function getLastBotMessageId(bot, chatId) {
   return null;
 }
 
-// Экспортируем функцию handleMessageInput
+// Экспортируем функции
 module.exports.handleMessageInput = handleMessageInput;
+module.exports.handleReportCommand = handleReportCommand;

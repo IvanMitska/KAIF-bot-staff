@@ -1,5 +1,6 @@
 const userService = require('../../services/userService');
 const keyboards = require('../keyboards/inline');
+const replyKeyboards = require('../keyboards/reply');
 const security = require('../../utils/security');
 
 // Храним состояния регистрации
@@ -45,8 +46,15 @@ module.exports = (bot) => {
       
       if (existingUser) {
         console.log('Sending welcome back message');
+        const MANAGER_IDS = [385436658, 1734337242];
+        const isManager = MANAGER_IDS.includes(userId);
+        
         await bot.sendMessage(chatId, `С возвращением, ${existingUser.name}! 👋`, {
-          reply_markup: keyboards.mainMenu()
+          reply_markup: {
+            ...keyboards.mainMenu(),
+            keyboard: isManager ? replyKeyboards.managerMenuKeyboard().keyboard : replyKeyboards.mainMenuKeyboard().keyboard,
+            resize_keyboard: true
+          }
         });
         // Удаляем состояние регистрации если есть
         registrationStates.delete(userId);

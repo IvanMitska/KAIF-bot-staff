@@ -8,6 +8,7 @@ const { handleTaskCreationFlow } = require('./handlers/taskCreation');
 const { handleTaskCompletion } = require('./handlers/taskList');
 const { handleQuickTask } = require('./handlers/quickTask');
 const { handleQuickTaskInput } = require('./handlers/quickTaskMenu');
+const { handleReplyKeyboard } = require('./handlers/replyHandler');
 const schedulerService = require('../services/schedulerService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -51,7 +52,11 @@ bot.deleteWebHook().then(() => {
     // Обработчик текстовых сообщений для создания задач
     bot.on('message', async (msg) => {
       if (msg.text && !msg.text.startsWith('/')) {
-        // Сначала проверяем быстрые задачи
+        // Сначала проверяем reply клавиатуру
+        const replyHandled = await handleReplyKeyboard(bot, msg);
+        if (replyHandled) return;
+        
+        // Затем проверяем быстрые задачи
         const quickTaskHandled = await handleQuickTaskInput(bot, msg);
         if (quickTaskHandled) return;
         
