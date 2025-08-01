@@ -445,6 +445,16 @@ const notionService = {
       });
 
       console.log('Task updated successfully');
+      
+      // Проверяем обновленный статус
+      try {
+        const updatedTask = await notion.pages.retrieve({ page_id: taskId });
+        const updatedStatus = updatedTask.properties['Статус']?.select?.name;
+        console.log('Verified task status after update:', updatedStatus);
+      } catch (verifyError) {
+        console.error('Error verifying task status:', verifyError);
+      }
+      
       return response;
     } catch (error) {
       console.error('Notion update task status error:', error);

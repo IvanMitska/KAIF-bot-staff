@@ -207,7 +207,11 @@ async function handleTaskCompletion(bot, msg) {
   
   try {
     const comment = text === '-' ? null : text;
+    console.log('Completing task:', { taskId: state.taskId, status: 'Выполнена', comment });
+    
     await updateTaskStatus(state.taskId, 'Выполнена', comment);
+    
+    console.log('Task completion successful, sending confirmation...');
     
     await bot.sendMessage(
       chatId,

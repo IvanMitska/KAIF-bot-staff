@@ -116,6 +116,27 @@ module.exports = (bot) => {
     }
   });
 
+  // Временная команда для отладки задач
+  bot.onText(/\/debug_tasks/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      const { debugGetAllTasks } = require('../../services/notionService');
+      await debugGetAllTasks();
+      await bot.sendMessage(chatId, '📊 Информация о всех задачах выведена в консоль');
+    } catch (error) {
+      console.error('Debug error:', error);
+      bot.sendMessage(chatId, '❌ Ошибка при выполнении отладки');
+    }
+  });
+
   // Команда профиля
   bot.onText(/\/profile/, async (msg) => {
     const chatId = msg.chat.id;
