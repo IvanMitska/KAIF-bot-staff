@@ -289,6 +289,36 @@ module.exports = (bot) => {
     }
   });
 
+  // Команда для проверки регистрации
+  bot.onText(/\/check_me/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    try {
+      const user = await notionService.getUser(userId);
+      
+      if (user) {
+        await bot.sendMessage(chatId, 
+          `✅ Вы зарегистрированы:\n\n` +
+          `ID: ${userId}\n` +
+          `Имя: ${user.name}\n` +
+          `Должность: ${user.position}\n` +
+          `Активен: ${user.isActive ? 'Да' : 'Нет'}\n` +
+          `Менеджер: ${[385436658, 1734337242].includes(userId) ? 'Да' : 'Нет'}`
+        );
+      } else {
+        await bot.sendMessage(chatId, 
+          `❌ Вы не зарегистрированы!\n\n` +
+          `Ваш ID: ${userId}\n` +
+          `Используйте /start для регистрации`
+        );
+      }
+    } catch (error) {
+      console.error('Check me error:', error);
+      await bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
+    }
+  });
+
   // Команда профиля
   bot.onText(/\/profile/, async (msg) => {
     const chatId = msg.chat.id;
@@ -331,6 +361,8 @@ module.exports = (bot) => {
     const chatId = callbackQuery.message.chat.id;
     const userId = callbackQuery.from.id;
     const data = callbackQuery.data;
+
+    console.log('Commands callback handler - data:', data, 'userId:', userId);
 
     switch (data) {
       case 'help':
@@ -424,9 +456,14 @@ module.exports = (bot) => {
         
       case 'tasks_menu':
         // Передаем управление в обработчик задач
-        const { handleTasksCommand } = require('./tasks');
-        await bot.answerCallbackQuery(callbackQuery.id);
-        await handleTasksCommand(bot, callbackQuery);
+        try {
+          const { handleTasksCommand } = require('./tasks');
+          await bot.answerCallbackQuery(callbackQuery.id);
+          await handleTasksCommand(bot, callbackQuery);
+        } catch (error) {
+          console.error('Error handling tasks_menu:', error);
+          await bot.sendMessage(chatId, '❌ Произошла ошибка при загрузке меню задач');
+        }
         return; // Важно: выходим, чтобы не вызвать answerCallbackQuery дважды
         
       default:
