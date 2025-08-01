@@ -24,4 +24,14 @@ app.listen(PORT, () => {
     const keepAlive = require('./utils/keepAlive');
     keepAlive(process.env.RENDER_EXTERNAL_URL);
   }
+  
+  // Отладка: показать все задачи при старте
+  const { debugGetAllTasks } = require('./services/notionService');
+  setTimeout(async () => {
+    try {
+      await debugGetAllTasks();
+    } catch (error) {
+      console.error('Debug error:', error);
+    }
+  }, 5000);
 });

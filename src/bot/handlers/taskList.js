@@ -10,11 +10,13 @@ async function handleMyTasks(bot, callbackQuery, statusFilter = null) {
   const userId = callbackQuery.from.id;
   
   try {
+    console.log('Employee viewing tasks - userId:', userId, 'statusFilter:', statusFilter);
     const tasks = await getTasksByAssignee(userId, statusFilter);
     
     if (tasks.length === 0) {
+      const statusText = statusFilter ? ` со статусом "${statusFilter}"` : '';
       await bot.editMessageText(
-        '📋 У вас пока нет задач',
+        `📋 У вас пока нет задач${statusText}`,
         {
           chat_id: chatId,
           message_id: callbackQuery.message.message_id,

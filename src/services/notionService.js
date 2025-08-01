@@ -293,6 +293,8 @@ const notionService = {
 
   async getTasksByAssignee(telegramId, status = null) {
     try {
+      console.log('Getting tasks for assignee:', telegramId, 'with status:', status);
+      
       const filters = [
         {
           property: 'Исполнитель ID',
@@ -310,6 +312,8 @@ const notionService = {
           }
         });
       }
+      
+      console.log('Filters for assignee tasks:', JSON.stringify(filters, null, 2));
 
       const response = await notion.databases.query({
         database_id: TASKS_DB_ID,
@@ -325,6 +329,13 @@ const notionService = {
           }
         ]
       });
+
+      console.log('Found tasks for assignee:', response.results.length);
+      if (response.results.length > 0) {
+        console.log('Assignee task statuses:', response.results.map(task => 
+          task.properties['Статус'].select?.name || 'No status'
+        ));
+      }
 
       return response.results.map(task => ({
         id: task.id,
@@ -370,6 +381,24 @@ const notionService = {
         console.log('Task statuses:', response.results.map(task => 
           task.properties['Статус'].select?.name || 'No status'
         ));
+      }
+      
+      // Логируем все задачи без фильтра для отладки
+      if (status === 'Выполнена') {
+        const allTasksResponse = await notion.databases.query({
+          database_id: TASKS_DB_ID,
+          sorts: [
+            {
+              property: 'Дата создания',
+              direction: 'descending'
+            }
+          ]
+        });
+        console.log('All tasks in DB:', allTasksResponse.results.length);
+        console.log('All statuses in DB:', allTasksResponse.results.map(task => ({
+          title: task.properties['Название'].rich_text[0]?.text.content || '',
+          status: task.properties['Статус'].select?.name || 'No status'
+        })));
       }
 
       return response.results.map(task => ({
@@ -431,6 +460,38 @@ const notionService = {
 
   async getUser(telegramId) {
     return notionService.getUserByTelegramId(telegramId);
+  },
+
+  // Временная функция для отладки
+  async debugGetAllTasks() {
+    try {
+      const response = await notion.databases.query({
+        database_id: TASKS_DB_ID,
+        sorts: [
+          {
+            property: 'Дата создания',
+            direction: 'descending'
+          }
+        ]
+      });
+
+      console.log('\n=== DEBUG: ALL TASKS IN DATABASE ===');
+      console.log('Total tasks:', response.results.length);
+      
+      response.results.forEach((task, index) => {
+        console.log(`\nTask ${index + 1}:`);
+        console.log('- Title:', task.properties['Название'].rich_text[0]?.text.content || 'No title');
+        console.log('- Status:', task.properties['Статус'].select?.name || 'No status');
+        console.log('- Assignee:', task.properties['Исполнитель'].rich_text[0]?.text.content || 'No assignee');
+        console.log('- Assignee ID:', task.properties['Исполнитель ID'].number || 'No ID');
+      });
+      console.log('=== END DEBUG ===\n');
+
+      return response.results;
+    } catch (error) {
+      console.error('Debug error:', error);
+      throw error;
+    }
   }
 };
 
