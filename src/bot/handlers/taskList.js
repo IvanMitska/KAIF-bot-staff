@@ -37,8 +37,10 @@ async function handleMyTasks(bot, callbackQuery, statusFilter = null) {
       }
     );
   } catch (error) {
-    console.error('Error getting tasks:', error);
-    await bot.sendMessage(chatId, '❌ Ошибка при загрузке задач');
+    console.error('Error getting tasks for employee:', error);
+    console.error('User ID:', userId);
+    console.error('Status filter:', statusFilter);
+    await bot.sendMessage(chatId, '❌ Ошибка при загрузке задач. Пожалуйста, обратитесь к администратору.');
   }
 }
 
@@ -90,8 +92,11 @@ async function handleAllTasks(bot, callbackQuery, statusFilter = null) {
       }
     );
   } catch (error) {
-    console.error('Error getting all tasks:', error);
-    await bot.sendMessage(chatId, '❌ Ошибка при загрузке задач');
+    console.error('Error getting all tasks for manager:', error);
+    console.error('Manager ID:', userId);
+    console.error('Status filter:', status);
+    console.error('Callback data:', callbackQuery.data);
+    await bot.sendMessage(chatId, '❌ Ошибка при загрузке задач. Пожалуйста, проверьте консоль для деталей.');
   }
 }
 

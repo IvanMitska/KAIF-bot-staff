@@ -25,13 +25,16 @@ app.listen(PORT, () => {
     keepAlive(process.env.RENDER_EXTERNAL_URL);
   }
   
-  // Отладка: показать все задачи при старте
-  const { debugGetAllTasks } = require('./services/notionService');
+  // Отладка: тестируем подключение к базе данных задач
+  const { testTasksDatabase, debugGetAllTasks } = require('./services/notionService');
   setTimeout(async () => {
     try {
-      await debugGetAllTasks();
+      const dbOk = await testTasksDatabase();
+      if (dbOk) {
+        await debugGetAllTasks();
+      }
     } catch (error) {
       console.error('Debug error:', error);
     }
-  }, 5000);
+  }, 3000);
 });

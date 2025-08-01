@@ -10,6 +10,11 @@ console.log('- Users DB:', USERS_DB_ID);
 console.log('- Reports DB:', REPORTS_DB_ID);
 console.log('- Tasks DB:', TASKS_DB_ID);
 
+// Проверяем, что все ID баз данных заданы
+if (!TASKS_DB_ID) {
+  console.error('ERROR: NOTION_DATABASE_TASKS_ID is not set in environment variables!');
+}
+
 const notionService = {
   async createUser(userData) {
     try {
@@ -358,6 +363,9 @@ const notionService = {
     } catch (error) {
       console.error('Notion get tasks by assignee error:', error);
       console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Database ID:', TASKS_DB_ID);
+      console.error('Filters used:', JSON.stringify(filters, null, 2));
       throw error;
     }
   },
@@ -411,6 +419,8 @@ const notionService = {
     } catch (error) {
       console.error('Notion get all tasks error:', error);
       console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Database ID:', TASKS_DB_ID);
       throw error;
     }
   },
@@ -543,6 +553,34 @@ const notionService = {
     } catch (error) {
       console.error('Debug task error:', error);
       throw error;
+    }
+  },
+
+  // Функция для проверки подключения к базе данных задач
+  async testTasksDatabase() {
+    try {
+      console.log('\n=== TESTING TASKS DATABASE CONNECTION ===');
+      console.log('Database ID:', TASKS_DB_ID);
+      
+      // Пробуем получить информацию о базе данных
+      const database = await notion.databases.retrieve({ database_id: TASKS_DB_ID });
+      console.log('Database title:', database.title[0]?.plain_text);
+      console.log('Database connection: SUCCESS');
+      
+      // Пробуем сделать простой запрос
+      const response = await notion.databases.query({
+        database_id: TASKS_DB_ID,
+        page_size: 1
+      });
+      console.log('Query test: SUCCESS');
+      console.log('=== END TEST ===\n');
+      
+      return true;
+    } catch (error) {
+      console.error('Tasks database test FAILED:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error status:', error.status);
+      return false;
     }
   }
 };
