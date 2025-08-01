@@ -255,6 +255,44 @@ module.exports = (bot) => {
     }
   });
 
+  // Команда для очистки кеша и перезагрузки
+  bot.onText(/\/reload_tasks/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      // Очищаем кеш модулей
+      delete require.cache[require.resolve('../../services/notionService')];
+      delete require.cache[require.resolve('./taskList')];
+      
+      // Перезагружаем модули
+      const notionService = require('../../services/notionService');
+      
+      // Проверяем подключение
+      const connected = await notionService.testTasksDatabase();
+      
+      if (connected) {
+        await bot.sendMessage(chatId, 
+          `✅ Модули перезагружены!\n\n` +
+          `База данных задач: подключена\n` +
+          `Попробуйте снова использовать /tasks`
+        );
+      } else {
+        await bot.sendMessage(chatId, '❌ Проблема с подключением к базе данных задач');
+      }
+      
+    } catch (error) {
+      console.error('Reload error:', error);
+      await bot.sendMessage(chatId, `❌ Ошибка при перезагрузке: ${error.message}`);
+    }
+  });
+
   // Команда для получения ID задач
   bot.onText(/\/get_task_ids/, async (msg) => {
     const chatId = msg.chat.id;
@@ -315,6 +353,58 @@ module.exports = (bot) => {
       }
     } catch (error) {
       console.error('Check me error:', error);
+      await bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
+    }
+  });
+
+  // Команда для создания тестовой задачи
+  bot.onText(/\/create_test_task/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      const { createTask, forceUpdateTaskStatus, getAllTasks } = require('../../services/notionService');
+      
+      // Создаем тестовую задачу
+      const creator = await notionService.getUser(userId);
+      const taskData = {
+        title: 'Тестовая задача для проверки статусов',
+        description: 'Эта задача создана для тестирования отображения статусов',
+        assigneeId: userId,
+        assigneeName: creator.name,
+        creatorId: userId,
+        creatorName: creator.name,
+        priority: 'Средний',
+        deadline: new Date(Date.now() + 86400000).toISOString() // завтра
+      };
+      
+      const newTask = await createTask(taskData);
+      console.log('Created test task:', newTask.id);
+      
+      // Сразу меняем статус на "В работе"
+      await forceUpdateTaskStatus(newTask.id, 'В работе');
+      
+      // Проверяем, что задача создалась
+      const allTasks = await getAllTasks();
+      const inProgressTasks = await getAllTasks('В работе');
+      
+      await bot.sendMessage(chatId, 
+        `✅ Тестовая задача создана!\n\n` +
+        `ID: ${newTask.id}\n` +
+        `Статус: В работе\n\n` +
+        `Всего задач: ${allTasks.length}\n` +
+        `Задач "В работе": ${inProgressTasks.length}\n\n` +
+        `Используйте кнопки в /tasks для проверки`
+      );
+      
+    } catch (error) {
+      console.error('Create test task error:', error);
       await bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
     }
   });
