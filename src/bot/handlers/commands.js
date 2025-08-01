@@ -219,6 +219,76 @@ module.exports = (bot) => {
     }
   });
 
+  // Команда для тестирования обновления статуса
+  bot.onText(/\/test_update (.+) (.+)/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    const taskId = match[1];
+    const newStatus = match[2];
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      const { updateTaskStatus, debugGetTaskById } = require('../../services/notionService');
+      
+      console.log('\n=== TESTING STATUS UPDATE ===');
+      console.log(`Attempting to update task ${taskId} to status "${newStatus}"`);
+      
+      // Показываем текущий статус
+      await debugGetTaskById(taskId);
+      
+      // Обновляем статус
+      await updateTaskStatus(taskId, newStatus);
+      
+      // Показываем обновленный статус
+      await debugGetTaskById(taskId);
+      
+      await bot.sendMessage(chatId, `✅ Попытка обновления статуса выполнена. Проверьте консоль.`);
+      
+    } catch (error) {
+      console.error('Test update error:', error);
+      bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
+    }
+  });
+
+  // Команда для получения ID задач
+  bot.onText(/\/get_task_ids/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверяем, что это менеджер
+    if (![385436658, 1734337242].includes(userId)) {
+      bot.sendMessage(chatId, '❌ Доступно только для менеджеров');
+      return;
+    }
+    
+    try {
+      const { getAllTasks } = require('../../services/notionService');
+      
+      const tasks = await getAllTasks();
+      let message = '📋 *ID задач:*\n\n';
+      
+      tasks.slice(0, 5).forEach((task, index) => {
+        message += `${index + 1}. ${task.title}\n`;
+        message += `   ID: \`${task.id}\`\n`;
+        message += `   Статус: ${task.status}\n\n`;
+      });
+      
+      message += '\nИспользуйте:\n`/test_update [ID] [Статус]`\n';
+      message += 'Например:\n`/test_update ID "В работе"`';
+      
+      await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      
+    } catch (error) {
+      console.error('Get task IDs error:', error);
+      bot.sendMessage(chatId, '❌ Ошибка при получении ID задач');
+    }
+  });
+
   // Команда профиля
   bot.onText(/\/profile/, async (msg) => {
     const chatId = msg.chat.id;
