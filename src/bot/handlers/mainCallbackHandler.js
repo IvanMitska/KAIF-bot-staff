@@ -118,6 +118,27 @@ async function mainCallbackHandler(bot, callbackQuery) {
         await schedulerService.handleRemindLater(bot, chatId, userId);
         return;
         
+      case 'classic_mode':
+        await bot.answerCallbackQuery(callbackQuery.id);
+        const replyKeyboards = require('../keyboards/reply');
+        const MANAGER_IDS = [385436658, 1734337242];
+        const isManager = MANAGER_IDS.includes(userId);
+        
+        await bot.editMessageText(
+          'Классический режим активирован ✅',
+          {
+            chat_id: chatId,
+            message_id: callbackQuery.message.message_id,
+            reply_markup: keyboards.mainMenu()
+          }
+        );
+        
+        // Устанавливаем reply клавиатуру
+        await bot.sendMessage(chatId, 'Выберите действие:', {
+          reply_markup: isManager ? replyKeyboards.managerMenuKeyboard() : replyKeyboards.mainMenuKeyboard()
+        });
+        return;
+        
       case 'report_history':
         await bot.answerCallbackQuery(callbackQuery.id);
         try {

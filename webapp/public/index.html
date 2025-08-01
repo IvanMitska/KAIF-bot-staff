@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>KAIF Staff</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Загрузчик -->
+        <div id="loader" class="loader">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Навигация -->
+        <nav id="navigation" class="navigation">
+            <button class="nav-btn active" data-section="dashboard">
+                <span class="icon">🏠</span>
+                <span class="label">Главная</span>
+            </button>
+            <button class="nav-btn" data-section="reports">
+                <span class="icon">📝</span>
+                <span class="label">Отчеты</span>
+            </button>
+            <button class="nav-btn" data-section="tasks">
+                <span class="icon">✅</span>
+                <span class="label">Задачи</span>
+            </button>
+            <button class="nav-btn" data-section="stats">
+                <span class="icon">📊</span>
+                <span class="label">Статистика</span>
+            </button>
+            <button class="nav-btn" data-section="profile">
+                <span class="icon">👤</span>
+                <span class="label">Профиль</span>
+            </button>
+        </nav>
+
+        <!-- Контент -->
+        <main id="content">
+            <!-- Главная страница -->
+            <section id="dashboard" class="section active">
+                <header class="section-header">
+                    <h1>Привет, <span id="userName">Пользователь</span>! 👋</h1>
+                    <p class="greeting-text">Добро пожаловать в KAIF Staff</p>
+                </header>
+                
+                <div class="quick-actions">
+                    <button class="action-card" onclick="showSection('reports')">
+                        <div class="action-icon">📝</div>
+                        <div class="action-content">
+                            <h3>Отправить отчет</h3>
+                            <p>Ежедневный отчет о работе</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-card" onclick="showSection('tasks')">
+                        <div class="action-icon">✅</div>
+                        <div class="action-content">
+                            <h3>Мои задачи</h3>
+                            <p><span id="activeTasksCount">0</span> активных</p>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="today-status">
+                    <h2>Статус на сегодня</h2>
+                    <div id="todayStatus" class="status-card">
+                        <div class="status-item">
+                            <span class="status-icon">📝</span>
+                            <span class="status-text">Отчет не отправлен</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Отчеты -->
+            <section id="reports" class="section">
+                <header class="section-header">
+                    <h1>Ежедневный отчет</h1>
+                    <p class="date-text" id="reportDate">Сегодня</p>
+                </header>
+
+                <form id="reportForm" class="report-form">
+                    <div class="form-group">
+                        <label for="whatDone">
+                            <span class="label-icon">✍️</span>
+                            Что сделали сегодня?
+                        </label>
+                        <textarea 
+                            id="whatDone" 
+                            name="whatDone" 
+                            rows="4" 
+                            placeholder="Опишите выполненную работу..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="problems">
+                            <span class="label-icon">⚠️</span>
+                            Какие были проблемы?
+                        </label>
+                        <textarea 
+                            id="problems" 
+                            name="problems" 
+                            rows="3" 
+                            placeholder="Опишите возникшие трудности или напишите 'нет'..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goals">
+                            <span class="label-icon">🎯</span>
+                            Планы на завтра
+                        </label>
+                        <textarea 
+                            id="goals" 
+                            name="goals" 
+                            rows="3" 
+                            placeholder="Что планируете сделать завтра..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <span class="btn-icon">📤</span>
+                        Отправить отчет
+                    </button>
+                </form>
+
+                <!-- История отчетов -->
+                <div class="report-history">
+                    <h2>История отчетов</h2>
+                    <div id="reportHistory" class="history-list">
+                        <!-- Загружается динамически -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Задачи -->
+            <section id="tasks" class="section">
+                <header class="section-header">
+                    <h1>Задачи</h1>
+                    <button id="createTaskBtn" class="create-btn" style="display:none;">
+                        <span>➕ Создать задачу</span>
+                    </button>
+                </header>
+
+                <!-- Фильтры задач -->
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">
+                        Все <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="new">
+                        🔴 Новые <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="in_progress">
+                        🟡 В работе <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="completed">
+                        🟢 Выполнены <span class="count">0</span>
+                    </button>
+                </div>
+
+                <!-- Список задач -->
+                <div id="tasksList" class="tasks-list">
+                    <!-- Загружается динамически -->
+                </div>
+            </section>
+
+            <!-- Статистика -->
+            <section id="stats" class="section">
+                <header class="section-header">
+                    <h1>Статистика</h1>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-value" id="totalReports">0</div>
+                        <div class="stat-label">Всего отчетов</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">Выполнено задач</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="currentStreak">0</div>
+                        <div class="stat-label">Дней подряд</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-value" id="completionRate">0%</div>
+                        <div class="stat-label">Выполнение</div>
+                    </div>
+                </div>
+
+                <!-- График активности -->
+                <div class="activity-chart">
+                    <h2>Активность за неделю</h2>
+                    <div id="weeklyChart" class="chart-container">
+                        <!-- График будет здесь -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Профиль -->
+            <section id="profile" class="section">
+                <header class="section-header">
+                    <h1>Профиль</h1>
+                </header>
+
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <span>👤</span>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profileName">Загрузка...</h2>
+                        <p id="profilePosition">...</p>
+                        <p class="profile-meta">
+                            <span>ID: <span id="profileId">...</span></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="profile-btn" onclick="showHelp()">
+                        <span class="btn-icon">❓</span>
+                        Помощь
+                    </button>
+                    <button class="profile-btn" onclick="showEmployees()" id="employeesBtn" style="display:none;">
+                        <span class="btn-icon">👥</span>
+                        Сотрудники
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Модальное окно для создания задачи -->
+        <div id="taskModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Новая задача</h2>
+                    <button class="close-btn" onclick="closeTaskModal()">✕</button>
+                </div>
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label for="taskEmployee">Исполнитель</label>
+                        <select id="taskEmployee" required>
+                            <option value="">Выберите сотрудника</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskTitle">Название задачи</label>
+                        <input type="text" id="taskTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">Описание</label>
+                        <textarea id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDeadline">Срок выполнения</label>
+                        <input type="date" id="taskDeadline">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">Приоритет</label>
+                        <select id="taskPriority">
+                            <option value="low">🟢 Низкий</option>
+                            <option value="medium" selected>🟡 Средний</option>
+                            <option value="high">🔴 Высокий</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Создать задачу</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

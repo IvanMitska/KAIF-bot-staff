@@ -49,15 +49,28 @@ module.exports = (bot) => {
         const MANAGER_IDS = [385436658, 1734337242];
         const isManager = MANAGER_IDS.includes(userId);
         
-        // Отправляем сообщение с inline клавиатурой
-        await bot.sendMessage(chatId, `С возвращением, ${existingUser.name}! 👋`, {
-          reply_markup: keyboards.mainMenu()
-        });
+        // Отправляем приветствие с кнопкой Web App
+        const webAppUrl = process.env.WEBAPP_URL || `https://${process.env.RAILWAY_STATIC_URL || 'localhost:3000'}`;
         
-        // Отправляем отдельное сообщение для установки reply клавиатуры
-        await bot.sendMessage(chatId, 'Выберите действие:', {
-          reply_markup: isManager ? replyKeyboards.managerMenuKeyboard() : replyKeyboards.mainMenuKeyboard()
-        });
+        await bot.sendMessage(chatId, 
+          `С возвращением, ${existingUser.name}! 👋\n\n` +
+          `Используйте Web App для удобной работы или продолжите в обычном режиме.`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '🚀 Открыть KAIF App',
+                    web_app: { url: webAppUrl }
+                  }
+                ],
+                [
+                  { text: '📱 Обычный режим', callback_data: 'classic_mode' }
+                ]
+              ]
+            }
+          }
+        );
         // Удаляем состояние регистрации если есть
         registrationStates.delete(userId);
       } else {
