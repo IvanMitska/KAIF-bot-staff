@@ -2,7 +2,7 @@
 
 const mainMenuKeyboard = () => ({
   keyboard: [
-    ['📋 Меню'],
+    ['🚀 KAIF App'],
     ['📝 Отчет', '📊 Статистика'],
     ['✅ Задачи', '❓ Помощь']
   ],
@@ -13,7 +13,7 @@ const mainMenuKeyboard = () => ({
 
 const managerMenuKeyboard = () => ({
   keyboard: [
-    ['📋 Меню'],
+    ['🚀 KAIF App'],
     ['📝 Отчет', '📊 Статистика'],
     ['✅ Задачи', '⚡ Быстрая задача'],
     ['👥 Сотрудники', '❓ Помощь']

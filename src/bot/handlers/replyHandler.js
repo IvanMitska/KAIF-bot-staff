@@ -10,14 +10,33 @@ async function handleReplyKeyboard(bot, msg) {
   const isManager = MANAGER_IDS.includes(userId);
   
   switch(text) {
-    case '📋 Меню':
+    case '🚀 KAIF App':
+      let webAppUrl = process.env.WEBAPP_URL;
+      
+      // Автоматическое определение URL
+      if (!webAppUrl && process.env.RAILWAY_STATIC_URL) {
+        webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}`;
+      } else if (!webAppUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
+        webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+      } else if (!webAppUrl) {
+        webAppUrl = 'http://localhost:3001';
+      }
+      
       await bot.sendMessage(chatId, 
-        '📋 Главное меню\n\nВыберите действие:', 
+        '🚀 Откройте KAIF App для удобной работы с отчетами и задачами', 
         {
-          reply_markup: keyboards.mainMenu()
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: '📱 Открыть приложение',
+                web_app: { url: webAppUrl }
+              }
+            ]]
+          }
         }
       );
       return true;
+      
       
     case '📝 Отчет':
       const { handleReportCommand } = require('./report');
