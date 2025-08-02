@@ -13,6 +13,7 @@ const API_URL = window.location.origin;
 // Глобальные переменные
 let currentUser = null;
 let currentFilter = 'all';
+let lastNewTasksCount = 0;
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
@@ -35,6 +36,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Обработчик формы отчета
     document.getElementById('reportForm').addEventListener('submit', submitReport);
+    
+    // Автоматическое обновление задач каждые 30 секунд
+    setInterval(async () => {
+        await loadTasksCount();
+        // Если открыта страница задач, обновляем список
+        if (document.getElementById('tasks').classList.contains('active')) {
+            loadTasks();
+        }
+    }, 30000);
 });
 
 // Навигация между страницами
@@ -149,10 +159,70 @@ async function loadTasksCount() {
         if (response.ok) {
             const tasks = await response.json();
             const activeTasks = tasks.filter(t => t.status !== 'Выполнена').length;
+            const newTasks = tasks.filter(t => t.status === 'Новая').length;
+            
             document.getElementById('activeTasksCount').textContent = activeTasks;
+            
+            // Показываем бейдж с новыми задачами
+            updateTaskBadge(newTasks);
+            
+            // Проверяем появились ли новые задачи
+            if (newTasks > lastNewTasksCount) {
+                // Вибрация и звук при новой задаче
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+                
+                // Показываем уведомление
+                if (newTasks - lastNewTasksCount === 1) {
+                    tg.showAlert('У вас новая задача! 📋');
+                } else {
+                    tg.showAlert(`У вас ${newTasks - lastNewTasksCount} новых задач! 📋`);
+                }
+            }
+            
+            lastNewTasksCount = newTasks;
         }
     } catch (error) {
         console.error('Error loading tasks count:', error);
+    }
+}
+
+// Обновление бейджа с количеством новых задач
+function updateTaskBadge(count) {
+    // Обновляем бейдж на кнопке навигации
+    const taskNavBtn = document.querySelector('.nav-btn[onclick*="tasks"]');
+    if (taskNavBtn) {
+        let badge = taskNavBtn.querySelector('.nav-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'nav-badge';
+                taskNavBtn.appendChild(badge);
+            }
+            badge.textContent = count;
+            badge.style.display = 'block';
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    }
+    
+    // Обновляем бейдж на карточке задач
+    const taskCard = document.querySelector('.action-card[onclick*="tasks"]');
+    if (taskCard) {
+        let badge = taskCard.querySelector('.card-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'card-badge';
+                badge.style.cssText = 'position: absolute; top: 20px; right: 20px; background: var(--danger); color: white; border-radius: 12px; padding: 4px 8px; font-size: 12px; font-weight: 600;';
+                taskCard.style.position = 'relative';
+                taskCard.appendChild(badge);
+            }
+            badge.textContent = `${count} ${count === 1 ? 'новая' : 'новых'}`;
+        } else if (badge) {
+            badge.remove();
+        }
     }
 }
 

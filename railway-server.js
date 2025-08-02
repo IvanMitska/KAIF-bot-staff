@@ -186,6 +186,37 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     };
     
     const taskId = await notionService.createTask(taskData);
+    
+    // Отправляем уведомление в Telegram
+    try {
+      const TelegramBot = require('node-telegram-bot-api');
+      const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+      
+      const message = `🆕 *Новая задача от ${creator.name}*\n\n` +
+                     `📋 *Задача:* ${taskData.title}\n` +
+                     (taskData.description ? `📝 *Описание:* ${taskData.description}\n` : '') +
+                     `📅 *Срок:* ${taskData.deadline ? new Date(taskData.deadline).toLocaleDateString('ru-RU') : 'Без срока'}\n` +
+                     `🔥 *Приоритет:* ${taskData.priority === 'high' ? '🔴 Высокий' : taskData.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий'}\n\n` +
+                     `Откройте KAIF App для просмотра деталей`;
+      
+      await bot.sendMessage(assignee.telegramId, message, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: '📱 Открыть KAIF App',
+              web_app: { 
+                url: `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public` 
+              }
+            }
+          ]]
+        }
+      });
+    } catch (notificationError) {
+      console.error('Failed to send notification:', notificationError);
+      // Не прерываем создание задачи из-за ошибки уведомления
+    }
+    
     res.json({ success: true, taskId });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

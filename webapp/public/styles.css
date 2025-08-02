@@ -673,3 +673,21 @@ body {
     border-radius: 50%;
     animation: pulse 2s infinite;
 }
+
+/* Бейдж для навигации */
+.nav-badge {
+    position: absolute;
+    top: 8px;
+    right: 50%;
+    transform: translateX(20px);
+    background: var(--danger);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+}
