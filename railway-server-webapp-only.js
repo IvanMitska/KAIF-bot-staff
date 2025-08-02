@@ -143,8 +143,23 @@ app.post('/api/reports', authMiddleware, async (req, res) => {
 app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   try {
     console.log('Getting tasks for user:', req.telegramUser.id, 'type:', typeof req.telegramUser.id);
+    console.log('User details:', {
+      id: req.telegramUser.id,
+      first_name: req.telegramUser.first_name,
+      username: req.telegramUser.username
+    });
+    
     const tasks = await notionService.getTasksByAssignee(req.telegramUser.id);
     console.log('Found tasks:', tasks.length);
+    
+    if (tasks.length > 0) {
+      console.log('First task:', {
+        title: tasks[0].title,
+        status: tasks[0].status,
+        assigneeId: tasks[0].assigneeId
+      });
+    }
+    
     res.json(tasks);
   } catch (error) {
     console.error('Error getting tasks:', error);
@@ -206,6 +221,12 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     const creator = await userService.getUserByTelegramId(req.telegramUser.id);
     const assignee = await userService.getUserByTelegramId(req.body.assigneeId);
     
+    console.log('Creating task:', {
+      creatorId: req.telegramUser.id,
+      assigneeId: req.body.assigneeId,
+      assignee: assignee ? { name: assignee.name, telegramId: assignee.telegramId } : null
+    });
+    
     if (!creator || !assignee) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -213,7 +234,7 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     const taskData = {
       title: req.body.title,
       description: req.body.description || '',
-      assigneeId: req.body.assigneeId,
+      assigneeId: assignee.telegramId, // Используем telegramId из найденного пользователя
       assigneeName: assignee.name,
       creatorId: req.telegramUser.id,
       creatorName: creator.name,
@@ -258,6 +279,23 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     res.json({ success: true, taskId });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Временный endpoint для отладки задач
+app.get('/api/debug/tasks', authMiddleware, async (req, res) => {
+  try {
+    const allTasks = await notionService.debugGetAllTasks();
+    const userTasks = await notionService.getTasksByAssignee(req.telegramUser.id);
+    
+    res.json({
+      currentUserId: req.telegramUser.id,
+      totalTasksInDB: allTasks.length,
+      userTasksFound: userTasks.length,
+      debug: 'Check server logs for detailed output'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
