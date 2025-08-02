@@ -251,6 +251,13 @@ const notionService = {
 
   async createTask(taskData) {
     try {
+      // Преобразуем ID в числа
+      const assigneeId = typeof taskData.assigneeId === 'string' ? parseInt(taskData.assigneeId, 10) : taskData.assigneeId;
+      const creatorId = typeof taskData.creatorId === 'string' ? parseInt(taskData.creatorId, 10) : taskData.creatorId;
+      
+      console.log('Creating task with assigneeId:', assigneeId, 'type:', typeof assigneeId);
+      console.log('Creating task with creatorId:', creatorId, 'type:', typeof creatorId);
+      
       const response = await notion.pages.create({
         parent: { database_id: TASKS_DB_ID },
         properties: {
@@ -267,13 +274,13 @@ const notionService = {
             rich_text: [{ text: { content: taskData.assigneeName } }]
           },
           'Исполнитель ID': {
-            number: taskData.assigneeId
+            number: assigneeId
           },
           'Постановщик': {
             rich_text: [{ text: { content: taskData.creatorName } }]
           },
           'Постановщик ID': {
-            number: taskData.creatorId
+            number: creatorId
           },
           'Статус': {
             select: { name: 'Новая' }
@@ -289,6 +296,8 @@ const notionService = {
           }
         }
       });
+      
+      console.log('Task created successfully');
       return response;
     } catch (error) {
       console.error('Notion create task error:', error);
@@ -300,11 +309,15 @@ const notionService = {
     try {
       console.log('Getting tasks for assignee:', telegramId, 'with status:', status);
       
+      // Преобразуем telegramId в число
+      const numericId = typeof telegramId === 'string' ? parseInt(telegramId, 10) : telegramId;
+      console.log('Using numeric ID:', numericId, 'type:', typeof numericId);
+      
       const filters = [
         {
           property: 'Исполнитель ID',
           number: {
-            equals: telegramId
+            equals: numericId
           }
         }
       ];
@@ -423,6 +436,10 @@ const notionService = {
       console.error('Database ID:', TASKS_DB_ID);
       throw error;
     }
+  },
+
+  async completeTask(taskId) {
+    return this.updateTaskStatus(taskId, 'Выполнена');
   },
 
   async updateTaskStatus(taskId, status, comment = null) {

@@ -337,7 +337,7 @@ function displayTasks(tasks) {
                 ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
                 <div class="task-meta">
                     <span>📅 ${formatDate(task.deadline)}</span>
-                    <span>👤 ${task.createdBy || task.assignedBy || 'Система'}</span>
+                    <span>👤 ${task.creatorName || task.createdBy || task.assignedBy || 'Система'}</span>
                 </div>
             </div>
         `;

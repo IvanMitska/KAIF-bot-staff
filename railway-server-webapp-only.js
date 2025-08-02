@@ -142,10 +142,13 @@ app.post('/api/reports', authMiddleware, async (req, res) => {
 
 app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   try {
+    console.log('Getting tasks for user:', req.telegramUser.id, 'type:', typeof req.telegramUser.id);
     const tasks = await notionService.getTasksByAssignee(req.telegramUser.id);
+    console.log('Found tasks:', tasks.length);
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error getting tasks:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 
