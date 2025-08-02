@@ -15,9 +15,12 @@ async function handleReplyKeyboard(bot, msg) {
       
       // Автоматическое определение URL
       if (!webAppUrl && process.env.RAILWAY_STATIC_URL) {
-        webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}`;
+        webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
       } else if (!webAppUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
-        webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+        webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+      } else if (!webAppUrl && process.env.RAILWAY_GIT_COMMIT_SHA) {
+        // Railway v2
+        webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
       } else if (!webAppUrl) {
         webAppUrl = 'http://localhost:3001';
       }

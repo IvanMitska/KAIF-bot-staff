@@ -4,7 +4,8 @@
   "description": "Telegram bot for collecting daily employee reports with Notion integration",
   "main": "src/app.js",
   "scripts": {
-    "start": "node start.js",
+    "start": "node railway-server.js",
+    "start:local": "node start.js",
     "start:bot": "node src/app.js",
     "start:webapp": "node webapp/server.js",
     "dev": "nodemon src/app.js",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
+    "localtunnel": "^2.0.2",
     "nodemon": "^3.0.1"
   },
   "engines": {

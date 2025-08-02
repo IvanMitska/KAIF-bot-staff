@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "TELEGRAM_BOT_TOKEN": "@telegram-bot-token",
+    "NOTION_API_KEY": "@notion-api-key",
+    "NOTION_DATABASE_REPORTS_ID": "@notion-db-reports",
+    "NOTION_DATABASE_USERS_ID": "@notion-db-users",
+    "NOTION_DATABASE_TASKS_ID": "@notion-db-tasks"
+  }
+}
