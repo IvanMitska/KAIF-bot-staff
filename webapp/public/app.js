@@ -288,18 +288,29 @@ async function loadTasks() {
     `;
     
     try {
+        console.log('Loading tasks...');
+        console.log('Init data available:', !!tg.initData);
+        
         const response = await fetch(`${API_URL}/api/tasks/my`, {
             headers: {
                 'X-Telegram-Init-Data': tg.initData
             }
         });
         
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
             const tasks = await response.json();
+            console.log('Tasks loaded:', tasks.length);
             displayTasks(tasks);
             updateTaskCounts(tasks);
+        } else {
+            const error = await response.text();
+            console.error('Error response:', error);
+            tasksList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Ошибка: ${response.status}</p>`;
         }
     } catch (error) {
+        console.error('Error loading tasks:', error);
         tasksList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Ошибка загрузки задач</p>';
     }
 }
@@ -444,6 +455,40 @@ function showHelp() {
         '📊 Следите за статистикой\n\n' +
         'По вопросам обращайтесь к администратору'
     );
+}
+
+// Отладка задач
+async function debugTasks() {
+    try {
+        console.log('Debug: Current user:', tg.initDataUnsafe.user);
+        console.log('Debug: Init data:', tg.initData);
+        
+        const response = await fetch(`${API_URL}/api/debug/tasks`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const debug = await response.json();
+            console.log('Debug info:', debug);
+            
+            tg.showAlert(
+                `Debug Info:\n\n` +
+                `Your ID: ${debug.currentUserId}\n` +
+                `Total tasks in DB: ${debug.totalTasksInDB}\n` +
+                `Your tasks: ${debug.userTasksFound}\n\n` +
+                `Check console for details`
+            );
+        } else {
+            const error = await response.text();
+            console.error('Debug error:', error);
+            tg.showAlert(`Debug Error: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Debug error:', error);
+        tg.showAlert('Debug error: ' + error.message);
+    }
 }
 
 // Показ сотрудников (для менеджеров)
