@@ -315,6 +315,15 @@ const notionService = {
         return [];
       }
       
+      // Проверяем доступность базы данных
+      try {
+        await notion.databases.retrieve({ database_id: TASKS_DB_ID });
+      } catch (dbError) {
+        console.error('Tasks database not accessible:', dbError.message);
+        console.error('Please check if the database is shared with the integration');
+        return [];
+      }
+      
       // Преобразуем telegramId в число
       const numericId = typeof telegramId === 'string' ? parseInt(telegramId, 10) : telegramId;
       console.log('Using numeric ID:', numericId, 'type:', typeof numericId);
@@ -398,7 +407,6 @@ const notionService = {
       console.error('Error details:', error.message);
       console.error('Error stack:', error.stack);
       console.error('Database ID:', TASKS_DB_ID);
-      console.error('Filters used:', JSON.stringify(filters, null, 2));
       throw error;
     }
   },
