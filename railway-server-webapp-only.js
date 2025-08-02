@@ -233,17 +233,29 @@ app.get('/', (req, res) => {
 
 // Запускаем бота если все переменные есть
 if (missingVars.length === 0) {
-  const bot = spawn('node', ['src/app-webapp-only.js'], {
+  // Запускаем минимальный бот
+  const { spawn } = require('child_process');
+  const botProcess = spawn('node', ['src/bot-minimal.js'], {
     stdio: 'inherit',
     env: process.env
   });
   
-  bot.on('error', (err) => {
+  botProcess.on('error', (err) => {
     console.error('Failed to start bot:', err);
   });
   
-  bot.on('exit', (code) => {
+  botProcess.on('exit', (code) => {
     console.log(`Bot process exited with code ${code}`);
+    if (code !== 0) {
+      // Перезапуск через 5 секунд при ошибке
+      setTimeout(() => {
+        console.log('Restarting bot...');
+        spawn('node', ['src/bot-minimal.js'], {
+          stdio: 'inherit',
+          env: process.env
+        });
+      }, 5000);
+    }
   });
 }
 
