@@ -103,7 +103,7 @@ app.post('/api/reports', authMiddleware, async (req, res) => {
       telegramId: req.telegramUser.id,
       whatDone: req.body.whatDone,
       problems: req.body.problems || 'Нет',
-      goals: req.body.goals,
+      goals: 'Не указано',
       timestamp: new Date().toISOString(),
       status: 'Отправлен'
     };

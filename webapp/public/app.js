@@ -158,8 +158,7 @@ async function submitReport(event) {
     const formData = new FormData(event.target);
     const report = {
         whatDone: formData.get('whatDone'),
-        problems: formData.get('problems') || 'Нет',
-        goals: formData.get('goals')
+        problems: formData.get('problems') || 'Нет'
     };
     
     // Показываем индикатор загрузки
