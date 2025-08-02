@@ -59,43 +59,62 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 20px;
-    padding-bottom: 100px; /* Для навигации */
+    padding-top: 100px; /* Для навигации */
+    padding-bottom: 40px;
 }
 
 /* Заголовок */
 .header {
     text-align: center;
-    padding: 30px 0;
-    background: var(--gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    padding: 20px 0 30px 0;
+    position: relative;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50%;
+    right: -50%;
+    height: 300px;
+    background: radial-gradient(ellipse at center, rgba(91, 108, 255, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .header h1 {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 36px;
+    font-weight: 800;
     margin-bottom: 8px;
-    letter-spacing: -0.5px;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .header p {
     font-size: 16px;
-    opacity: 0.8;
-    -webkit-text-fill-color: var(--text-secondary);
+    color: var(--text-secondary);
+    font-weight: 400;
+    letter-spacing: 0.2px;
 }
 
 /* Современные карточки */
 .action-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 16px;
+    background: linear-gradient(145deg, #1E1E28, #1A1A23);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 20px;
     cursor: pointer;
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.3),
+                -8px -8px 16px rgba(40, 40, 50, 0.1),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.05);
 }
 
 .action-card::before {
@@ -111,9 +130,12 @@ body {
 }
 
 .action-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg), var(--shadow-glow);
-    border-color: var(--primary);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 12px 12px 24px rgba(0, 0, 0, 0.4),
+                -12px -12px 24px rgba(40, 40, 50, 0.15),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+                0 0 30px rgba(91, 108, 255, 0.2);
+    border-color: rgba(91, 108, 255, 0.3);
 }
 
 .action-card:hover::before {
@@ -125,10 +147,16 @@ body {
 }
 
 .action-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
+    font-size: 56px;
+    margin-bottom: 20px;
     display: inline-block;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+    transform: scale(1);
+    transition: transform var(--transition-normal);
+}
+
+.action-card:hover .action-icon {
+    transform: scale(1.1) rotate(-5deg);
 }
 
 .action-content h3 {
@@ -146,11 +174,13 @@ body {
 
 /* Статус карточка */
 .status-card {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, #1A1A23, #16161E);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.25),
+                -6px -6px 12px rgba(40, 40, 50, 0.08);
 }
 
 .status-item {
@@ -189,17 +219,18 @@ body {
 /* Навигация */
 .navigation {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
-    background: rgba(26, 26, 35, 0.95);
+    background: rgba(15, 15, 20, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     justify-content: space-around;
-    padding: 8px 0;
+    padding: 12px 0 8px 0;
     z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .nav-btn {
@@ -217,27 +248,30 @@ body {
     color: var(--primary);
 }
 
-.nav-btn.active::before {
+.nav-btn.active::after {
     content: '';
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 40px;
     height: 3px;
     background: var(--gradient-primary);
-    border-radius: 0 0 3px 3px;
+    border-radius: 3px 3px 0 0;
 }
 
 .nav-icon {
-    font-size: 24px;
+    font-size: 20px;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
 }
 
 .nav-label {
-    font-size: 11px;
+    font-size: 10px;
     display: block;
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 /* Формы */
@@ -531,14 +565,27 @@ body {
 @media (max-width: 480px) {
     .container {
         padding: 16px;
+        padding-top: 90px;
     }
     
     .header h1 {
-        font-size: 28px;
+        font-size: 30px;
     }
     
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .navigation {
+        padding: 10px 0 6px 0;
+    }
+    
+    .nav-icon {
+        font-size: 18px;
+    }
+    
+    .nav-label {
+        font-size: 9px;
     }
 }
 

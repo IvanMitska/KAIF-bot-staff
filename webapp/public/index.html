@@ -5,9 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KAIF App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="styles-modern.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Навигация -->
+    <nav class="navigation">
+        <button class="nav-btn active" onclick="showPage('home')">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </button>
+        <button class="nav-btn" onclick="showPage('report')">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Отчеты</span>
+        </button>
+        <button class="nav-btn" onclick="showPage('tasks')">
+            <span class="nav-icon">✅</span>
+            <span class="nav-label">Задачи</span>
+        </button>
+        <button class="nav-btn" onclick="showPage('stats')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Статистика</span>
+        </button>
+        <button class="nav-btn" onclick="showPage('profile')">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </button>
+    </nav>
+    
     <div class="container">
         <!-- Главная страница -->
         <div id="home" class="page active">
@@ -181,30 +205,6 @@
         </div>
     </div>
     
-    <!-- Навигация -->
-    <nav class="navigation">
-        <button class="nav-btn active" onclick="showPage('home')">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-label">Главная</span>
-        </button>
-        <button class="nav-btn" onclick="showPage('report')">
-            <span class="nav-icon">📝</span>
-            <span class="nav-label">Отчеты</span>
-        </button>
-        <button class="nav-btn" onclick="showPage('tasks')">
-            <span class="nav-icon">✅</span>
-            <span class="nav-label">Задачи</span>
-        </button>
-        <button class="nav-btn" onclick="showPage('stats')">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Статистика</span>
-        </button>
-        <button class="nav-btn" onclick="showPage('profile')">
-            <span class="nav-icon">👤</span>
-            <span class="nav-label">Профиль</span>
-        </button>
-    </nav>
-    
-    <script src="app-modern.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
