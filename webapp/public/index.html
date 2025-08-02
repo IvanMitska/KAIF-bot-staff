@@ -102,10 +102,10 @@
         <div id="tasks" class="page">
             <button class="back-btn" onclick="showPage('home')">← Назад</button>
             
-            <div class="header" style="position: relative;">
-                <h1>Мои задачи</h1>
-                <button id="createTaskBtn" onclick="showCreateTaskModal()" style="display: none; position: absolute; top: 50%; right: 0; transform: translateY(-50%); background: var(--gradient-primary); border: none; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
-                    <span>➕ Создать</span>
+            <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h1 style="margin: 0;">Мои задачи</h1>
+                <button id="createTaskBtn" onclick="showCreateTaskModal()" style="display: none; background: var(--gradient-primary); border: none; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    ➕ Создать
                 </button>
             </div>
             

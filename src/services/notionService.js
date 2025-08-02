@@ -308,6 +308,12 @@ const notionService = {
   async getTasksByAssignee(telegramId, status = null) {
     try {
       console.log('Getting tasks for assignee:', telegramId, 'with status:', status);
+      console.log('Tasks database ID:', TASKS_DB_ID);
+      
+      if (!TASKS_DB_ID) {
+        console.error('TASKS_DB_ID is not set!');
+        return [];
+      }
       
       // Преобразуем telegramId в число
       const numericId = typeof telegramId === 'string' ? parseInt(telegramId, 10) : telegramId;
@@ -333,9 +339,9 @@ const notionService = {
       
       console.log('Filters for assignee tasks:', JSON.stringify(filters, null, 2));
 
-      const response = await notion.databases.query({
+      // Временно отключаем фильтр для отладки
+      const queryParams = {
         database_id: TASKS_DB_ID,
-        filter: filters.length > 1 ? { and: filters } : filters[0],
         sorts: [
           {
             property: 'Приоритет',
@@ -346,7 +352,12 @@ const notionService = {
             direction: 'descending'
           }
         ]
-      });
+      };
+      
+      // Временно получаем все задачи для отладки
+      console.log('WARNING: Fetching all tasks without filter for debugging');
+      
+      const response = await notion.databases.query(queryParams);
 
       console.log('Found tasks for assignee:', response.results.length);
       if (response.results.length > 0) {
@@ -355,7 +366,16 @@ const notionService = {
         ));
       }
 
-      return response.results.map(task => {
+      // Фильтруем задачи вручную
+      const filteredResults = response.results.filter(task => {
+        const taskAssigneeId = task.properties['Исполнитель ID']?.number;
+        console.log('Task assignee ID:', taskAssigneeId, 'vs requested:', numericId);
+        return taskAssigneeId === numericId;
+      });
+      
+      console.log('Filtered tasks:', filteredResults.length);
+      
+      return filteredResults.map(task => {
         try {
           return {
             id: task.id,
