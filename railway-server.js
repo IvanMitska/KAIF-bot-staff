@@ -140,6 +140,58 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// Получить список сотрудников (для менеджеров)
+app.get('/api/employees', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const employees = await notionService.getAllActiveUsers();
+    res.json(employees);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Создать задачу (для менеджеров)
+app.post('/api/tasks', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const creator = await userService.getUserByTelegramId(req.telegramUser.id);
+    const assignee = await userService.getUserByTelegramId(req.body.assigneeId);
+    
+    if (!creator || !assignee) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const taskData = {
+      title: req.body.title,
+      description: req.body.description || '',
+      assigneeId: req.body.assigneeId,
+      assigneeName: assignee.name,
+      creatorId: req.telegramUser.id,
+      creatorName: creator.name,
+      status: 'Новая',
+      priority: req.body.priority || 'medium',
+      deadline: req.body.deadline || null,
+      createdAt: new Date().toISOString()
+    };
+    
+    const taskId = await notionService.createTask(taskData);
+    res.json({ success: true, taskId });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Главная страница
 app.get('/', (req, res) => {
   const publicUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost';

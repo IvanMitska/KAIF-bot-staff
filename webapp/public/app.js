@@ -94,9 +94,14 @@ async function loadProfile() {
                 document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
                 
                 // Проверяем, является ли пользователь менеджером
-                const MANAGER_IDS = [385436658, 1734337242];
+                const MANAGER_IDS = [385436658, 1734337242]; // Boris, Ivan
                 if (MANAGER_IDS.includes(tg.initDataUnsafe.user?.id)) {
                     document.getElementById('managerSection')?.style.setProperty('display', 'block');
+                    // Показываем кнопку создания задачи
+                    const createTaskBtn = document.getElementById('createTaskBtn');
+                    if (createTaskBtn) {
+                        createTaskBtn.style.display = 'inline-flex';
+                    }
                 }
             }
         }
@@ -262,7 +267,7 @@ function displayTasks(tasks) {
                 ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
                 <div class="task-meta">
                     <span>📅 ${formatDate(task.deadline)}</span>
-                    <span>👤 ${task.assignedBy}</span>
+                    <span>👤 ${task.createdBy || task.assignedBy || 'Система'}</span>
                 </div>
             </div>
         `;
@@ -372,8 +377,177 @@ function showHelp() {
 }
 
 // Показ сотрудников (для менеджеров)
-function showEmployees() {
-    tg.showAlert('Функция в разработке');
+async function showEmployees() {
+    showPage('employees');
+    loadEmployees();
+}
+
+// Загрузка списка сотрудников
+async function loadEmployees() {
+    const employeesList = document.getElementById('employeesList');
+    if (!employeesList) {
+        // Создаем страницу сотрудников если её нет
+        createEmployeesPage();
+        return;
+    }
+    
+    employeesList.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px;">Загрузка сотрудников...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/employees`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const employees = await response.json();
+            displayEmployees(employees);
+        }
+    } catch (error) {
+        employeesList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Ошибка загрузки</p>';
+    }
+}
+
+// Отображение сотрудников
+function displayEmployees(employees) {
+    const employeesList = document.getElementById('employeesList');
+    
+    if (employees.length === 0) {
+        employeesList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Нет сотрудников</p>';
+        return;
+    }
+    
+    employeesList.innerHTML = employees.map(emp => `
+        <div class="action-card" onclick="createTaskForEmployee('${emp.telegramId}', '${emp.name}')">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="font-size: 40px;">👤</div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px;">${emp.name}</h3>
+                    <p style="margin: 4px 0 0 0; color: var(--text-secondary);">${emp.position}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Создать задачу для сотрудника
+function createTaskForEmployee(employeeId, employeeName) {
+    showCreateTaskModal(employeeId, employeeName);
+}
+
+// Показать модальное окно создания задачи
+function showCreateTaskModal(employeeId = null, employeeName = null) {
+    const modal = document.getElementById('taskModal');
+    if (!modal) {
+        createTaskModal();
+        return;
+    }
+    
+    modal.style.display = 'flex';
+    
+    // Если передан сотрудник, выбираем его
+    if (employeeId && employeeName) {
+        const select = document.getElementById('taskEmployee');
+        select.innerHTML = `<option value="${employeeId}" selected>${employeeName}</option>`;
+        loadEmployeesForSelect(employeeId);
+    } else {
+        loadEmployeesForSelect();
+    }
+    
+    // Устанавливаем минимальную дату - сегодня
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskDeadline').min = today;
+}
+
+// Загрузить сотрудников для выбора
+async function loadEmployeesForSelect(selectedId = null) {
+    try {
+        const response = await fetch(`${API_URL}/api/employees`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const employees = await response.json();
+            const select = document.getElementById('taskEmployee');
+            
+            select.innerHTML = '<option value="">Выберите сотрудника</option>' +
+                employees.map(emp => 
+                    `<option value="${emp.telegramId}" ${emp.telegramId == selectedId ? 'selected' : ''}>${emp.name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading employees:', error);
+    }
+}
+
+// Закрыть модальное окно
+function closeTaskModal() {
+    const modal = document.getElementById('taskModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('taskForm').reset();
+    }
+}
+
+// Отправить задачу
+async function submitTask(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const task = {
+        assigneeId: parseInt(formData.get('employee')),
+        title: formData.get('title'),
+        description: formData.get('description') || '',
+        deadline: formData.get('deadline'),
+        priority: formData.get('priority')
+    };
+    
+    const submitBtn = event.target.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Создание...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/tasks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': tg.initData
+            },
+            body: JSON.stringify(task)
+        });
+        
+        if (response.ok) {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+            
+            tg.showAlert('Задача успешно создана! ✅', () => {
+                closeTaskModal();
+                if (document.getElementById('tasks').classList.contains('active')) {
+                    loadTasks();
+                }
+            });
+        } else {
+            throw new Error('Ошибка создания');
+        }
+    } catch (error) {
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+        tg.showAlert('Ошибка при создании задачи');
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
 }
 
 // Переключение задачи
