@@ -167,6 +167,27 @@ app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   }
 });
 
+// Получить задачи, поставленные мной (для менеджеров)
+app.get('/api/tasks/created', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    console.log('Getting created tasks for manager:', req.telegramUser.id);
+    
+    const tasks = await notionService.getTasksByCreator(req.telegramUser.id);
+    console.log('Found created tasks:', tasks.length);
+    
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error getting created tasks:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
 app.post('/api/tasks/:taskId/complete', authMiddleware, async (req, res) => {
   try {
     await notionService.completeTask(req.params.taskId);

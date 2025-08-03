@@ -38,9 +38,7 @@ bot.deleteWebHook().then(() => {
     commandsHandler(bot);
     reportHandler(bot);
     
-    // Команды убраны - весь функционал доступен через кнопки интерфейса
-    // /tasks - доступно через кнопку "✅ Задачи"
-    // /task - доступно через кнопку "⚡ Быстрая задача"
+   
     
     // Единый централизованный обработчик всех callback queries
     bot.on('callback_query', async (callbackQuery) => {

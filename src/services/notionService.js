@@ -470,6 +470,71 @@ const notionService = {
     return this.updateTaskStatus(taskId, 'Выполнена');
   },
 
+  async getTasksByCreator(creatorId, status = null) {
+    try {
+      console.log('Getting tasks by creator:', creatorId);
+      
+      if (!TASKS_DB_ID) {
+        console.error('TASKS_DB_ID is not set!');
+        return [];
+      }
+      
+      // Проверяем доступность базы данных
+      try {
+        await notion.databases.retrieve({ database_id: TASKS_DB_ID });
+      } catch (dbError) {
+        console.error('Tasks database not accessible:', dbError.message);
+        return [];
+      }
+      
+      // Преобразуем creatorId в число
+      const numericId = typeof creatorId === 'string' ? parseInt(creatorId, 10) : creatorId;
+      
+      const queryParams = {
+        database_id: TASKS_DB_ID,
+        sorts: [
+          {
+            property: 'Дата создания',
+            direction: 'descending'
+          }
+        ]
+      };
+      
+      const response = await notion.databases.query(queryParams);
+      
+      // Фильтруем задачи по постановщику
+      const filteredResults = response.results.filter(task => {
+        const taskCreatorId = task.properties['Постановщик ID']?.number;
+        return taskCreatorId === numericId;
+      });
+      
+      console.log('Found tasks by creator:', filteredResults.length);
+      
+      return filteredResults.map(task => {
+        try {
+          return {
+            id: task.id,
+            taskId: task.properties['ID']?.title?.[0]?.text?.content || 'NO_ID',
+            title: task.properties['Название']?.rich_text?.[0]?.text?.content || '',
+            description: task.properties['Описание']?.rich_text?.[0]?.text?.content || '',
+            status: task.properties['Статус']?.select?.name || 'Новая',
+            priority: task.properties['Приоритет']?.select?.name || 'Средний',
+            createdDate: task.properties['Дата создания']?.date?.start,
+            deadline: task.properties['Срок выполнения']?.date?.start,
+            assigneeName: task.properties['Исполнитель']?.rich_text?.[0]?.text?.content || '',
+            assigneeId: task.properties['Исполнитель ID']?.number
+          };
+        } catch (mapError) {
+          console.error('Error mapping creator task:', task.id, mapError);
+          return null;
+        }
+      }).filter(task => task !== null);
+    } catch (error) {
+      console.error('Notion get tasks by creator error:', error);
+      throw error;
+    }
+  },
+
   async updateTaskStatus(taskId, status, comment = null) {
     try {
       console.log('Updating task status:', { taskId, status, comment });

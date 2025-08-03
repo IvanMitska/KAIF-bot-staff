@@ -109,6 +109,16 @@
                 </button>
             </div>
             
+            <!-- Переключатель типа задач -->
+            <div class="task-type-switcher" style="display: flex; background: var(--bg-secondary); border-radius: 12px; padding: 4px; margin-bottom: 20px;">
+                <button id="myTasksBtn" class="task-type-btn active" onclick="switchTaskType('my')" style="flex: 1; padding: 10px; background: var(--bg-card); border: none; border-radius: 8px; color: var(--text-primary); cursor: pointer; transition: all 0.3s;">
+                    📥 Мои задачи
+                </button>
+                <button id="createdTasksBtn" class="task-type-btn" onclick="switchTaskType('created')" style="flex: 1; padding: 10px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: all 0.3s; display: none;">
+                    📤 Поставленные
+                </button>
+            </div>
+            
             <div class="task-filters">
                 <button class="filter-btn active" onclick="filterTasks('all')">
                     Все <span class="count">0</span>

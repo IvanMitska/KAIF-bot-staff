@@ -14,6 +14,7 @@ const API_URL = window.location.origin;
 let currentUser = null;
 let currentFilter = 'all';
 let lastNewTasksCount = 0;
+let currentTaskType = 'my'; // 'my' или 'created'
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
@@ -111,6 +112,11 @@ async function loadProfile() {
                     const createTaskBtn = document.getElementById('createTaskBtn');
                     if (createTaskBtn) {
                         createTaskBtn.style.display = 'inline-flex';
+                    }
+                    // Показываем переключатель типа задач
+                    const createdTasksBtn = document.getElementById('createdTasksBtn');
+                    if (createdTasksBtn) {
+                        createdTasksBtn.style.display = 'block';
                     }
                 }
             }
@@ -277,6 +283,45 @@ async function submitReport(event) {
     }
 }
 
+// Переключение типа задач
+function switchTaskType(type) {
+    currentTaskType = type;
+    currentFilter = 'all';
+    
+    // Обновляем кнопки
+    const myBtn = document.getElementById('myTasksBtn');
+    const createdBtn = document.getElementById('createdTasksBtn');
+    
+    if (type === 'my') {
+        myBtn.classList.add('active');
+        myBtn.style.background = 'var(--bg-card)';
+        myBtn.style.color = 'var(--text-primary)';
+        createdBtn.classList.remove('active');
+        createdBtn.style.background = 'transparent';
+        createdBtn.style.color = 'var(--text-secondary)';
+    } else {
+        createdBtn.classList.add('active');
+        createdBtn.style.background = 'var(--bg-card)';
+        createdBtn.style.color = 'var(--text-primary)';
+        myBtn.classList.remove('active');
+        myBtn.style.background = 'transparent';
+        myBtn.style.color = 'var(--text-secondary)';
+    }
+    
+    // Сбрасываем фильтр
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector('.filter-btn[onclick*="all"]').classList.add('active');
+    
+    // Загружаем задачи
+    loadTasks();
+    
+    if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('light');
+    }
+}
+
 // Загрузка задач
 async function loadTasks() {
     const tasksList = document.getElementById('tasksList');
@@ -289,9 +334,12 @@ async function loadTasks() {
     
     try {
         console.log('Loading tasks...');
+        console.log('Task type:', currentTaskType);
         console.log('Init data available:', !!tg.initData);
         
-        const response = await fetch(`${API_URL}/api/tasks/my`, {
+        const endpoint = currentTaskType === 'my' ? '/api/tasks/my' : '/api/tasks/created';
+        
+        const response = await fetch(`${API_URL}${endpoint}`, {
             headers: {
                 'X-Telegram-Init-Data': tg.initData
             }
@@ -348,7 +396,7 @@ function displayTasks(tasks) {
                 ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
                 <div class="task-meta">
                     <span>📅 ${formatDate(task.deadline)}</span>
-                    <span>👤 ${task.creatorName || task.createdBy || task.assignedBy || 'Система'}</span>
+                    <span>👤 ${currentTaskType === 'my' ? (task.creatorName || 'Система') : (task.assigneeName || 'Не назначен')}</span>
                 </div>
             </div>
         `;
