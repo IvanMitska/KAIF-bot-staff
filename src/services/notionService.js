@@ -395,7 +395,9 @@ const notionService = {
             priority: task.properties['Приоритет']?.select?.name || 'Средний',
             createdDate: task.properties['Дата создания']?.date?.start,
             deadline: task.properties['Срок выполнения']?.date?.start,
-            creatorName: task.properties['Постановщик']?.rich_text?.[0]?.text?.content || ''
+            creatorName: task.properties['Постановщик']?.rich_text?.[0]?.text?.content || '',
+            assigneeId: task.properties['Исполнитель ID']?.number,
+            assigneeName: task.properties['Исполнитель']?.rich_text?.[0]?.text?.content || ''
           };
         } catch (mapError) {
           console.error('Error mapping assignee task:', task.id, mapError);

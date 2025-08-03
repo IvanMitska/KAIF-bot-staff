@@ -1,11 +1,11 @@
 const userService = require('../services/userService');
 const security = require('../utils/security');
 
+// Глобальный флаг для предотвращения дублирования обработчиков
+let handlersRegistered = false;
+
 module.exports = (bot) => {
   console.log('🌐 Инициализация Web App Only режима');
-  
-  // Флаг для предотвращения дублирования обработчиков
-  let handlersRegistered = false;
   
   if (handlersRegistered) {
     console.log('⚠️ Обработчики уже зарегистрированы, пропускаем');
@@ -29,8 +29,11 @@ module.exports = (bot) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     
+    console.log(`📱 Получена команда /start от пользователя ${userId} (@${msg.from.username})`);
+    
     // Проверка авторизации
     if (!security.isUserAuthorized(userId)) {
+      console.log(`❌ Пользователь ${userId} не авторизован`);
       await bot.sendMessage(chatId, 
         '🚫 У вас нет доступа к этому боту.\n\n' +
         'Обратитесь к администратору.'

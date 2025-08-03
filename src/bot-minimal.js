@@ -10,20 +10,30 @@ if (!token) {
 
 console.log('🚀 Запуск минимального бота...');
 
-// Создаем бота
+// Создаем бота без автозапуска polling
 const bot = new TelegramBot(token, { 
   polling: {
     interval: 300,
-    autoStart: true,
+    autoStart: false, // Изменено на false
     params: {
       timeout: 10
     }
   }
 });
 
-// Удаляем вебхук если был
-bot.deleteWebHook().then(() => {
+// Сначала останавливаем polling если он был запущен
+bot.stopPolling().then(() => {
+  console.log('✅ Старый polling остановлен');
+  
+  // Удаляем вебхук если был
+  return bot.deleteWebHook();
+}).then(() => {
   console.log('✅ Webhook удален');
+  
+  // Запускаем polling
+  return bot.startPolling();
+}).then(() => {
+  console.log('✅ Polling запущен');
   
   // Проверяем информацию о боте
   bot.getMe().then(botInfo => {
