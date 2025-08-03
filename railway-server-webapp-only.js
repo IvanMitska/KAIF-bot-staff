@@ -230,13 +230,15 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
   }
 });
 
-// Создать задачу (для менеджеров)
+// Создать задачу
 app.post('/api/tasks', authMiddleware, async (req, res) => {
   try {
     const MANAGER_IDS = [385436658, 1734337242];
+    const isManager = MANAGER_IDS.includes(req.telegramUser.id);
     
-    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
-      return res.status(403).json({ error: 'Forbidden' });
+    // Проверяем права: обычные пользователи могут создавать задачи только себе
+    if (!isManager && req.body.assigneeId !== req.telegramUser.id) {
+      return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
     }
     
     const creator = await userService.getUserByTelegramId(req.telegramUser.id);
@@ -245,6 +247,8 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     console.log('Creating task:', {
       creatorId: req.telegramUser.id,
       assigneeId: req.body.assigneeId,
+      isManager: isManager,
+      isSelfTask: req.telegramUser.id === req.body.assigneeId,
       assignee: assignee ? { name: assignee.name, telegramId: assignee.telegramId } : null
     });
     
@@ -267,34 +271,42 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     
     const taskId = await notionService.createTask(taskData);
     
-    // Отправляем уведомление в Telegram
-    try {
-      const TelegramBot = require('node-telegram-bot-api');
-      const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
-      
-      const message = `🆕 *Новая задача от ${creator.name}*\n\n` +
-                     `📋 *Задача:* ${taskData.title}\n` +
-                     (taskData.description ? `📝 *Описание:* ${taskData.description}\n` : '') +
-                     `📅 *Срок:* ${taskData.deadline ? new Date(taskData.deadline).toLocaleDateString('ru-RU') : 'Без срока'}\n` +
-                     `🔥 *Приоритет:* ${taskData.priority === 'high' ? '🔴 Высокий' : taskData.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий'}\n\n` +
-                     `Откройте KAIF App для просмотра деталей`;
-      
-      await bot.sendMessage(assignee.telegramId, message, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: '📱 Открыть KAIF App',
-              web_app: { 
-                url: `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public` 
+    // Отправляем уведомление в Telegram только если задача НЕ для себя
+    const isSelfTask = req.telegramUser.id === req.body.assigneeId;
+    
+    if (!isSelfTask) {
+      try {
+        const TelegramBot = require('node-telegram-bot-api');
+        const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+        
+        const message = `🆕 *Новая задача от ${creator.name}*\n\n` +
+                       `📋 *Задача:* ${taskData.title}\n` +
+                       (taskData.description ? `📝 *Описание:* ${taskData.description}\n` : '') +
+                       `📅 *Срок:* ${taskData.deadline ? new Date(taskData.deadline).toLocaleDateString('ru-RU') : 'Без срока'}\n` +
+                       `🔥 *Приоритет:* ${taskData.priority === 'high' ? '🔴 Высокий' : taskData.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий'}\n\n` +
+                       `Откройте KAIF App для просмотра деталей`;
+        
+        await bot.sendMessage(assignee.telegramId, message, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: '📱 Открыть KAIF App',
+                web_app: { 
+                  url: `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public` 
+                }
               }
-            }
-          ]]
-        }
-      });
-    } catch (notificationError) {
-      console.error('Failed to send notification:', notificationError);
-      // Не прерываем создание задачи из-за ошибки уведомления
+            ]]
+          }
+        });
+        
+        console.log('Notification sent to assignee');
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+        // Не прерываем создание задачи из-за ошибки уведомления
+      }
+    } else {
+      console.log('Self-task created, no notification sent');
     }
     
     res.json({ success: true, taskId });

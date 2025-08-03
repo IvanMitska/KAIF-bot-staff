@@ -104,21 +104,27 @@ async function loadProfile() {
             if (currentUser && !currentUser.needsRegistration) {
                 document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
                 
+                // Показываем кнопку создания задачи ВСЕМ пользователям
+                const createTaskBtn = document.getElementById('createTaskBtn');
+                if (createTaskBtn) {
+                    createTaskBtn.style.display = 'inline-flex';
+                }
+                
                 // Проверяем, является ли пользователь менеджером
                 const MANAGER_IDS = [385436658, 1734337242]; // Boris, Ivan
-                if (MANAGER_IDS.includes(tg.initDataUnsafe.user?.id)) {
+                const isManager = MANAGER_IDS.includes(tg.initDataUnsafe.user?.id);
+                
+                if (isManager) {
                     document.getElementById('managerSection')?.style.setProperty('display', 'block');
-                    // Показываем кнопку создания задачи
-                    const createTaskBtn = document.getElementById('createTaskBtn');
-                    if (createTaskBtn) {
-                        createTaskBtn.style.display = 'inline-flex';
-                    }
-                    // Показываем переключатель типа задач
+                    // Показываем переключатель типа задач только менеджерам
                     const createdTasksBtn = document.getElementById('createdTasksBtn');
                     if (createdTasksBtn) {
                         createdTasksBtn.style.display = 'block';
                     }
                 }
+                
+                // Сохраняем статус менеджера глобально
+                window.isManager = isManager;
             }
         }
     } catch (error) {
@@ -396,7 +402,9 @@ function displayTasks(tasks) {
                 ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
                 <div class="task-meta">
                     <span>📅 ${formatDate(task.deadline)}</span>
-                    <span>👤 ${currentTaskType === 'my' ? (task.creatorName || 'Система') : (task.assigneeName || 'Не назначен')}</span>
+                    <span>👤 ${currentTaskType === 'my' ? 
+                        (task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')) : 
+                        (task.assigneeName || 'Не назначен')}</span>
                 </div>
             </div>
         `;
@@ -614,13 +622,38 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     
     modal.style.display = 'flex';
     
-    // Если передан сотрудник, выбираем его
-    if (employeeId && employeeName) {
-        const select = document.getElementById('taskEmployee');
-        select.innerHTML = `<option value="${employeeId}" selected>${employeeName}</option>`;
-        loadEmployeesForSelect(employeeId);
+    const select = document.getElementById('taskEmployee');
+    
+    // Если обычный пользователь - показываем только себя
+    if (!window.isManager) {
+        select.innerHTML = `<option value="${tg.initDataUnsafe.user.id}" selected>${currentUser.name} (Я)</option>`;
+        select.disabled = true; // Блокируем выбор
+        
+        // Скрываем label или добавляем пояснение
+        const formGroup = select.closest('.form-group');
+        if (formGroup) {
+            const label = formGroup.querySelector('label');
+            if (label) {
+                label.textContent = 'Исполнитель (только для себя)';
+            }
+        }
     } else {
-        loadEmployeesForSelect();
+        // Менеджер - показываем всех сотрудников
+        select.disabled = false;
+        const formGroup = select.closest('.form-group');
+        if (formGroup) {
+            const label = formGroup.querySelector('label');
+            if (label) {
+                label.textContent = 'Исполнитель';
+            }
+        }
+        
+        if (employeeId && employeeName) {
+            select.innerHTML = `<option value="${employeeId}" selected>${employeeName}</option>`;
+            loadEmployeesForSelect(employeeId);
+        } else {
+            loadEmployeesForSelect();
+        }
     }
     
     // Устанавливаем минимальную дату - сегодня
