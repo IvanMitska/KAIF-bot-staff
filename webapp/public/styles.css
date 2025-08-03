@@ -691,3 +691,123 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     animation: pulse 2s infinite;
 }
+
+/* Детальный просмотр задачи */
+.task-detail-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.task-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.task-detail-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    flex: 1;
+    margin-right: 16px;
+}
+
+.task-detail-section {
+    margin-bottom: 24px;
+}
+
+.task-detail-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+}
+
+.task-detail-section p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.task-detail-info {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.info-row:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.info-label {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.info-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.task-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: center;
+}
+
+.start-btn {
+    background: var(--gradient-secondary);
+    color: white;
+}
+
+.complete-btn {
+    background: var(--gradient-success);
+    color: white;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.task-completed-badge {
+    background: rgba(78, 205, 196, 0.1);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--success);
+    margin-top: 24px;
+}

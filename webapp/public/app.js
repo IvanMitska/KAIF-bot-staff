@@ -15,6 +15,7 @@ let currentUser = null;
 let currentFilter = 'all';
 let lastNewTasksCount = 0;
 let currentTaskType = 'my'; // 'my' или 'created'
+let currentTasks = []; // Хранение текущих задач
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
@@ -356,6 +357,7 @@ async function loadTasks() {
         if (response.ok) {
             const tasks = await response.json();
             console.log('Tasks loaded:', tasks.length);
+            currentTasks = tasks; // Сохраняем задачи глобально
             displayTasks(tasks);
             updateTaskCounts(tasks);
         } else {
@@ -394,7 +396,7 @@ function displayTasks(tasks) {
                           task.status === 'В работе' ? 'in-progress' : 'completed';
         
         return `
-            <div class="task-item" onclick="toggleTask('${task.id}')">
+            <div class="task-item" onclick="openTaskDetail('${task.id}')" style="cursor: pointer;">
                 <div class="task-header">
                     <h3 class="task-title">${task.title}</h3>
                     <span class="task-status ${statusClass}">${task.status}</span>
@@ -746,10 +748,149 @@ async function submitTask(event) {
     }
 }
 
-// Переключение задачи
-function toggleTask(taskId) {
+// Открыть детальный просмотр задачи
+window.openTaskDetail = async function(taskId) {
+    console.log('Opening task detail for:', taskId);
+    console.log('Current tasks:', currentTasks);
+    
     if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
     }
-    // TODO: Реализовать изменение статуса задачи
+    
+    // Находим задачу в текущем списке
+    const task = currentTasks.find(t => t.id === taskId);
+    if (!task) {
+        console.error('Task not found:', taskId);
+        console.error('Available task IDs:', currentTasks.map(t => t.id));
+        return;
+    }
+    
+    console.log('Found task:', task);
+    
+    // Переходим на страницу детального просмотра
+    showPage('taskDetail');
+    
+    // Отображаем детали задачи
+    displayTaskDetail(task);
+}
+
+// Отобразить детали задачи
+function displayTaskDetail(task) {
+    const content = document.querySelector('.task-detail-content');
+    
+    const statusClass = task.status === 'Новая' ? 'new' : 
+                      task.status === 'В работе' ? 'in-progress' : 'completed';
+    
+    const priorityText = task.priority === 'high' ? '🔴 Высокий' : 
+                        task.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий';
+    
+    const canComplete = task.status !== 'Выполнена' && currentTaskType === 'my';
+    
+    content.innerHTML = `
+        <div class="task-detail-card">
+            <div class="task-detail-header">
+                <h1>${task.title}</h1>
+                <span class="task-status ${statusClass}">${task.status}</span>
+            </div>
+            
+            ${task.description ? `
+                <div class="task-detail-section">
+                    <h3>📝 Описание</h3>
+                    <p>${task.description}</p>
+                </div>
+            ` : ''}
+            
+            <div class="task-detail-section">
+                <h3>ℹ️ Информация</h3>
+                <div class="task-detail-info">
+                    <div class="info-row">
+                        <span class="info-label">Приоритет:</span>
+                        <span class="info-value">${priorityText}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Срок:</span>
+                        <span class="info-value">📅 ${formatDate(task.deadline)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Создана:</span>
+                        <span class="info-value">${formatDate(task.createdDate)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Постановщик:</span>
+                        <span class="info-value">👤 ${task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')}</span>
+                    </div>
+                    ${currentTaskType === 'created' ? `
+                        <div class="info-row">
+                            <span class="info-label">Исполнитель:</span>
+                            <span class="info-value">👤 ${task.assigneeName || 'Не назначен'}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            ${canComplete ? `
+                <div class="task-detail-actions">
+                    ${task.status === 'Новая' ? `
+                        <button class="action-btn start-btn" onclick="updateTaskStatus('${task.id}', 'В работе')">
+                            🚀 Взять в работу
+                        </button>
+                    ` : ''}
+                    <button class="action-btn complete-btn" onclick="updateTaskStatus('${task.id}', 'Выполнена')">
+                        ✅ Выполнить задачу
+                    </button>
+                </div>
+            ` : ''}
+            
+            ${task.status === 'Выполнена' ? `
+                <div class="task-completed-badge">
+                    ✅ Задача выполнена
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Обновить статус задачи
+window.updateTaskStatus = async function(taskId, newStatus) {
+    try {
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+        
+        const response = await fetch(`${API_URL}/api/tasks/${taskId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': tg.initData
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+            
+            const message = newStatus === 'В работе' ? 'Задача взята в работу!' : 'Задача выполнена! 🎉';
+            
+            tg.showAlert(message, () => {
+                // Обновляем задачу в локальном списке
+                const task = currentTasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = newStatus;
+                    displayTaskDetail(task);
+                }
+                
+                // Перезагружаем список задач
+                loadTasks();
+            });
+        } else {
+            throw new Error('Ошибка обновления');
+        }
+    } catch (error) {
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+        tg.showAlert('Ошибка при обновлении задачи');
+    }
 }

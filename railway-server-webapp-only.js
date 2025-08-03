@@ -197,6 +197,36 @@ app.post('/api/tasks/:taskId/complete', authMiddleware, async (req, res) => {
   }
 });
 
+// Обновить статус задачи
+app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['Новая', 'В работе', 'Выполнена'];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Получаем задачу для проверки прав
+    const tasks = await notionService.getTasksByAssignee(req.telegramUser.id);
+    const task = tasks.find(t => t.id === req.params.taskId);
+    
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found or access denied' });
+    }
+    
+    // Обновляем статус
+    await notionService.updateTaskStatus(req.params.taskId, status);
+    
+    console.log(`Task ${req.params.taskId} status updated to ${status} by user ${req.telegramUser.id}`);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
     const reports = await notionService.getUserReports(req.telegramUser.id, 30);
