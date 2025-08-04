@@ -256,6 +256,52 @@ app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
     
     console.log(`Task ${req.params.taskId} status updated to ${status} by user ${req.telegramUser.id}`);
     
+    // Отправляем уведомления создателю задачи
+    if (task.creatorId && task.creatorId !== req.telegramUser.id) {
+      try {
+        const executor = await userService.getUserByTelegramId(req.telegramUser.id);
+        const TelegramBot = require('node-telegram-bot-api');
+        const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+        
+        let message = '';
+        
+        if (status === 'Выполнена') {
+          message = `✅ *Задача выполнена!*\n\n` +
+                   `📋 *Задача:* ${task.title}\n` +
+                   `👤 *Исполнитель:* ${executor?.name || 'Неизвестный'}\n` +
+                   `📅 *Дата выполнения:* ${new Date().toLocaleDateString('ru-RU')}\n\n` +
+                   `Отличная работа команды! 🎉`;
+        } else if (status === 'В работе') {
+          message = `🚀 *Задача взята в работу!*\n\n` +
+                   `📋 *Задача:* ${task.title}\n` +
+                   `👤 *Исполнитель:* ${executor?.name || 'Неизвестный'}\n` +
+                   `📅 *Дата:* ${new Date().toLocaleDateString('ru-RU')}\n\n` +
+                   `Работа началась! 💪`;
+        }
+        
+        if (message) {
+          await bot.sendMessage(task.creatorId, message, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '📱 Открыть KAIF App',
+                  web_app: { 
+                    url: `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public` 
+                  }
+                }
+              ]]
+            }
+          });
+          
+          console.log('Status notification sent to task creator');
+        }
+      } catch (notificationError) {
+        console.error('Failed to send status notification:', notificationError);
+        // Не прерываем обновление статуса из-за ошибки уведомления
+      }
+    }
+    
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating task status:', error);
