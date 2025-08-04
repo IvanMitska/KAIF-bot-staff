@@ -21,6 +21,32 @@ if (missingVars.length > 0) {
   console.error('Добавьте их в Railway dashboard → Variables');
 }
 
+// Функция для отправки запроса фото
+async function sendPhotoRequest(bot, userId, taskTitle) {
+  try {
+    await bot.sendMessage(userId, 
+      `✅ Задача "${taskTitle}" выполнена!\n\n` +
+      `📸 Вы можете прикрепить фото результата работы.\n` +
+      `Отправьте фото в этот чат или нажмите "Пропустить"`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: '⏭ Пропустить',
+              callback_data: 'skip_photo'
+            }
+          ]]
+        }
+      }
+    );
+    
+    console.log('Photo request sent to user:', userId);
+  } catch (error) {
+    console.error('Error sending photo request:', error);
+  }
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -291,41 +317,38 @@ app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
     
     console.log(`Task ${req.params.taskId} status updated to ${status} by user ${req.telegramUser.id}`);
     
-    // Если задача выполнена, предлагаем прикрепить фото
+    // Если задача выполнена, сохраняем информацию для запроса фото
     if (status === 'Выполнена') {
       try {
-        const TelegramBot = require('node-telegram-bot-api');
-        const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
-        
         // Сохраняем информацию о задаче для последующей обработки фото
         const pendingPhotos = global.pendingTaskPhotos || new Map();
         pendingPhotos.set(req.telegramUser.id, {
           taskId: req.params.taskId,
           taskTitle: task.title,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          needsPhotoRequest: true
         });
         global.pendingTaskPhotos = pendingPhotos;
         
-        await bot.sendMessage(req.telegramUser.id, 
-          `✅ Задача "${task.title}" выполнена!\n\n` +
-          `📸 Вы можете прикрепить фото результата работы.\n` +
-          `Отправьте фото в этот чат или нажмите "Пропустить"`,
-          {
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [[
-                {
-                  text: '⏭ Пропустить',
-                  callback_data: 'skip_photo'
-                }
-              ]]
-            }
-          }
-        );
+        console.log('Task marked for photo request:', req.telegramUser.id);
         
-        console.log('Photo request sent to user:', req.telegramUser.id);
+        // Отправляем флаг в ответе, что нужно запросить фото
+        res.json({ 
+          success: true, 
+          requestPhoto: true,
+          taskTitle: task.title 
+        });
+        
+        // Запускаем отложенную отправку через глобальный бот
+        setTimeout(() => {
+          if (global.botInstance) {
+            sendPhotoRequest(global.botInstance, req.telegramUser.id, task.title);
+          }
+        }, 1000);
+        
+        return; // Важно: выходим здесь, чтобы не отправить res.json дважды
       } catch (photoError) {
-        console.error('Failed to send photo request:', photoError);
+        console.error('Failed to setup photo request:', photoError);
       }
     }
     

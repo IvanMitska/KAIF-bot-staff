@@ -39,6 +39,9 @@ bot.stopPolling().then(() => {
   bot.getMe().then(botInfo => {
     console.log(`✅ Бот подключен: @${botInfo.username}`);
     
+    // Сохраняем экземпляр бота глобально для использования в других модулях
+    global.botInstance = bot;
+    
     // Загружаем ТОЛЬКО Web App обработчик
     require('./bot/webAppOnly')(bot);
     
