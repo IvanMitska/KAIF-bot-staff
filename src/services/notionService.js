@@ -537,6 +537,58 @@ const notionService = {
     }
   },
 
+  async updateTask(taskId, updates) {
+    try {
+      console.log('Updating task:', { taskId, updates });
+      
+      const properties = {};
+      
+      if (updates.title) {
+        properties['Название'] = {
+          title: [{ text: { content: updates.title } }]
+        };
+      }
+      
+      if (updates.description !== undefined) {
+        properties['Описание'] = {
+          rich_text: updates.description ? [{ text: { content: updates.description } }] : []
+        };
+      }
+      
+      if (updates.deadline) {
+        properties['Срок выполнения'] = {
+          date: { start: updates.deadline }
+        };
+      }
+      
+      if (updates.priority) {
+        properties['Приоритет'] = {
+          select: { name: updates.priority }
+        };
+      }
+      
+      if (updates.assigneeId && updates.assigneeName) {
+        properties['Исполнитель ID'] = {
+          number: updates.assigneeId
+        };
+        properties['Исполнитель'] = {
+          rich_text: [{ text: { content: updates.assigneeName } }]
+        };
+      }
+      
+      await notion.pages.update({
+        page_id: taskId,
+        properties
+      });
+      
+      console.log('Task updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Notion update task error:', error);
+      throw error;
+    }
+  },
+
   async updateTaskStatus(taskId, status, comment = null) {
     try {
       console.log('Updating task status:', { taskId, status, comment });

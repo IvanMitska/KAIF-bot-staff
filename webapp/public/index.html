@@ -292,6 +292,53 @@
         </div>
     </div>
     
+    <!-- Модальное окно редактирования задачи -->
+    <div id="editTaskModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000;">
+        <div style="background: var(--bg-card); border-radius: 20px; padding: 28px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0;">Редактировать задачу</h2>
+                <button onclick="closeEditTaskModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">✕</button>
+            </div>
+            
+            <form id="editTaskForm" onsubmit="submitEditTask(event)">
+                <input type="hidden" id="editTaskId" name="taskId">
+                
+                <div class="form-group">
+                    <label>Название задачи</label>
+                    <input type="text" id="editTaskTitle" name="title" required placeholder="Краткое описание задачи">
+                </div>
+                
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="editTaskDescription" name="description" rows="3" placeholder="Подробное описание"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Срок выполнения</label>
+                    <input type="date" id="editTaskDeadline" name="deadline" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Приоритет</label>
+                    <select id="editTaskPriority" name="priority" style="background: var(--bg-secondary);">
+                        <option value="low">🟢 Низкий</option>
+                        <option value="medium">🟡 Средний</option>
+                        <option value="high">🔴 Высокий</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Исполнитель</label>
+                    <select id="editTaskEmployee" name="employee" required style="background: var(--bg-secondary);">
+                        <option value="">Выберите сотрудника</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-btn">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+    
     <script src="app.js"></script>
 </body>
 </html>

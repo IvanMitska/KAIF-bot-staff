@@ -841,6 +841,14 @@ function displayTaskDetail(task) {
                 </div>
             ` : ''}
             
+            ${window.isManager && currentTaskType === 'created' ? `
+                <div class="task-detail-actions" style="margin-top: 12px;">
+                    <button class="action-btn" style="background: var(--gradient-secondary);" onclick="editTask('${task.id}')">
+                        ✏️ Редактировать задачу
+                    </button>
+                </div>
+            ` : ''}
+            
             ${task.status === 'Выполнена' ? `
                 <div class="task-completed-badge">
                     ✅ Задача выполнена
@@ -892,5 +900,115 @@ window.updateTaskStatus = async function(taskId, newStatus) {
             tg.HapticFeedback.notificationOccurred('error');
         }
         tg.showAlert('Ошибка при обновлении задачи');
+    }
+}
+
+// Открыть модальное окно редактирования задачи
+window.editTask = async function(taskId) {
+    const task = currentTasks.find(t => t.id === taskId);
+    if (!task) {
+        console.error('Task not found for editing:', taskId);
+        return;
+    }
+    
+    // Заполняем форму данными задачи
+    document.getElementById('editTaskId').value = task.id;
+    document.getElementById('editTaskTitle').value = task.title;
+    document.getElementById('editTaskDescription').value = task.description || '';
+    document.getElementById('editTaskPriority').value = task.priority || 'medium';
+    
+    // Устанавливаем дату
+    if (task.deadline) {
+        const date = new Date(task.deadline);
+        document.getElementById('editTaskDeadline').value = date.toISOString().split('T')[0];
+    }
+    
+    // Загружаем список сотрудников
+    await loadEmployeesForEditSelect(task.assigneeId);
+    
+    // Показываем модальное окно
+    document.getElementById('editTaskModal').style.display = 'flex';
+}
+
+// Загрузить сотрудников для редактирования
+async function loadEmployeesForEditSelect(selectedId = null) {
+    try {
+        const response = await fetch(`${API_URL}/api/employees`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const employees = await response.json();
+            const select = document.getElementById('editTaskEmployee');
+            
+            select.innerHTML = employees.map(emp => 
+                `<option value="${emp.telegramId}" ${emp.telegramId == selectedId ? 'selected' : ''}>${emp.name}</option>`
+            ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading employees for edit:', error);
+    }
+}
+
+// Закрыть модальное окно редактирования
+window.closeEditTaskModal = function() {
+    document.getElementById('editTaskModal').style.display = 'none';
+    document.getElementById('editTaskForm').reset();
+}
+
+// Отправить изменения задачи
+window.submitEditTask = async function(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const taskId = formData.get('taskId');
+    const updatedTask = {
+        title: formData.get('title'),
+        description: formData.get('description') || '',
+        deadline: formData.get('deadline'),
+        priority: formData.get('priority'),
+        assigneeId: parseInt(formData.get('employee'))
+    };
+    
+    const submitBtn = event.target.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Сохранение...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': tg.initData
+            },
+            body: JSON.stringify(updatedTask)
+        });
+        
+        if (response.ok) {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+            
+            tg.showAlert('Задача успешно обновлена! ✅', () => {
+                closeEditTaskModal();
+                // Перезагружаем задачи
+                loadTasks();
+                // Закрываем детальный просмотр
+                showPage('tasks');
+            });
+        } else {
+            throw new Error('Ошибка обновления');
+        }
+    } catch (error) {
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+        tg.showAlert('Ошибка при обновлении задачи');
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 }

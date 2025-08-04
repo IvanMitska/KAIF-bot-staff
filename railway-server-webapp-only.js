@@ -197,6 +197,42 @@ app.post('/api/tasks/:taskId/complete', authMiddleware, async (req, res) => {
   }
 });
 
+// Обновить задачу (для менеджеров)
+app.put('/api/tasks/:taskId', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const { title, description, deadline, priority, assigneeId } = req.body;
+    
+    // Получаем информацию о новом исполнителе
+    const assignee = await userService.getUserByTelegramId(assigneeId);
+    if (!assignee) {
+      return res.status(404).json({ error: 'Assignee not found' });
+    }
+    
+    // Обновляем задачу
+    await notionService.updateTask(req.params.taskId, {
+      title,
+      description,
+      deadline,
+      priority,
+      assigneeId,
+      assigneeName: assignee.name
+    });
+    
+    console.log(`Task ${req.params.taskId} updated by manager ${req.telegramUser.id}`);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Обновить статус задачи
 app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
   try {
