@@ -843,7 +843,7 @@ function displayTaskDetail(task) {
             
             ${window.isManager && currentTaskType === 'created' ? `
                 <div class="task-detail-actions" style="margin-top: 12px;">
-                    <button class="action-btn" style="background: var(--gradient-secondary);" onclick="editTask('${task.id}')">
+                    <button class="action-btn edit-btn" onclick="editTask('${task.id}')">
                         ✏️ Редактировать задачу
                     </button>
                 </div>

@@ -800,6 +800,18 @@ body {
     transform: translateY(0);
 }
 
+.edit-btn {
+    background: linear-gradient(145deg, #2b2d42, #1a1b26);
+    border: 1px solid rgba(91, 108, 255, 0.3);
+    color: var(--text-primary);
+}
+
+.edit-btn:hover {
+    background: linear-gradient(145deg, #323548, #212230);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(91, 108, 255, 0.2);
+}
+
 .task-completed-badge {
     background: rgba(78, 205, 196, 0.1);
     border: 1px solid rgba(78, 205, 196, 0.2);
