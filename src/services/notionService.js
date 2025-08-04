@@ -619,6 +619,35 @@ const notionService = {
       throw error;
     }
   },
+  
+  async addPhotoToTask(taskId, photoUrl, caption = '') {
+    try {
+      console.log('Adding photo to task:', { taskId, photoUrl, caption });
+      
+      const properties = {
+        'Фото результата': {
+          url: photoUrl
+        }
+      };
+      
+      if (caption) {
+        properties['Комментарий к фото'] = {
+          rich_text: [{ text: { content: caption } }]
+        };
+      }
+      
+      await notion.pages.update({
+        page_id: taskId,
+        properties
+      });
+      
+      console.log('Photo added successfully to task');
+      return true;
+    } catch (error) {
+      console.error('Notion add photo error:', error);
+      throw error;
+    }
+  },
 
   async updateTaskStatus(taskId, status, comment = null) {
     try {

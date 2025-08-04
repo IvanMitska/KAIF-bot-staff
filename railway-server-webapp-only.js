@@ -291,6 +291,44 @@ app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
     
     console.log(`Task ${req.params.taskId} status updated to ${status} by user ${req.telegramUser.id}`);
     
+    // Если задача выполнена, предлагаем прикрепить фото
+    if (status === 'Выполнена') {
+      try {
+        const TelegramBot = require('node-telegram-bot-api');
+        const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+        
+        // Сохраняем информацию о задаче для последующей обработки фото
+        const pendingPhotos = global.pendingTaskPhotos || new Map();
+        pendingPhotos.set(req.telegramUser.id, {
+          taskId: req.params.taskId,
+          taskTitle: task.title,
+          timestamp: Date.now()
+        });
+        global.pendingTaskPhotos = pendingPhotos;
+        
+        await bot.sendMessage(req.telegramUser.id, 
+          `✅ Задача "${task.title}" выполнена!\n\n` +
+          `📸 Вы можете прикрепить фото результата работы.\n` +
+          `Отправьте фото в этот чат или нажмите "Пропустить"`,
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '⏭ Пропустить',
+                  callback_data: 'skip_photo'
+                }
+              ]]
+            }
+          }
+        );
+        
+        console.log('Photo request sent to user:', req.telegramUser.id);
+      } catch (photoError) {
+        console.error('Failed to send photo request:', photoError);
+      }
+    }
+    
     // Отправляем уведомления создателю задачи
     if (task.creatorId && task.creatorId !== req.telegramUser.id) {
       try {
