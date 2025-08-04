@@ -117,9 +117,26 @@ app.get('/api/reports/today-status', authMiddleware, async (req, res) => {
 
 app.post('/api/reports', authMiddleware, async (req, res) => {
   try {
-    const user = await userService.getUserByTelegramId(req.telegramUser.id);
+    let user = await userService.getUserByTelegramId(req.telegramUser.id);
+    
+    // Если пользователь не найден, создаем его автоматически
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log(`User ${req.telegramUser.id} not found, creating automatically`);
+      
+      const newUserData = {
+        telegramId: req.telegramUser.id,
+        username: req.telegramUser.username || '',
+        name: `${req.telegramUser.first_name} ${req.telegramUser.last_name || ''}`.trim(),
+        position: 'Сотрудник'
+      };
+      
+      try {
+        user = await userService.createUser(newUserData);
+        console.log(`User ${req.telegramUser.id} created successfully`);
+      } catch (createError) {
+        console.error('Error creating user:', createError);
+        return res.status(500).json({ error: 'Failed to create user profile' });
+      }
     }
     
     const reportData = {
@@ -133,9 +150,18 @@ app.post('/api/reports', authMiddleware, async (req, res) => {
       status: 'Отправлен'
     };
     
+    console.log('Creating report:', {
+      userId: req.telegramUser.id,
+      userName: user.name,
+      date: reportData.date
+    });
+    
     await notionService.createReport(reportData);
+    console.log('Report created successfully for user:', user.name);
+    
     res.json({ success: true });
   } catch (error) {
+    console.error('Error creating report:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -407,6 +433,12 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
                        `🔥 *Приоритет:* ${taskData.priority === 'high' ? '🔴 Высокий' : taskData.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий'}\n\n` +
                        `Откройте KAIF App для просмотра деталей`;
         
+        console.log('Sending notification to assignee:', {
+          assigneeId: assignee.telegramId,
+          assigneeName: assignee.name,
+          taskTitle: taskData.title
+        });
+        
         await bot.sendMessage(assignee.telegramId, message, {
           parse_mode: 'Markdown',
           reply_markup: {
@@ -421,7 +453,7 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
           }
         });
         
-        console.log('Notification sent to assignee');
+        console.log('Notification sent successfully to assignee:', assignee.name);
       } catch (notificationError) {
         console.error('Failed to send notification:', notificationError);
         // Не прерываем создание задачи из-за ошибки уведомления
