@@ -396,7 +396,7 @@ const notionService = {
             createdDate: task.properties['Дата создания']?.date?.start,
             deadline: task.properties['Срок выполнения']?.date?.start,
             creatorName: task.properties['Постановщик']?.rich_text?.[0]?.text?.content || '',
-            creatorId: task.properties['ID создателя']?.number,
+            creatorId: task.properties['Постановщик ID']?.number,
             assigneeId: task.properties['Исполнитель ID']?.number,
             assigneeName: task.properties['Исполнитель']?.rich_text?.[0]?.text?.content || ''
           };

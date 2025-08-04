@@ -251,6 +251,15 @@ app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Task not found or access denied' });
     }
     
+    console.log('Task details for notification:', {
+      taskId: task.id,
+      title: task.title,
+      creatorId: task.creatorId,
+      creatorName: task.creatorName,
+      currentUserId: req.telegramUser.id,
+      willSendNotification: task.creatorId && task.creatorId !== req.telegramUser.id
+    });
+    
     // Обновляем статус
     await notionService.updateTaskStatus(req.params.taskId, status);
     
