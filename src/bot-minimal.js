@@ -42,6 +42,10 @@ bot.stopPolling().then(() => {
     // Загружаем ТОЛЬКО Web App обработчик
     require('./bot/webAppOnly')(bot);
     
+    // Инициализируем планировщик для Web App
+    const schedulerServiceWebApp = require('./services/schedulerServiceWebApp');
+    schedulerServiceWebApp.initScheduler(bot);
+    
     console.log('✅ Бот готов к работе в режиме Web App Only');
   }).catch(err => {
     console.error('❌ Ошибка получения информации о боте:', err);
