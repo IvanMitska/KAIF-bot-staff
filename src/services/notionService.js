@@ -86,6 +86,25 @@ const notionService = {
 
   async createReport(reportData) {
     try {
+      // Валидация обязательных полей
+      if (!reportData.employeeName || !reportData.telegramId || !reportData.whatDone) {
+        console.error('Missing required fields in report data:', {
+          hasEmployeeName: !!reportData.employeeName,
+          hasTelegramId: !!reportData.telegramId,
+          hasWhatDone: !!reportData.whatDone
+        });
+        throw new Error('Missing required fields in report data');
+      }
+      
+      console.log('Creating report in Notion:', {
+        date: reportData.date,
+        employeeName: reportData.employeeName,
+        telegramId: reportData.telegramId,
+        status: reportData.status,
+        whatDoneLength: reportData.whatDone?.length,
+        problemsLength: reportData.problems?.length
+      });
+      
       const response = await notion.pages.create({
         parent: { database_id: REPORTS_DB_ID },
         properties: {
@@ -115,9 +134,20 @@ const notionService = {
           }
         }
       });
+      
+      console.log('Report created successfully in Notion:', {
+        pageId: response.id,
+        employeeName: reportData.employeeName
+      });
+      
       return response;
     } catch (error) {
       console.error('Notion create report error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        reportData: reportData
+      });
       throw error;
     }
   },
