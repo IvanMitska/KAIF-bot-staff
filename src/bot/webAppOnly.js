@@ -4,6 +4,9 @@ const security = require('../utils/security');
 // Глобальный флаг для предотвращения дублирования обработчиков
 let handlersRegistered = false;
 
+// Хранилище для предотвращения дублирования сообщений
+const processedMessages = new Set();
+
 module.exports = (bot) => {
   console.log('🌐 Инициализация Web App Only режима');
   
@@ -13,37 +16,10 @@ module.exports = (bot) => {
   }
   
   // Логируем все входящие сообщения для отладки
-  bot.on('message', async (msg) => {
+  bot.on('message', (msg) => {
     console.log(`📨 Получено сообщение от ${msg.from.id} (@${msg.from.username}): ${msg.text || '[не текст]'}`);
     console.log('Тип чата:', msg.chat.type);
     console.log('Chat ID:', msg.chat.id);
-    
-    // Обработка команды /start если она не была обработана onText
-    if (msg.text && msg.text.startsWith('/start')) {
-      console.log('⚡ Обработка /start через message handler');
-      
-      const chatId = msg.chat.id;
-      const userId = msg.from.id;
-      
-      try {
-        await bot.sendMessage(chatId, 
-          `Привет! 👋\n\nВсе функции доступны в приложении:`,
-          {
-            reply_markup: {
-              inline_keyboard: [[
-                {
-                  text: '🚀 Открыть KAIF App',
-                  web_app: { url: webAppUrl }
-                }
-              ]]
-            }
-          }
-        );
-        console.log('✅ Сообщение отправлено через message handler');
-      } catch (error) {
-        console.error('❌ Ошибка в message handler:', error.message);
-      }
-    }
   });
   
   // Получаем URL Web App один раз
@@ -59,9 +35,25 @@ module.exports = (bot) => {
   console.log(`📱 Web App URL: ${webAppUrl}`);
   
   // Команда /start - основная точка входа
-  bot.onText(/\/start/, async (msg) => {
+  bot.onText(/^\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const messageId = msg.message_id;
+    
+    // Проверяем, не обработали ли мы уже это сообщение
+    const messageKey = `${chatId}-${messageId}`;
+    if (processedMessages.has(messageKey)) {
+      console.log('⚠️ Сообщение уже обработано, пропускаем');
+      return;
+    }
+    
+    // Добавляем в обработанные
+    processedMessages.add(messageKey);
+    
+    // Очищаем старые записи через 5 минут
+    setTimeout(() => {
+      processedMessages.delete(messageKey);
+    }, 5 * 60 * 1000);
     
     console.log(`📱 Команда /start получена от пользователя ${userId}`);
     console.log('URL для Web App:', webAppUrl);
