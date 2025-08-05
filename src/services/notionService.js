@@ -1027,8 +1027,26 @@ const notionService = {
       const checkInMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
       const checkOutMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
       
-      const checkInTime = checkInMatch ? checkInMatch[1] : null;
-      const checkOutTime = checkOutMatch ? checkOutMatch[1] : null;
+      const checkInTimeStr = checkInMatch ? checkInMatch[1] : null;
+      const checkOutTimeStr = checkOutMatch ? checkOutMatch[1] : null;
+      
+      // Конвертируем время в полную дату ISO
+      let checkInISO = null;
+      let checkOutISO = null;
+      
+      if (checkInTimeStr) {
+        const [hours, minutes] = checkInTimeStr.split(':');
+        const checkInDate = new Date(dateISO);
+        checkInDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        checkInISO = checkInDate.toISOString();
+      }
+      
+      if (checkOutTimeStr) {
+        const [hours, minutes] = checkOutTimeStr.split(':');
+        const checkOutDate = new Date(dateISO);
+        checkOutDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        checkOutISO = checkOutDate.toISOString();
+      }
       
       // Получаем статус из разных возможных полей
       let status = 'В работе';
@@ -1041,14 +1059,24 @@ const notionService = {
         }
       }
       
+      // Рассчитываем отработанные часы
+      let workHours = null;
+      if (checkInISO && checkOutISO) {
+        const checkInTime = new Date(checkInISO);
+        const checkOutTime = new Date(checkOutISO);
+        const hoursWorked = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+        workHours = Math.round(hoursWorked * 10) / 10; // Округляем до 1 знака после запятой
+      }
+      
       const attendance = {
         id: page.id,
         employeeId: null,
         date: dateISO,
-        checkIn: checkInTime,
-        checkOut: checkOutTime,
+        checkIn: checkInISO,
+        checkOut: checkOutISO,
         status: status,
-        isPresent: !checkOutTime && !!checkInTime
+        isPresent: !checkOutISO && !!checkInISO,
+        workHours: workHours
       };
       
       console.log('Parsed attendance:', attendance);
