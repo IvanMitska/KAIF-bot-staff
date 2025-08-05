@@ -36,6 +36,8 @@ let currentTasks = []; // Хранение текущих задач
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('=== DOMContentLoaded ===');
+    
     // Показываем имя пользователя из Telegram
     if (tg.initDataUnsafe.user) {
         document.getElementById('userName').textContent = tg.initDataUnsafe.user.first_name;
@@ -48,7 +50,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkReportStatus();
     
     // Проверяем статус рабочего времени
+    console.log('Calling checkAttendanceStatus from DOMContentLoaded...');
     await checkAttendanceStatus();
+    
+    // Дополнительная проверка через секунду
+    setTimeout(async () => {
+        console.log('Rechecking attendance status after 1 second...');
+        await checkAttendanceStatus();
+    }, 1000);
     
     // Загружаем количество задач
     await loadTasksCount();
@@ -626,6 +635,7 @@ async function checkAttendanceStatus() {
                     
                     checkInBtn.disabled = true;
                     checkInBtn.classList.add('active');
+                    checkInBtn.classList.add('checked-in');
                     checkInTime.textContent = timeStr;
                     checkInTime.style.display = 'block';
                     
@@ -670,6 +680,12 @@ async function checkAttendanceStatus() {
                                 pointerEvents: checkOutBtn.style.pointerEvents
                             }
                         });
+                        
+                        // Дополнительная попытка активации через небольшую задержку
+                        setTimeout(() => {
+                            console.log('Attempting force enable checkout after delay...');
+                            window.forceEnableCheckOut();
+                        }, 100);
                     }
                 } else {
                     // Не пришел
@@ -726,6 +742,11 @@ window.checkIn = async function() {
             showNotification('Приход отмечен', 'success');
             await checkAttendanceStatus();
             
+            // Принудительно активируем кнопку через небольшую задержку
+            setTimeout(() => {
+                window.forceEnableCheckOut();
+            }, 500);
+            
             // Вибрация
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred('success');
@@ -763,6 +784,33 @@ window.debugCheckOutButton = function() {
             pointerEvents: window.getComputedStyle(btn).pointerEvents
         } : null
     });
+};
+
+// Функция для принудительной активации кнопки "Ушел с работы"
+window.forceEnableCheckOut = function() {
+    const checkOutBtn = document.getElementById('checkOutBtn');
+    const checkInBtn = document.getElementById('checkInBtn');
+    
+    if (checkOutBtn && checkInBtn && checkInBtn.classList.contains('checked-in')) {
+        console.log('Force enabling checkout button...');
+        checkOutBtn.disabled = false;
+        checkOutBtn.removeAttribute('disabled');
+        checkOutBtn.classList.remove('disabled');
+        checkOutBtn.style.opacity = '1';
+        checkOutBtn.style.cursor = 'pointer';
+        checkOutBtn.style.pointerEvents = 'auto';
+        checkOutBtn.style.filter = 'none';
+        
+        // Убираем все возможные блокировки
+        const wrapper = checkOutBtn.querySelector('.btn-icon-wrapper');
+        if (wrapper) {
+            wrapper.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        }
+        
+        console.log('Checkout button force enabled');
+        return true;
+    }
+    return false;
 };
 
 // Отметить уход

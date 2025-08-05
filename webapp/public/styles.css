@@ -1019,6 +1019,17 @@ body {
     background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
 }
 
+/* Переопределение для кнопки checkout когда есть активный checkin */
+.attendance-buttons:has(.check-in.checked-in) .check-out {
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.attendance-buttons:has(.check-in.checked-in) .check-out .btn-icon-wrapper {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
 /* Анимация появления времени */
 @keyframes fadeInUp {
     from {
