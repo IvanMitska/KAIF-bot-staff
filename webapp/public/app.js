@@ -588,6 +588,7 @@ function showHelp() {
 
 // Функции учета рабочего времени
 async function checkAttendanceStatus() {
+    console.log('=== checkAttendanceStatus called ===');
     try {
         const response = await fetch(`${API_URL}/api/attendance/today`, {
             headers: {
@@ -595,15 +596,29 @@ async function checkAttendanceStatus() {
             }
         });
         
+        console.log('Attendance response status:', response.status);
+        
         if (response.ok) {
             const attendance = await response.json();
+            console.log('Attendance data received:', attendance);
+            
             const statusItem = document.getElementById('attendanceStatusItem');
             const checkInBtn = document.getElementById('checkInBtn');
             const checkOutBtn = document.getElementById('checkOutBtn');
             const checkInTime = document.getElementById('checkInTime');
             const checkOutTime = document.getElementById('checkOutTime');
             
+            console.log('Button elements:', {
+                checkInBtn: checkInBtn ? 'found' : 'not found',
+                checkOutBtn: checkOutBtn ? 'found' : 'not found'
+            });
+            
             if (attendance) {
+                console.log('Attendance exists:', {
+                    checkIn: attendance.checkIn,
+                    checkOut: attendance.checkOut,
+                    status: attendance.status
+                });
                 if (attendance.checkIn) {
                     // Сотрудник пришел
                     const checkInDate = new Date(attendance.checkIn);
@@ -631,16 +646,34 @@ async function checkAttendanceStatus() {
                         `;
                     } else {
                         // На работе
+                        console.log('Setting checkOut button to ENABLED (no checkOut time)');
                         checkOutBtn.disabled = false;
+                        checkOutBtn.removeAttribute('disabled');
+                        checkOutBtn.classList.remove('disabled');
+                        checkOutBtn.style.opacity = '1';
+                        checkOutBtn.style.cursor = 'pointer';
+                        checkOutBtn.style.pointerEvents = 'auto';
                         
                         statusItem.className = 'status-item status-success';
                         statusItem.innerHTML = `
                             <span class="status-icon">🟢</span>
                             <span class="status-text">На работе с ${timeStr}</span>
                         `;
+                        
+                        console.log('CheckOut button state after update:', {
+                            disabled: checkOutBtn.disabled,
+                            hasDisabledAttr: checkOutBtn.hasAttribute('disabled'),
+                            classList: checkOutBtn.className,
+                            style: {
+                                opacity: checkOutBtn.style.opacity,
+                                cursor: checkOutBtn.style.cursor,
+                                pointerEvents: checkOutBtn.style.pointerEvents
+                            }
+                        });
                     }
                 } else {
                     // Не пришел
+                    console.log('No checkIn - disabling checkOut button');
                     checkInBtn.disabled = false;
                     checkOutBtn.disabled = true;
                     
@@ -652,6 +685,7 @@ async function checkAttendanceStatus() {
                 }
             } else {
                 // Нет записи на сегодня
+                console.log('No attendance record - disabling checkOut button');
                 checkInBtn.disabled = false;
                 checkOutBtn.disabled = true;
                 
@@ -709,8 +743,31 @@ window.checkIn = async function() {
     }
 }
 
+// Глобальная функция для отладки кнопок
+window.debugCheckOutButton = function() {
+    const btn = document.getElementById('checkOutBtn');
+    console.log('CheckOut Button Debug:', {
+        element: btn,
+        disabled: btn?.disabled,
+        hasDisabledAttr: btn?.hasAttribute('disabled'),
+        className: btn?.className,
+        onclick: btn?.onclick,
+        style: {
+            opacity: btn?.style.opacity,
+            cursor: btn?.style.cursor,
+            pointerEvents: btn?.style.pointerEvents
+        },
+        computedStyle: btn ? {
+            opacity: window.getComputedStyle(btn).opacity,
+            cursor: window.getComputedStyle(btn).cursor,
+            pointerEvents: window.getComputedStyle(btn).pointerEvents
+        } : null
+    });
+};
+
 // Отметить уход
 window.checkOut = async function() {
+    console.log('=== checkOut function called ===');
     try {
         const checkOutBtn = document.getElementById('checkOutBtn');
         checkOutBtn.disabled = true;
