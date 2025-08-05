@@ -40,6 +40,23 @@
                 <p>Добро пожаловать в KAIF Staff</p>
             </div>
             
+            <!-- Кнопки учета времени -->
+            <div class="attendance-section" style="margin-bottom: 24px;">
+                <h2 style="font-size: 18px; margin-bottom: 16px; color: var(--text-secondary);">Учет рабочего времени</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in-btn">
+                        <span style="font-size: 24px;">🟢</span>
+                        <span style="display: block; margin-top: 8px; font-weight: 600;">Пришел на работу</span>
+                        <span id="checkInTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
+                    </button>
+                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out-btn" disabled>
+                        <span style="font-size: 24px;">🔴</span>
+                        <span style="display: block; margin-top: 8px; font-weight: 600;">Ушел с работы</span>
+                        <span id="checkOutTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
+                    </button>
+                </div>
+            </div>
+            
             <div class="action-cards">
                 <div class="action-card" onclick="showPage('report')">
                     <div class="action-icon">📝</div>
@@ -71,28 +88,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Кнопки учета времени -->
-            <div class="attendance-section" style="margin-top: 24px;">
-                <h2 style="font-size: 18px; margin-bottom: 16px; color: var(--text-secondary);">Учет рабочего времени</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in-btn">
-                        <span style="font-size: 24px;">🟢</span>
-                        <span style="display: block; margin-top: 8px; font-weight: 600;">Пришел на работу</span>
-                        <span id="checkInTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
-                    </button>
-                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out-btn" disabled>
-                        <span style="font-size: 24px;">🔴</span>
-                        <span style="display: block; margin-top: 8px; font-weight: 600;">Ушел с работы</span>
-                        <span id="checkOutTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Временная кнопка для отладки -->
-            <button onclick="debugTasks()" style="margin-top: 20px; padding: 10px 20px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                🔍 Debug Tasks
-            </button>
         </div>
         
         <!-- Страница отчетов -->
