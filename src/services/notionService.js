@@ -1043,30 +1043,81 @@ const notionService = {
         minute: '2-digit' 
       });
       
-      const response = await notion.pages.create({
-        parent: { database_id: ATTENDANCE_DB_ID },
-        properties: {
-          'Title': {
-            title: [{ text: { content: attendanceTitle } }]
-          },
-          'Assignee': {
-            number: typeof attendanceData.employeeId === 'string' ? 
-              parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
-          },
-          'Status': {
-            select: { name: 'В работе' }
-          },
-          'Description': {
-            rich_text: [
-              { 
-                text: { 
-                  content: `Сотрудник: ${attendanceData.employeeName}\nID: ${attendanceData.employeeId}\nПриход: ${checkInTime}\nОпоздание: ${attendanceData.late ? 'Да' : 'Нет'}`
-                } 
+      // Пробуем создать с минимальным набором полей
+      console.log('Attempting to create page with properties...');
+      
+      // Попробуем разные варианты названия главного поля
+      const titleVariants = ['Title', 'Name', 'Название', 'Задача', 'Task'];
+      let response = null;
+      let successField = null;
+      
+      for (const fieldName of titleVariants) {
+        try {
+          console.log(`Trying to create with field name: ${fieldName}`);
+          response = await notion.pages.create({
+            parent: { database_id: ATTENDANCE_DB_ID },
+            properties: {
+              [fieldName]: {
+                title: [{ text: { content: attendanceTitle } }]
               }
-            ]
+            }
+          });
+          successField = fieldName;
+          console.log(`Success! Field name "${fieldName}" works`);
+          break;
+        } catch (err) {
+          console.log(`Field "${fieldName}" failed:`, err.message);
+          continue;
+        }
+      }
+      
+      if (!response) {
+        throw new Error('Could not create page with any title field variant');
+      }
+      
+      console.log(`Page created successfully with field "${successField}"`);
+      
+      // Теперь попробуем обновить с остальными полями
+      try {
+        const updateProps = {};
+        
+        // Попробуем разные варианты для Assignee
+        const assigneeVariants = ['Assignee', 'Исполнитель', 'Assigned', 'Person'];
+        for (const field of assigneeVariants) {
+          try {
+            await notion.pages.update({
+              page_id: response.id,
+              properties: {
+                [field]: {
+                  number: typeof attendanceData.employeeId === 'string' ? 
+                    parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
+                }
+              }
+            });
+            console.log(`Assignee field "${field}" works`);
+            break;
+          } catch (e) {
+            console.log(`Assignee field "${field}" failed:`, e.message);
           }
         }
-      });
+        
+        // Добавляем описание в тело страницы если не можем в свойства
+        try {
+          await notion.pages.update({
+            page_id: response.id,
+            properties: {
+              'Status': { select: { name: 'В работе' } }
+            }
+          });
+        } catch (e) {
+          console.log('Could not update status:', e.message);
+        }
+        
+      } catch (updateError) {
+        console.error('Error updating page:', updateError.message);
+      }
+      
+      return response;
       
       console.log('Attendance record created successfully:', response.id);
       return response;
