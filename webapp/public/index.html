@@ -260,75 +260,160 @@
             
             <div class="header">
                 <h1>Админ-панель</h1>
-                <p>Отчеты и статистика команды</p>
+                <p>Управление командой</p>
             </div>
             
-            <!-- Фильтры -->
-            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 24px;">
-                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Период</label>
-                        <select id="periodFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
-                            <option value="today">Сегодня</option>
-                            <option value="week">Эта неделя</option>
-                            <option value="month">Этот месяц</option>
-                            <option value="custom">Выбрать даты</option>
-                        </select>
+            <!-- Вкладки -->
+            <div style="display: flex; background: var(--bg-secondary); border-radius: 12px; padding: 4px; margin-bottom: 24px;">
+                <button id="dashboardTab" class="admin-tab active" onclick="switchAdminTab('dashboard')">
+                    📊 Dashboard
+                </button>
+                <button id="reportsTab" class="admin-tab" onclick="switchAdminTab('reports')">
+                    📝 Отчеты
+                </button>
+            </div>
+            
+            <!-- Dashboard вкладка -->
+            <div id="dashboardContent" class="admin-tab-content active">
+                <!-- Ключевые метрики -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-value" id="dashboardTodayReports">0</div>
+                        <div class="stat-label">Отчетов сегодня</div>
                     </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Сотрудник</label>
-                        <select id="employeeFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
-                            <option value="all">Все сотрудники</option>
-                        </select>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value" id="dashboardMissingReports">0</div>
+                        <div class="stat-label">Без отчетов</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value" id="dashboardActiveTasks">0</div>
+                        <div class="stat-label">Активных задач</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="dashboardCompletedToday">0</div>
+                        <div class="stat-label">Выполнено сегодня</div>
                     </div>
                 </div>
                 
-                <div id="customDateRange" style="display: none; gap: 12px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">С</label>
-                        <input type="date" id="startDate" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                <!-- График активности за неделю -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px;">📊 Активность за неделю</h3>
+                    <div id="activityChart" style="height: 200px;">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
                     </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">По</label>
-                        <input type="date" id="endDate" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Топ сотрудников -->
+                    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+                        <h3 style="margin-bottom: 16px; font-size: 18px;">🏆 Топ сотрудников</h3>
+                        <div id="topEmployees">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Статус задач -->
+                    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+                        <h3 style="margin-bottom: 16px; font-size: 18px;">📋 Статус задач</h3>
+                        <div id="tasksStatus">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Сотрудники без отчетов -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-top: 20px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px; color: var(--warning);">⚠️ Сотрудники без отчетов сегодня</h3>
+                    <div id="missingReportsList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Общая статистика -->
-            <div class="stats-grid" style="margin-bottom: 24px;">
-                <div class="stat-card">
-                    <div class="stat-icon">📝</div>
-                    <div class="stat-value" id="adminTotalReports">0</div>
-                    <div class="stat-label">Всего отчетов</div>
+            <!-- Отчеты вкладка -->
+            <div id="reportsContent" class="admin-tab-content" style="display: none;">
+                <!-- Фильтры -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Период</label>
+                            <select id="periodFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <option value="today">Сегодня</option>
+                                <option value="week">Эта неделя</option>
+                                <option value="month">Этот месяц</option>
+                                <option value="custom">Выбрать даты</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Сотрудник</label>
+                            <select id="employeeFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <option value="all">Все сотрудники</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="customDateRange" style="display: none; gap: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">С</label>
+                            <input type="date" id="startDate" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">По</label>
+                            <input type="date" id="endDate" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-value" id="adminActiveEmployees">0</div>
-                    <div class="stat-label">Активных сотрудников</div>
+                <!-- Общая статистика -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="adminTotalReports">0</div>
+                        <div class="stat-label">Всего отчетов</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="adminActiveEmployees">0</div>
+                        <div class="stat-label">Активных сотрудников</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="adminCompletedTasks">0</div>
+                        <div class="stat-label">Выполнено задач</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-value" id="adminTodayReports">0</div>
+                        <div class="stat-label">Отчетов сегодня</div>
+                    </div>
                 </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-value" id="adminCompletedTasks">0</div>
-                    <div class="stat-label">Выполнено задач</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-value" id="adminTodayReports">0</div>
-                    <div class="stat-label">Отчетов сегодня</div>
-                </div>
-            </div>
-            
-            <!-- Список отчетов -->
-            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
-                <h3 style="margin-bottom: 16px; font-size: 18px;">Отчеты сотрудников</h3>
-                <div id="adminReportsList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p style="margin-top: 16px;">Загрузка отчетов...</p>
+                <!-- Список отчетов -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px;">Отчеты сотрудников</h3>
+                    <div id="adminReportsList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p style="margin-top: 16px;">Загрузка отчетов...</p>
+                        </div>
                     </div>
                 </div>
             </div>

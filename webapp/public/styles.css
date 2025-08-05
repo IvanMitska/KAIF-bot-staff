@@ -427,6 +427,33 @@ body {
     margin-bottom: 32px;
 }
 
+/* Админ панель вкладки */
+.admin-tab {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-tab.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
 .stat-card {
     background: var(--bg-card);
     border: 1px solid rgba(255, 255, 255, 0.05);

@@ -538,6 +538,124 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
   }
 });
 
+// Dashboard статистика (только для менеджеров)
+app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Получаем все задачи
+    const allTasks = await notionService.getAllTasks();
+    const activeTasks = allTasks.filter(t => t.status !== 'Выполнена').length;
+    const completedToday = allTasks.filter(t => 
+      t.status === 'Выполнена' && 
+      t.completedDate && 
+      t.completedDate.split('T')[0] === today
+    ).length;
+    
+    // Статус задач
+    const tasksStatus = {
+      new: allTasks.filter(t => t.status === 'Новая').length,
+      inProgress: allTasks.filter(t => t.status === 'В работе').length,
+      completed: allTasks.filter(t => t.status === 'Выполнена').length
+    };
+    
+    // Активность за неделю
+    const weekActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const reports = await notionService.getReportsForPeriod(dateStr, dateStr);
+      weekActivity.push({
+        date: dateStr,
+        count: reports.length
+      });
+    }
+    
+    // Топ сотрудников за месяц
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    const monthReports = await notionService.getReportsForPeriod(
+      monthStart.toISOString().split('T')[0],
+      today
+    );
+    
+    // Группируем по сотрудникам
+    const employeeReports = {};
+    monthReports.forEach(report => {
+      if (!employeeReports[report.employeeName]) {
+        employeeReports[report.employeeName] = 0;
+      }
+      employeeReports[report.employeeName]++;
+    });
+    
+    // Сортируем и берем топ-5
+    const topEmployees = Object.entries(employeeReports)
+      .map(([name, count]) => ({ name, reportsCount: count }))
+      .sort((a, b) => b.reportsCount - a.reportsCount)
+      .slice(0, 5);
+    
+    res.json({
+      activeTasks,
+      completedToday,
+      tasksStatus,
+      weekActivity,
+      topEmployees
+    });
+    
+  } catch (error) {
+    console.error('Error getting dashboard stats:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Отправить напоминание сотруднику (только для менеджеров)
+app.post('/api/admin/send-reminder', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const { employeeId } = req.body;
+    
+    const TelegramBot = require('node-telegram-bot-api');
+    const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+    
+    const message = `⚠️ *Напоминание от руководства*\n\n` +
+                   `Пожалуйста, не забудьте отправить отчет за сегодня.\n\n` +
+                   `Откройте KAIF App для отправки отчета.`;
+    
+    await bot.sendMessage(employeeId, message, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: '📱 Открыть KAIF App',
+            web_app: { 
+              url: `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public` 
+            }
+          }
+        ]]
+      }
+    });
+    
+    res.json({ success: true });
+    
+  } catch (error) {
+    console.error('Error sending reminder:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Получить отчеты для админ-панели (только для менеджеров)
 app.get('/api/admin/reports', authMiddleware, async (req, res) => {
   try {

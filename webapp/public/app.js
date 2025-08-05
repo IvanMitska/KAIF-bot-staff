@@ -583,7 +583,254 @@ window.showAdminPanel = function() {
     }
     
     showPage('adminPanel');
-    loadAdminPanel();
+    // По умолчанию показываем dashboard
+    switchAdminTab('dashboard');
+}
+
+// Переключение вкладок админ-панели
+window.switchAdminTab = function(tab) {
+    // Обновляем активную вкладку
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.admin-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    document.getElementById(`${tab}Tab`).classList.add('active');
+    document.getElementById(`${tab}Content`).classList.add('active');
+    
+    // Загружаем контент в зависимости от вкладки
+    if (tab === 'dashboard') {
+        loadDashboard();
+    } else if (tab === 'reports') {
+        loadAdminPanel();
+    }
+}
+
+// Загрузка dashboard
+async function loadDashboard() {
+    try {
+        // Загружаем все необходимые данные параллельно
+        const [employeesRes, todayReportsRes, tasksRes] = await Promise.all([
+            fetch(`${API_URL}/api/employees`, {
+                headers: { 'X-Telegram-Init-Data': tg.initData }
+            }),
+            fetch(`${API_URL}/api/admin/reports?startDate=${new Date().toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`, {
+                headers: { 'X-Telegram-Init-Data': tg.initData }
+            }),
+            fetch(`${API_URL}/api/admin/dashboard/stats`, {
+                headers: { 'X-Telegram-Init-Data': tg.initData }
+            })
+        ]);
+        
+        if (employeesRes.ok && todayReportsRes.ok && tasksRes.ok) {
+            const employees = await employeesRes.json();
+            const todayData = await todayReportsRes.json();
+            const dashboardStats = await tasksRes.json();
+            
+            // Обновляем ключевые метрики
+            document.getElementById('dashboardTodayReports').textContent = todayData.todayReports;
+            document.getElementById('dashboardMissingReports').textContent = employees.length - todayData.todayReports;
+            document.getElementById('dashboardActiveTasks').textContent = dashboardStats.activeTasks;
+            document.getElementById('dashboardCompletedToday').textContent = dashboardStats.completedToday;
+            
+            // Загружаем дополнительные виджеты
+            loadActivityChart(dashboardStats.weekActivity);
+            loadTopEmployees(dashboardStats.topEmployees);
+            loadTasksStatus(dashboardStats.tasksStatus);
+            loadMissingReports(employees, todayData.reports);
+        }
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        showNotification('Ошибка загрузки dashboard', 'error');
+    }
+}
+
+// График активности за неделю
+function loadActivityChart(weekData) {
+    const container = document.getElementById('activityChart');
+    
+    if (!weekData || weekData.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет данных</p>';
+        return;
+    }
+    
+    // Простая визуализация графика с помощью HTML/CSS
+    let maxValue = Math.max(...weekData.map(d => d.count));
+    if (maxValue === 0) maxValue = 1;
+    
+    let html = '<div style="display: flex; align-items: flex-end; justify-content: space-between; height: 160px; margin-bottom: 16px;">';
+    
+    weekData.forEach(day => {
+        const height = (day.count / maxValue) * 140;
+        const dayName = new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' });
+        
+        html += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div style="position: relative; width: 100%; max-width: 40px;">
+                    <div style="background: var(--gradient-primary); height: ${height}px; border-radius: 8px 8px 0 0; transition: all 0.3s; cursor: pointer;"
+                         onmouseover="this.style.transform='scaleY(1.05)'"
+                         onmouseout="this.style.transform='scaleY(1)'">
+                    </div>
+                    <div style="position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--text-primary);">
+                        ${day.count}
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${dayName}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Топ сотрудников
+function loadTopEmployees(topEmployees) {
+    const container = document.getElementById('topEmployees');
+    
+    if (!topEmployees || topEmployees.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет данных</p>';
+        return;
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    
+    topEmployees.forEach((employee, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏆';
+        
+        html += `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-card); border-radius: 12px;">
+                <span style="font-size: 24px;">${medal}</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: var(--text-primary);">${employee.name}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${employee.reportsCount} отчетов</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Статус задач
+function loadTasksStatus(tasksStatus) {
+    const container = document.getElementById('tasksStatus');
+    
+    if (!tasksStatus) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет данных</p>';
+        return;
+    }
+    
+    const total = tasksStatus.new + tasksStatus.inProgress + tasksStatus.completed;
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; height: 20px; border-radius: 10px; overflow: hidden; background: var(--bg-primary);">
+                ${tasksStatus.new > 0 ? `<div style="width: ${(tasksStatus.new / total) * 100}%; background: var(--danger);"></div>` : ''}
+                ${tasksStatus.inProgress > 0 ? `<div style="width: ${(tasksStatus.inProgress / total) * 100}%; background: var(--warning);"></div>` : ''}
+                ${tasksStatus.completed > 0 ? `<div style="width: ${(tasksStatus.completed / total) * 100}%; background: var(--success);"></div>` : ''}
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; background: var(--danger); border-radius: 3px;"></div>
+                    <span style="font-size: 14px; color: var(--text-secondary);">Новые</span>
+                </div>
+                <span style="font-weight: 600;">${tasksStatus.new}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; background: var(--warning); border-radius: 3px;"></div>
+                    <span style="font-size: 14px; color: var(--text-secondary);">В работе</span>
+                </div>
+                <span style="font-weight: 600;">${tasksStatus.inProgress}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; background: var(--success); border-radius: 3px;"></div>
+                    <span style="font-size: 14px; color: var(--text-secondary);">Выполнено</span>
+                </div>
+                <span style="font-weight: 600;">${tasksStatus.completed}</span>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Сотрудники без отчетов
+function loadMissingReports(allEmployees, todayReports) {
+    const container = document.getElementById('missingReportsList');
+    
+    // Получаем ID сотрудников, которые отправили отчеты
+    const reportedIds = todayReports.map(r => parseInt(r.telegramId));
+    
+    // Фильтруем тех, кто не отправил
+    const missingEmployees = allEmployees.filter(emp => !reportedIds.includes(emp.telegramId));
+    
+    if (missingEmployees.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: var(--success); font-size: 16px;">✅ Все сотрудники отправили отчеты!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    
+    missingEmployees.forEach(employee => {
+        html += `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-card); border-radius: 12px; border: 1px solid rgba(255, 107, 107, 0.2);">
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary);">${employee.name}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${employee.position}</div>
+                </div>
+                <button onclick="sendReminderToEmployee(${employee.telegramId}, '${employee.name}')" 
+                        style="padding: 8px 16px; background: var(--warning); border: none; border-radius: 8px; color: black; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    Напомнить
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Отправка напоминания сотруднику
+window.sendReminderToEmployee = async function(employeeId, employeeName) {
+    if (!confirm(`Отправить напоминание сотруднику ${employeeName}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/admin/send-reminder`, {
+            method: 'POST',
+            headers: {
+                'X-Telegram-Init-Data': tg.initData,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ employeeId })
+        });
+        
+        if (response.ok) {
+            showNotification('Напоминание отправлено', 'success');
+        } else {
+            showNotification('Ошибка отправки напоминания', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending reminder:', error);
+        showNotification('Ошибка отправки напоминания', 'error');
+    }
 }
 
 async function loadAdminPanel() {
