@@ -932,84 +932,111 @@ const notionService = {
       
       console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
       
-      // Ищем задачу учета времени на сегодня - ищем по частичному совпадению заголовка и ID сотрудника
-      const response = await notion.databases.query({
-        database_id: ATTENDANCE_DB_ID,
-        filter: {
-          and: [
-            {
-              property: 'Title',
-              title: {
-                contains: `Учет времени`
-              }
-            },
-            {
-              property: 'Title',
-              title: {
-                contains: todayISO
-              }
-            },
-            {
-              property: 'Assignee',
-              number: {
-                equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
-              }
-            }
-          ]
-        },
-        page_size: 1
-      });
+      // Сначала попробуем найти задачу только по Assignee
+      console.log('Searching for attendance with minimal filter...');
       
-      if (response.results.length > 0) {
-        const page = response.results[0];
-        const description = page.properties['Description']?.rich_text[0]?.text?.content || '';
+      try {
+        const response = await notion.databases.query({
+          database_id: ATTENDANCE_DB_ID,
+          filter: {
+            property: 'Assignee',
+            number: {
+              equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
+            }
+          },
+          page_size: 100
+        });
         
-        // Парсим данные из описания
-        const checkInMatch = description.match(/Приход: (\d{2}:\d{2})/);
-        const checkOutMatch = description.match(/Уход: (\d{2}:\d{2})/);
+        console.log(`Found ${response.results.length} tasks for employee ${employeeId}`);
         
-        // Создаем полные даты для checkIn и checkOut
-        let checkIn = null;
-        let checkOut = null;
+        // Фильтруем результаты вручную
+        const todayAttendance = response.results.find(page => {
+          // Пробуем получить заголовок из разных возможных полей
+          let title = '';
+          const possibleTitleFields = ['Title', 'Name', 'Название', 'Задача', 'Task'];
+          
+          for (const field of possibleTitleFields) {
+            if (page.properties[field]?.title?.[0]?.text?.content) {
+              title = page.properties[field].title[0].text.content;
+              break;
+            }
+          }
+          
+          // Проверяем, что это задача учета времени на сегодня
+          return title.includes('Учет времени') && title.includes(todayISO);
+        });
         
-        if (checkInMatch) {
-          const [hours, minutes] = checkInMatch[1].split(':');
-          checkIn = new Date(todayISO);
-          checkIn.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-          checkIn = checkIn.toISOString();
+        if (todayAttendance) {
+          console.log('Found today attendance record');
+          return this.parseAttendanceFromPage(todayAttendance, todayISO);
         }
         
-        if (checkOutMatch) {
-          const [hours, minutes] = checkOutMatch[1].split(':');
-          checkOut = new Date(todayISO);
-          checkOut.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-          checkOut = checkOut.toISOString();
-        }
+        console.log('No attendance record found for today');
+        return null;
         
-        // Вычисляем отработанные часы
-        let workHours = 0;
-        if (checkIn && checkOut) {
-          const checkInTime = new Date(checkIn);
-          const checkOutTime = new Date(checkOut);
-          workHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
-        }
-        
-        return {
-          id: page.id,
-          date: todayISO,
-          checkIn: checkIn,
-          checkOut: checkOut,
-          status: page.properties['Status']?.select?.name || 'В работе',
-          late: description.includes('Опоздание: Да'),
-          workHours: workHours,
-          notes: description
-        };
+      } catch (searchError) {
+        console.error('Error searching for attendance:', searchError);
+        // Если поиск не удался, возвращаем null
+        return null;
       }
       
-      return null;
     } catch (error) {
-      console.error('Notion get today attendance error:', error);
-      throw error;
+      console.error('Error in getTodayAttendance:', error);
+      return null;
+    }
+  },
+  
+  // Парсинг записи учета времени из страницы Notion
+  parseAttendanceFromPage(page, dateISO) {
+    try {
+      console.log('Parsing attendance from page:', page.id);
+      
+      // Получаем Description из разных возможных полей
+      let descriptionContent = '';
+      const descriptionFields = ['Description', 'Описание', 'Content', 'Содержание'];
+      
+      for (const field of descriptionFields) {
+        if (page.properties[field]?.rich_text?.[0]?.text?.content) {
+          descriptionContent = page.properties[field].rich_text[0].text.content;
+          console.log(`Found description in field "${field}"`);
+          break;
+        }
+      }
+      
+      // Парсим информацию из описания
+      const checkInMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
+      const checkOutMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
+      
+      const checkInTime = checkInMatch ? checkInMatch[1] : null;
+      const checkOutTime = checkOutMatch ? checkOutMatch[1] : null;
+      
+      // Получаем статус из разных возможных полей
+      let status = 'В работе';
+      const statusFields = ['Status', 'Статус'];
+      
+      for (const field of statusFields) {
+        if (page.properties[field]?.select?.name) {
+          status = page.properties[field].select.name;
+          break;
+        }
+      }
+      
+      const attendance = {
+        id: page.id,
+        employeeId: null,
+        date: dateISO,
+        checkIn: checkInTime,
+        checkOut: checkOutTime,
+        status: status,
+        isPresent: !checkOutTime && !!checkInTime
+      };
+      
+      console.log('Parsed attendance:', attendance);
+      return attendance;
+      
+    } catch (error) {
+      console.error('Error parsing attendance from page:', error);
+      return null;
     }
   },
 
@@ -1140,7 +1167,25 @@ const notionService = {
       
       // Сначала получаем текущую страницу
       const page = await notion.pages.retrieve({ page_id: attendanceId });
-      const currentDescription = page.properties['Description']?.rich_text[0]?.text?.content || '';
+      
+      // Ищем поле описания адаптивно
+      let currentDescription = '';
+      let descriptionField = null;
+      const descriptionFields = ['Description', 'Описание', 'Content', 'Содержание'];
+      
+      for (const field of descriptionFields) {
+        if (page.properties[field]?.rich_text) {
+          currentDescription = page.properties[field].rich_text[0]?.text?.content || '';
+          descriptionField = field;
+          console.log(`Found description field: ${field}`);
+          break;
+        }
+      }
+      
+      if (!descriptionField) {
+        console.error('Could not find description field in page properties');
+        throw new Error('Description field not found');
+      }
       
       // Добавляем время ухода к описанию
       const checkOutTime = new Date(checkOut).toLocaleTimeString('ru-RU', { 
@@ -1148,24 +1193,43 @@ const notionService = {
         minute: '2-digit' 
       });
       
-      const updatedDescription = currentDescription + `\nУход: ${checkOutTime}`;
+      const updatedDescription = currentDescription + `\nВремя ухода: ${checkOutTime}`;
+      
+      // Ищем поле статуса адаптивно
+      let statusField = null;
+      const statusFields = ['Status', 'Статус'];
+      
+      for (const field of statusFields) {
+        if (page.properties[field]?.select !== undefined) {
+          statusField = field;
+          console.log(`Found status field: ${field}`);
+          break;
+        }
+      }
+      
+      // Формируем объект обновления
+      const updateProperties = {
+        [descriptionField]: {
+          rich_text: [
+            { 
+              text: { 
+                content: updatedDescription
+              } 
+            }
+          ]
+        }
+      };
+      
+      // Добавляем статус только если нашли поле
+      if (statusField) {
+        updateProperties[statusField] = {
+          select: { name: 'Выполнена' }
+        };
+      }
       
       const response = await notion.pages.update({
         page_id: attendanceId,
-        properties: {
-          'Status': {
-            select: { name: 'Выполнена' }
-          },
-          'Description': {
-            rich_text: [
-              { 
-                text: { 
-                  content: updatedDescription
-                } 
-              }
-            ]
-          }
-        }
+        properties: updateProperties
       });
       
       console.log('Attendance check-out updated successfully');
