@@ -43,6 +43,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('userName').textContent = tg.initDataUnsafe.user.first_name;
     }
     
+    // Инициализируем кнопки учета времени по умолчанию
+    const checkOutBtn = document.getElementById('checkOutBtn');
+    if (checkOutBtn) {
+        checkOutBtn.disabled = true;
+        console.log('CheckOut button initially disabled');
+    }
+    
     // Загружаем профиль
     await loadProfile();
     
@@ -58,6 +65,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Rechecking attendance status after 1 second...');
         await checkAttendanceStatus();
     }, 1000);
+    
+    // Периодическая проверка состояния кнопок каждые 3 секунды
+    setInterval(async () => {
+        const checkInBtn = document.getElementById('checkInBtn');
+        const checkOutBtn = document.getElementById('checkOutBtn');
+        
+        if (checkInBtn && checkInBtn.classList.contains('active') && 
+            checkOutBtn && checkOutBtn.disabled) {
+            console.log('Periodic check: trying to enable checkout button...');
+            await window.checkAndEnableCheckOut();
+        }
+    }, 3000);
     
     // Загружаем количество задач
     await loadTasksCount();
@@ -747,6 +766,11 @@ window.checkIn = async function() {
                 window.forceEnableCheckOut();
             }, 500);
             
+            // Дополнительная проверка через API
+            setTimeout(async () => {
+                await window.checkAndEnableCheckOut();
+            }, 1000);
+            
             // Вибрация
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred('success');
@@ -809,6 +833,48 @@ window.forceEnableCheckOut = function() {
         
         console.log('Checkout button force enabled');
         return true;
+    }
+    return false;
+};
+
+// Новый метод для проверки и активации кнопки через API
+window.checkAndEnableCheckOut = async function() {
+    try {
+        const response = await fetch(`${API_URL}/api/attendance/today`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const attendance = await response.json();
+            console.log('Manual check attendance:', attendance);
+            
+            const checkOutBtn = document.getElementById('checkOutBtn');
+            const checkInBtn = document.getElementById('checkInBtn');
+            
+            if (attendance && attendance.checkIn && !attendance.checkOut && checkOutBtn) {
+                console.log('Manual enable checkout button');
+                checkOutBtn.disabled = false;
+                checkOutBtn.removeAttribute('disabled');
+                checkOutBtn.style.opacity = '1';
+                checkOutBtn.style.cursor = 'pointer';
+                checkOutBtn.style.pointerEvents = 'auto';
+                
+                if (checkInBtn) {
+                    checkInBtn.classList.add('checked-in');
+                }
+                
+                const wrapper = checkOutBtn.querySelector('.btn-icon-wrapper');
+                if (wrapper) {
+                    wrapper.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                }
+                
+                return true;
+            }
+        }
+    } catch (error) {
+        console.error('Error in checkAndEnableCheckOut:', error);
     }
     return false;
 };
