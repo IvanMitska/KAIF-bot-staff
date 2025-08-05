@@ -110,9 +110,32 @@ function showPage(pageId) {
 // Загрузка профиля
 async function loadProfile() {
     try {
-        if (!tg.initData) {
-            console.error('No initData available');
-            showNotification('Ошибка авторизации. Откройте приложение через Telegram.', 'error');
+        // Проверяем, что приложение открыто через Telegram
+        if (!tg.initData || tg.initData.length === 0) {
+            console.error('No initData available. WebApp context:', {
+                platform: tg.platform,
+                version: tg.version,
+                initDataUnsafe: tg.initDataUnsafe
+            });
+            
+            // Показываем красивое сообщение об ошибке
+            const errorHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px;">
+                    <div style="background: var(--bg-card); border-radius: 20px; padding: 32px; text-align: center; max-width: 320px;">
+                        <div style="font-size: 64px; margin-bottom: 24px;">🔒</div>
+                        <h2 style="margin-bottom: 16px; color: var(--text-primary);">Требуется авторизация</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                            Откройте приложение через Telegram бота @Report_KAIF_bot
+                        </p>
+                        <div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px;">
+                            <p style="color: var(--text-muted); font-size: 14px; margin: 0;">
+                                Отправьте команду /start боту для доступа к приложению
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.innerHTML = errorHTML;
             return;
         }
         

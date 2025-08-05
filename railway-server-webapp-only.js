@@ -641,7 +641,9 @@ if (missingVars.length === 0) {
 
 // Запуск сервера
 app.listen(PORT, () => {
+  const publicUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'your-railway-domain';
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Web App Only Mode активен`);
-  console.log(`🌐 Web App: https://[your-railway-domain]/webapp/public`);
+  console.log(`🌐 Web App URL: https://${publicUrl}/webapp/public`);
+  console.log(`🔗 Railway Domain: ${publicUrl}`);
 });
