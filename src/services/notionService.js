@@ -10,7 +10,7 @@ const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const USERS_DB_ID = process.env.NOTION_DATABASE_USERS_ID;
 const REPORTS_DB_ID = process.env.NOTION_DATABASE_REPORTS_ID;
 const TASKS_DB_ID = process.env.NOTION_DATABASE_TASKS_ID;
-const ATTENDANCE_DB_ID = process.env.NOTION_DATABASE_ATTENDANCE_ID;
+const ATTENDANCE_DB_ID = process.env.NOTION_DATABASE_ATTENDANCE_ID || process.env.NOTION_DATABASE_TASKS_ID;
 
 console.log('Notion configuration:');
 console.log('- API Key:', process.env.NOTION_API_KEY ? 'Present' : 'MISSING!');
@@ -930,27 +930,34 @@ const notionService = {
       
       console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
       
+      // Ищем задачу учета времени на сегодня
       const response = await notion.databases.query({
         database_id: ATTENDANCE_DB_ID,
         filter: {
           and: [
             {
-              property: 'Employee ID',
-              number: {
-                equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
+              property: 'Задача',
+              title: {
+                contains: `Учет времени`
               }
             },
             {
-              property: 'Date',
+              property: 'Дата',
               date: {
                 equals: todayISO
+              }
+            },
+            {
+              property: 'Описание',
+              rich_text: {
+                contains: `ID: ${employeeId}`
               }
             }
           ]
         },
         sorts: [
           {
-            property: 'Check In',
+            property: 'Дата создания',
             direction: 'descending'
           }
         ],
@@ -958,16 +965,48 @@ const notionService = {
       });
       
       if (response.results.length > 0) {
-        const attendance = response.results[0];
+        const page = response.results[0];
+        const description = page.properties['Описание']?.rich_text[0]?.text?.content || '';
+        
+        // Парсим данные из описания
+        const checkInMatch = description.match(/Приход: (\d{2}:\d{2})/);
+        const checkOutMatch = description.match(/Уход: (\d{2}:\d{2})/);
+        
+        // Создаем полные даты для checkIn и checkOut
+        let checkIn = null;
+        let checkOut = null;
+        
+        if (checkInMatch) {
+          const [hours, minutes] = checkInMatch[1].split(':');
+          checkIn = new Date(todayISO);
+          checkIn.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          checkIn = checkIn.toISOString();
+        }
+        
+        if (checkOutMatch) {
+          const [hours, minutes] = checkOutMatch[1].split(':');
+          checkOut = new Date(todayISO);
+          checkOut.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          checkOut = checkOut.toISOString();
+        }
+        
+        // Вычисляем отработанные часы
+        let workHours = 0;
+        if (checkIn && checkOut) {
+          const checkInTime = new Date(checkIn);
+          const checkOutTime = new Date(checkOut);
+          workHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+        }
+        
         return {
-          id: attendance.id,
-          date: attendance.properties['Date']?.date?.start,
-          checkIn: attendance.properties['Check In']?.date?.start,
-          checkOut: attendance.properties['Check Out']?.date?.start || null,
-          status: attendance.properties['Status']?.select?.name || 'Present',
-          late: attendance.properties['Late']?.checkbox || false,
-          workHours: attendance.properties['Work Hours']?.formula?.number || null,
-          notes: attendance.properties['Notes']?.rich_text?.[0]?.text?.content || ''
+          id: page.id,
+          date: todayISO,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          status: page.properties['Статус']?.select?.name || 'В процессе',
+          late: description.includes('Опоздание: Да'),
+          workHours: workHours,
+          notes: description
         };
       }
       
@@ -996,31 +1035,36 @@ const notionService = {
         checkIn: attendanceData.checkIn
       });
       
+      // Создаем задачу в базе Tasks для учета времени
+      const attendanceTitle = `Учет времени - ${attendanceData.employeeName} - ${attendanceData.date}`;
+      const checkInTime = new Date(attendanceData.checkIn).toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      
       const response = await notion.pages.create({
         parent: { database_id: ATTENDANCE_DB_ID },
         properties: {
-          'Employee Name': {
-            title: [{ text: { content: attendanceData.employeeName } }]
+          'Задача': {
+            title: [{ text: { content: attendanceTitle } }]
           },
-          'Employee ID': {
-            number: typeof attendanceData.employeeId === 'string' ? 
-              parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
+          'Исполнитель': {
+            multi_select: [{ name: attendanceData.employeeName }]
           },
-          'Date': {
+          'Статус': {
+            select: { name: 'В процессе' }
+          },
+          'Дата': {
             date: { start: attendanceData.date }
           },
-          'Check In': {
-            date: { start: attendanceData.checkIn }
-          },
-          'Status': {
-            select: { name: attendanceData.status || 'Present' }
-          },
-          'Late': {
-            checkbox: attendanceData.late || false
-          },
-          'Notes': {
-            rich_text: attendanceData.notes ? 
-              [{ text: { content: attendanceData.notes } }] : []
+          'Описание': {
+            rich_text: [
+              { 
+                text: { 
+                  content: `Сотрудник: ${attendanceData.employeeName}\nID: ${attendanceData.employeeId}\nПриход: ${checkInTime}\nОпоздание: ${attendanceData.late ? 'Да' : 'Нет'}`
+                } 
+              }
+            ]
           }
         }
       });
@@ -1044,14 +1088,32 @@ const notionService = {
         checkOut
       });
       
+      // Сначала получаем текущую страницу
+      const page = await notion.pages.retrieve({ page_id: attendanceId });
+      const currentDescription = page.properties['Описание']?.rich_text[0]?.text?.content || '';
+      
+      // Добавляем время ухода к описанию
+      const checkOutTime = new Date(checkOut).toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      
+      const updatedDescription = currentDescription + `\nУход: ${checkOutTime}`;
+      
       const response = await notion.pages.update({
         page_id: attendanceId,
         properties: {
-          'Check Out': {
-            date: { start: checkOut }
+          'Статус': {
+            select: { name: 'Выполнена' }
           },
-          'Status': {
-            select: { name: 'Completed' }
+          'Описание': {
+            rich_text: [
+              { 
+                text: { 
+                  content: updatedDescription
+                } 
+              }
+            ]
           }
         }
       });
