@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем статус отчета
     await checkReportStatus();
     
+    // Проверяем статус рабочего времени
+    await checkAttendanceStatus();
+    
     // Загружаем количество задач
     await loadTasksCount();
     
@@ -572,6 +575,154 @@ function showHelp() {
     );
 }
 
+// Функции учета рабочего времени
+async function checkAttendanceStatus() {
+    try {
+        const response = await fetch(`${API_URL}/api/attendance/today`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const attendance = await response.json();
+            const statusItem = document.getElementById('attendanceStatusItem');
+            const checkInBtn = document.getElementById('checkInBtn');
+            const checkOutBtn = document.getElementById('checkOutBtn');
+            const checkInTime = document.getElementById('checkInTime');
+            const checkOutTime = document.getElementById('checkOutTime');
+            
+            if (attendance) {
+                if (attendance.checkIn) {
+                    // Сотрудник пришел
+                    const checkInDate = new Date(attendance.checkIn);
+                    const timeStr = checkInDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    
+                    checkInBtn.disabled = true;
+                    checkInBtn.classList.add('active');
+                    checkInTime.textContent = `Пришел в ${timeStr}`;
+                    checkInTime.style.display = 'block';
+                    
+                    if (attendance.checkOut) {
+                        // Сотрудник ушел
+                        const checkOutDate = new Date(attendance.checkOut);
+                        const timeStr = checkOutDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        
+                        checkOutBtn.disabled = true;
+                        checkOutBtn.classList.add('active');
+                        checkOutTime.textContent = `Ушел в ${timeStr}`;
+                        checkOutTime.style.display = 'block';
+                        
+                        statusItem.className = 'status-item status-success';
+                        statusItem.innerHTML = `
+                            <span class="status-icon">✅</span>
+                            <span class="status-text">Рабочий день завершен (${attendance.workHours} ч)</span>
+                        `;
+                    } else {
+                        // На работе
+                        checkOutBtn.disabled = false;
+                        
+                        statusItem.className = 'status-item status-success';
+                        statusItem.innerHTML = `
+                            <span class="status-icon">🟢</span>
+                            <span class="status-text">На работе с ${timeStr}</span>
+                        `;
+                    }
+                } else {
+                    // Не пришел
+                    checkInBtn.disabled = false;
+                    checkOutBtn.disabled = true;
+                    
+                    statusItem.className = 'status-item status-warning';
+                    statusItem.innerHTML = `
+                        <span class="status-icon">⏰</span>
+                        <span class="status-text">Не отмечен приход</span>
+                    `;
+                }
+            } else {
+                // Нет записи на сегодня
+                checkInBtn.disabled = false;
+                checkOutBtn.disabled = true;
+                
+                statusItem.className = 'status-item status-warning';
+                statusItem.innerHTML = `
+                    <span class="status-icon">⏰</span>
+                    <span class="status-text">Не отмечен приход</span>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error checking attendance status:', error);
+    }
+}
+
+// Отметить приход
+window.checkIn = async function() {
+    try {
+        const checkInBtn = document.getElementById('checkInBtn');
+        checkInBtn.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/attendance/check-in`, {
+            method: 'POST',
+            headers: {
+                'X-Telegram-Init-Data': tg.initData,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            showNotification('Приход отмечен', 'success');
+            await checkAttendanceStatus();
+            
+            // Вибрация
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        } else {
+            showNotification('Ошибка отметки прихода', 'error');
+            checkInBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error checking in:', error);
+        showNotification('Ошибка отметки прихода', 'error');
+        document.getElementById('checkInBtn').disabled = false;
+    }
+}
+
+// Отметить уход
+window.checkOut = async function() {
+    try {
+        const checkOutBtn = document.getElementById('checkOutBtn');
+        checkOutBtn.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/attendance/check-out`, {
+            method: 'POST',
+            headers: {
+                'X-Telegram-Init-Data': tg.initData,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(`Уход отмечен. Отработано: ${result.workHours} часов`, 'success');
+            await checkAttendanceStatus();
+            
+            // Вибрация
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        } else {
+            showNotification('Ошибка отметки ухода', 'error');
+            checkOutBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error checking out:', error);
+        showNotification('Ошибка отметки ухода', 'error');
+        document.getElementById('checkOutBtn').disabled = false;
+    }
+}
+
 // Отладка задач
 // Функции админ-панели
 window.showAdminPanel = function() {
@@ -605,6 +756,8 @@ window.switchAdminTab = function(tab) {
         loadDashboard();
     } else if (tab === 'reports') {
         loadAdminPanel();
+    } else if (tab === 'attendance') {
+        loadAttendanceTab();
     }
 }
 
@@ -640,6 +793,7 @@ async function loadDashboard() {
             loadTopEmployees(dashboardStats.topEmployees);
             loadTasksStatus(dashboardStats.tasksStatus);
             loadMissingReports(employees, todayData.reports);
+            loadAttendanceStatus();
         }
         
     } catch (error) {
@@ -830,6 +984,88 @@ window.sendReminderToEmployee = async function(employeeId, employeeName) {
     } catch (error) {
         console.error('Error sending reminder:', error);
         showNotification('Ошибка отправки напоминания', 'error');
+    }
+}
+
+// Загрузка статуса присутствия
+async function loadAttendanceStatus() {
+    const container = document.getElementById('attendanceStatus');
+    
+    try {
+        const response = await fetch(`${API_URL}/api/admin/attendance/current`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const attendanceData = await response.json();
+            
+            if (attendanceData.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p style="color: var(--text-secondary);">Пока никто не отметился</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Сортируем по статусу (присутствующие первыми)
+            attendanceData.sort((a, b) => {
+                if (a.isPresent && !b.isPresent) return -1;
+                if (!a.isPresent && b.isPresent) return 1;
+                return 0;
+            });
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+            
+            attendanceData.forEach(attendance => {
+                const checkInTime = new Date(attendance.checkIn).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                const checkOutTime = attendance.checkOut ? 
+                    new Date(attendance.checkOut).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : null;
+                
+                html += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-card); border-radius: 12px; border: 1px solid ${attendance.isPresent ? 'rgba(78, 205, 196, 0.2)' : 'rgba(255, 255, 255, 0.05)'};">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 20px;">${attendance.isPresent ? '🟢' : '🔴'}</div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">${attendance.employeeName}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">
+                                    Пришел: ${checkInTime}
+                                    ${checkOutTime ? ` • Ушел: ${checkOutTime}` : ''}
+                                    ${attendance.workHours ? ` • ${attendance.workHours.toFixed(1)} ч` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; padding: 4px 12px; background: ${attendance.isPresent ? 'rgba(78, 205, 196, 0.1)' : 'rgba(255, 107, 107, 0.1)'}; color: ${attendance.isPresent ? 'var(--success)' : 'var(--danger)'}; border-radius: 20px; font-weight: 600;">
+                            ${attendance.isPresent ? 'На работе' : 'Ушел'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // Добавляем статистику
+            const presentCount = attendanceData.filter(a => a.isPresent).length;
+            const totalCount = attendanceData.length;
+            
+            html += `
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                        <span style="color: var(--text-secondary);">Сейчас на работе:</span>
+                        <span style="font-weight: 600; color: var(--success);">${presentCount} из ${totalCount}</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Ошибка загрузки данных</p>';
+        }
+    } catch (error) {
+        console.error('Error loading attendance status:', error);
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Ошибка загрузки данных</p>';
     }
 }
 
@@ -1510,4 +1746,198 @@ window.submitEditTask = async function(event) {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
     }
+}
+
+// Загрузка вкладки учета времени
+async function loadAttendanceTab() {
+    try {
+        // Загружаем список сотрудников для фильтра
+        const employeesResponse = await fetch(`${API_URL}/api/employees`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (employeesResponse.ok) {
+            const employees = await employeesResponse.json();
+            const employeeFilter = document.getElementById('attendanceEmployeeFilter');
+            
+            employeeFilter.innerHTML = '<option value="all">Все сотрудники</option>' +
+                employees.map(emp => 
+                    `<option value="${emp.telegramId}">${emp.name}</option>`
+                ).join('');
+        }
+        
+        // Обработчик изменения периода
+        const periodFilter = document.getElementById('attendancePeriodFilter');
+        const customDateRange = document.getElementById('attendanceCustomDateRange');
+        
+        periodFilter.addEventListener('change', (e) => {
+            customDateRange.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+        });
+        
+        // Загружаем историю учета времени
+        updateAttendanceHistory();
+        
+    } catch (error) {
+        console.error('Error loading attendance tab:', error);
+        showNotification('Ошибка загрузки учета времени', 'error');
+    }
+}
+
+// Обновление истории учета времени
+window.updateAttendanceHistory = async function() {
+    const container = document.getElementById('attendanceHistoryList');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top: 16px;">Загрузка истории...</p></div>';
+    
+    try {
+        // Получаем значения фильтров
+        const period = document.getElementById('attendancePeriodFilter').value;
+        const employeeId = document.getElementById('attendanceEmployeeFilter').value;
+        
+        let startDate, endDate;
+        const today = new Date();
+        
+        switch (period) {
+            case 'today':
+                startDate = endDate = today.toISOString().split('T')[0];
+                break;
+            case 'week':
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay() + 1); // Понедельник
+                startDate = weekStart.toISOString().split('T')[0];
+                endDate = today.toISOString().split('T')[0];
+                break;
+            case 'month':
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                endDate = today.toISOString().split('T')[0];
+                break;
+            case 'custom':
+                startDate = document.getElementById('attendanceStartDate').value;
+                endDate = document.getElementById('attendanceEndDate').value;
+                if (!startDate || !endDate) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Выберите даты</p>';
+                    return;
+                }
+                break;
+        }
+        
+        // Формируем URL с параметрами
+        const params = new URLSearchParams({
+            startDate: startDate,
+            endDate: endDate
+        });
+        
+        if (employeeId !== 'all') {
+            params.append('employeeId', employeeId);
+        }
+        
+        const response = await fetch(`${API_URL}/api/admin/attendance/history?${params}`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const attendanceData = await response.json();
+            
+            if (attendanceData.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет данных за выбранный период</p>';
+                updateAttendanceStats([]); // Обновляем статистику пустыми данными
+                return;
+            }
+            
+            // Обновляем статистику
+            updateAttendanceStats(attendanceData);
+            
+            // Группируем данные по дням
+            const groupedByDate = {};
+            attendanceData.forEach(record => {
+                const date = record.date;
+                if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                }
+                groupedByDate[date].push(record);
+            });
+            
+            // Сортируем даты в обратном порядке
+            const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
+            
+            sortedDates.forEach(date => {
+                const dateRecords = groupedByDate[date];
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('ru-RU', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                html += `
+                    <div>
+                        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary);">
+                            ${dateStr}
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                `;
+                
+                dateRecords.forEach(record => {
+                    const checkInTime = record.checkIn ? 
+                        new Date(record.checkIn).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const checkOutTime = record.checkOut ? 
+                        new Date(record.checkOut).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const workHours = record.workHours ? `${record.workHours.toFixed(1)} ч` : '-';
+                    
+                    html += `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-card); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary);">${record.employeeName}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                    Пришел: ${checkInTime} • 
+                                    Ушел: ${checkOutTime} • 
+                                    Отработано: ${workHours}
+                                    ${record.late ? ' • <span style="color: var(--warning);">Опоздание</span>' : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                ${record.late ? '<span style="font-size: 20px;">⚠️</span>' : ''}
+                                <div style="font-size: 12px; padding: 4px 12px; background: ${record.status === 'Completed' ? 'rgba(78, 205, 196, 0.1)' : 'rgba(255, 217, 61, 0.1)'}; color: ${record.status === 'Completed' ? 'var(--success)' : 'var(--warning)'}; border-radius: 20px; font-weight: 600;">
+                                    ${record.status === 'Completed' ? 'Завершен' : 'В процессе'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+        } else {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Ошибка загрузки данных</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading attendance history:', error);
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Ошибка загрузки данных</p>';
+    }
+}
+
+// Обновление статистики учета времени
+function updateAttendanceStats(attendanceData) {
+    // Подсчитываем статистику
+    const totalDays = new Set(attendanceData.map(r => r.date)).size;
+    const totalHours = attendanceData.reduce((sum, r) => sum + (r.workHours || 0), 0);
+    const lateCount = attendanceData.filter(r => r.late).length;
+    const avgHours = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
+    
+    // Обновляем значения
+    document.getElementById('attendanceTotalDays').textContent = totalDays;
+    document.getElementById('attendanceTotalHours').textContent = totalHours.toFixed(1);
+    document.getElementById('attendanceLateCount').textContent = lateCount;
+    document.getElementById('attendanceAvgHours').textContent = avgHours;
 }

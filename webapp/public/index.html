@@ -65,6 +65,27 @@
                         <span class="status-icon">⚠️</span>
                         <span class="status-text">Отчет не отправлен</span>
                     </div>
+                    <div id="attendanceStatusItem" class="status-item">
+                        <span class="status-icon">⏰</span>
+                        <span class="status-text">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки учета времени -->
+            <div class="attendance-section" style="margin-top: 24px;">
+                <h2 style="font-size: 18px; margin-bottom: 16px; color: var(--text-secondary);">Учет рабочего времени</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in-btn">
+                        <span style="font-size: 24px;">🟢</span>
+                        <span style="display: block; margin-top: 8px; font-weight: 600;">Пришел на работу</span>
+                        <span id="checkInTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
+                    </button>
+                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out-btn" disabled>
+                        <span style="font-size: 24px;">🔴</span>
+                        <span style="display: block; margin-top: 8px; font-weight: 600;">Ушел с работы</span>
+                        <span id="checkOutTime" style="display: none; font-size: 12px; margin-top: 4px;"></span>
+                    </button>
                 </div>
             </div>
             
@@ -271,6 +292,9 @@
                 <button id="reportsTab" class="admin-tab" onclick="switchAdminTab('reports')">
                     📝 Отчеты
                 </button>
+                <button id="attendanceTab" class="admin-tab" onclick="switchAdminTab('attendance')">
+                    ⏰ Учет времени
+                </button>
             </div>
             
             <!-- Dashboard вкладка -->
@@ -330,6 +354,16 @@
                             <div class="loading">
                                 <div class="spinner"></div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Учет рабочего времени -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-top: 20px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px;">⏰ Присутствие сотрудников</h3>
+                    <div id="attendanceStatus">
+                        <div class="loading">
+                            <div class="spinner"></div>
                         </div>
                     </div>
                 </div>
@@ -413,6 +447,79 @@
                         <div class="loading">
                             <div class="spinner"></div>
                             <p style="margin-top: 16px;">Загрузка отчетов...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Учет времени вкладка -->
+            <div id="attendanceContent" class="admin-tab-content" style="display: none;">
+                <!-- Фильтры -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Период</label>
+                            <select id="attendancePeriodFilter" onchange="updateAttendanceHistory()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <option value="today">Сегодня</option>
+                                <option value="week" selected>Эта неделя</option>
+                                <option value="month">Этот месяц</option>
+                                <option value="custom">Выбрать даты</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Сотрудник</label>
+                            <select id="attendanceEmployeeFilter" onchange="updateAttendanceHistory()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <option value="all">Все сотрудники</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="attendanceCustomDateRange" style="display: none; gap: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">С</label>
+                            <input type="date" id="attendanceStartDate" onchange="updateAttendanceHistory()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">По</label>
+                            <input type="date" id="attendanceEndDate" onchange="updateAttendanceHistory()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Статистика -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-value" id="attendanceTotalDays">0</div>
+                        <div class="stat-label">Рабочих дней</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-value" id="attendanceTotalHours">0</div>
+                        <div class="stat-label">Часов отработано</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value" id="attendanceLateCount">0</div>
+                        <div class="stat-label">Опозданий</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="attendanceAvgHours">0</div>
+                        <div class="stat-label">Часов в день</div>
+                    </div>
+                </div>
+                
+                <!-- История учета времени -->
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px;">История учета времени</h3>
+                    <div id="attendanceHistoryList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p style="margin-top: 16px;">Загрузка истории...</p>
                         </div>
                     </div>
                 </div>

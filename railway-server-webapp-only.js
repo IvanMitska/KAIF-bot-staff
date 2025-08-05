@@ -12,7 +12,8 @@ const requiredEnvVars = [
   'NOTION_API_KEY',
   'NOTION_DATABASE_REPORTS_ID',
   'NOTION_DATABASE_USERS_ID',
-  'NOTION_DATABASE_TASKS_ID'
+  'NOTION_DATABASE_TASKS_ID',
+  'NOTION_DATABASE_ATTENDANCE_ID'
 ];
 
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -693,6 +694,149 @@ app.get('/api/admin/reports', authMiddleware, async (req, res) => {
     
   } catch (error) {
     console.error('Error getting admin reports:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить статус учета времени за сегодня
+app.get('/api/attendance/today', authMiddleware, async (req, res) => {
+  try {
+    const attendance = await notionService.getTodayAttendance(req.telegramUser.id);
+    res.json(attendance);
+  } catch (error) {
+    console.error('Error getting today attendance:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Отметить приход
+app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
+  try {
+    const user = await userService.getUserByTelegramId(req.telegramUser.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Проверяем, не отмечен ли уже приход сегодня
+    const existingAttendance = await notionService.getTodayAttendance(req.telegramUser.id);
+    if (existingAttendance && existingAttendance.checkIn) {
+      return res.status(400).json({ error: 'Already checked in today' });
+    }
+    
+    const attendanceData = {
+      employeeName: user.name,
+      employeeId: req.telegramUser.id,
+      date: new Date().toISOString().split('T')[0],
+      checkIn: new Date().toISOString(),
+      status: 'На работе',
+      late: new Date().getHours() >= 9 // Опоздание, если после 9:00
+    };
+    
+    await notionService.createAttendance(attendanceData);
+    
+    // Отправляем уведомление менеджерам
+    const MANAGER_IDS = [385436658, 1734337242];
+    const TelegramBot = require('node-telegram-bot-api');
+    const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+    
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const message = `🟢 *${user.name}* пришел на работу\n⏰ Время: ${time}${attendanceData.late ? '\n⚠️ Опоздание!' : ''}`;
+    
+    for (const managerId of MANAGER_IDS) {
+      try {
+        await bot.sendMessage(managerId, message, { parse_mode: 'Markdown' });
+      } catch (notifError) {
+        console.error('Failed to notify manager:', managerId, notifError);
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error checking in:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Отметить уход
+app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
+  try {
+    const attendance = await notionService.getTodayAttendance(req.telegramUser.id);
+    if (!attendance) {
+      return res.status(400).json({ error: 'Not checked in today' });
+    }
+    
+    if (attendance.checkOut) {
+      return res.status(400).json({ error: 'Already checked out today' });
+    }
+    
+    const checkOut = new Date().toISOString();
+    const workHours = await notionService.updateAttendanceCheckOut(attendance.id, checkOut);
+    
+    // Отправляем уведомление менеджерам
+    const user = await userService.getUserByTelegramId(req.telegramUser.id);
+    const MANAGER_IDS = [385436658, 1734337242];
+    const TelegramBot = require('node-telegram-bot-api');
+    const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+    
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const message = `🔴 *${user.name}* ушел с работы\n⏰ Время: ${time}\n⏱ Отработано: ${workHours} часов`;
+    
+    for (const managerId of MANAGER_IDS) {
+      try {
+        await bot.sendMessage(managerId, message, { parse_mode: 'Markdown' });
+      } catch (notifError) {
+        console.error('Failed to notify manager:', managerId, notifError);
+      }
+    }
+    
+    res.json({ success: true, workHours });
+  } catch (error) {
+    console.error('Error checking out:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить текущий статус присутствия (только для менеджеров)
+app.get('/api/admin/attendance/current', authMiddleware, async (req, res) => {
+  try {
+    // Проверяем права менеджера
+    const MANAGER_IDS = [385436658, 1734337242];
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const currentStatus = await notionService.getCurrentAttendanceStatus();
+    res.json(currentStatus);
+  } catch (error) {
+    console.error('Error getting attendance status:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить историю учета времени (только для менеджеров)
+app.get('/api/admin/attendance/history', authMiddleware, async (req, res) => {
+  try {
+    // Проверяем права менеджера
+    const MANAGER_IDS = [385436658, 1734337242];
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const { startDate, endDate, employeeId } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Start date and end date are required' });
+    }
+    
+    const attendanceHistory = await notionService.getAttendanceForPeriod(
+      startDate, 
+      endDate, 
+      employeeId || null
+    );
+    
+    res.json(attendanceHistory);
+  } catch (error) {
+    console.error('Error getting attendance history:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

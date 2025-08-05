@@ -850,3 +850,49 @@ body {
     color: var(--success);
     margin-top: 24px;
 }
+
+/* Кнопки учета времени */
+.attendance-btn {
+    background: var(--bg-card);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-primary);
+}
+
+.attendance-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.attendance-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.check-in-btn:not(:disabled):hover {
+    border-color: var(--success);
+    background: rgba(78, 205, 196, 0.1);
+}
+
+.check-out-btn:not(:disabled):hover {
+    border-color: var(--danger);
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.attendance-btn.active {
+    border-width: 3px;
+}
+
+.check-in-btn.active {
+    border-color: var(--success);
+    background: rgba(78, 205, 196, 0.15);
+}
+
+.check-out-btn.active {
+    border-color: var(--danger);
+    background: rgba(255, 107, 107, 0.15);
+}

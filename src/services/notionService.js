@@ -10,12 +10,14 @@ const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const USERS_DB_ID = process.env.NOTION_DATABASE_USERS_ID;
 const REPORTS_DB_ID = process.env.NOTION_DATABASE_REPORTS_ID;
 const TASKS_DB_ID = process.env.NOTION_DATABASE_TASKS_ID;
+const ATTENDANCE_DB_ID = process.env.NOTION_DATABASE_ATTENDANCE_ID;
 
 console.log('Notion configuration:');
 console.log('- API Key:', process.env.NOTION_API_KEY ? 'Present' : 'MISSING!');
 console.log('- Users DB:', USERS_DB_ID || 'MISSING!');
 console.log('- Reports DB:', REPORTS_DB_ID || 'MISSING!');
 console.log('- Tasks DB:', TASKS_DB_ID || 'MISSING!');
+console.log('- Attendance DB:', ATTENDANCE_DB_ID || 'MISSING!');
 
 // Проверяем, что все ID баз данных заданы
 if (!USERS_DB_ID || !REPORTS_DB_ID || !TASKS_DB_ID) {
@@ -911,6 +913,264 @@ const notionService = {
       console.error('Error code:', error.code);
       console.error('Error status:', error.status);
       return false;
+    }
+  },
+
+  // Методы для учета рабочего времени
+  async getTodayAttendance(employeeId) {
+    try {
+      if (!ATTENDANCE_DB_ID) {
+        console.error('ATTENDANCE_DB_ID is not set!');
+        return null;
+      }
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString().split('T')[0];
+      
+      console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
+      
+      const response = await notion.databases.query({
+        database_id: ATTENDANCE_DB_ID,
+        filter: {
+          and: [
+            {
+              property: 'Employee ID',
+              number: {
+                equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
+              }
+            },
+            {
+              property: 'Date',
+              date: {
+                equals: todayISO
+              }
+            }
+          ]
+        },
+        sorts: [
+          {
+            property: 'Check In',
+            direction: 'descending'
+          }
+        ],
+        page_size: 1
+      });
+      
+      if (response.results.length > 0) {
+        const attendance = response.results[0];
+        return {
+          id: attendance.id,
+          date: attendance.properties['Date']?.date?.start,
+          checkIn: attendance.properties['Check In']?.date?.start,
+          checkOut: attendance.properties['Check Out']?.date?.start || null,
+          status: attendance.properties['Status']?.select?.name || 'Present',
+          late: attendance.properties['Late']?.checkbox || false,
+          workHours: attendance.properties['Work Hours']?.formula?.number || null,
+          notes: attendance.properties['Notes']?.rich_text?.[0]?.text?.content || ''
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Notion get today attendance error:', error);
+      throw error;
+    }
+  },
+
+  async createAttendance(attendanceData) {
+    try {
+      if (!ATTENDANCE_DB_ID) {
+        throw new Error('ATTENDANCE_DB_ID is not configured');
+      }
+      
+      // Валидация обязательных полей
+      if (!attendanceData.employeeName || !attendanceData.employeeId || !attendanceData.checkIn) {
+        throw new Error('Missing required fields in attendance data');
+      }
+      
+      console.log('Creating attendance record:', {
+        employeeName: attendanceData.employeeName,
+        employeeId: attendanceData.employeeId,
+        date: attendanceData.date,
+        checkIn: attendanceData.checkIn
+      });
+      
+      const response = await notion.pages.create({
+        parent: { database_id: ATTENDANCE_DB_ID },
+        properties: {
+          'Employee Name': {
+            title: [{ text: { content: attendanceData.employeeName } }]
+          },
+          'Employee ID': {
+            number: typeof attendanceData.employeeId === 'string' ? 
+              parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
+          },
+          'Date': {
+            date: { start: attendanceData.date }
+          },
+          'Check In': {
+            date: { start: attendanceData.checkIn }
+          },
+          'Status': {
+            select: { name: attendanceData.status || 'Present' }
+          },
+          'Late': {
+            checkbox: attendanceData.late || false
+          },
+          'Notes': {
+            rich_text: attendanceData.notes ? 
+              [{ text: { content: attendanceData.notes } }] : []
+          }
+        }
+      });
+      
+      console.log('Attendance record created successfully:', response.id);
+      return response;
+    } catch (error) {
+      console.error('Notion create attendance error:', error);
+      throw error;
+    }
+  },
+
+  async updateAttendanceCheckOut(attendanceId, checkOut) {
+    try {
+      if (!attendanceId || !checkOut) {
+        throw new Error('Missing attendanceId or checkOut time');
+      }
+      
+      console.log('Updating attendance check-out:', {
+        attendanceId,
+        checkOut
+      });
+      
+      const response = await notion.pages.update({
+        page_id: attendanceId,
+        properties: {
+          'Check Out': {
+            date: { start: checkOut }
+          },
+          'Status': {
+            select: { name: 'Completed' }
+          }
+        }
+      });
+      
+      console.log('Attendance check-out updated successfully');
+      return response;
+    } catch (error) {
+      console.error('Notion update attendance check-out error:', error);
+      throw error;
+    }
+  },
+
+  // Получить все записи учета времени за период
+  async getAttendanceForPeriod(startDate, endDate, employeeId = null) {
+    try {
+      if (!ATTENDANCE_DB_ID) {
+        console.error('ATTENDANCE_DB_ID is not set!');
+        return [];
+      }
+      
+      const filters = [
+        {
+          property: 'Date',
+          date: {
+            on_or_after: startDate
+          }
+        },
+        {
+          property: 'Date',
+          date: {
+            on_or_before: endDate
+          }
+        }
+      ];
+      
+      if (employeeId) {
+        filters.push({
+          property: 'Employee ID',
+          number: {
+            equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
+          }
+        });
+      }
+      
+      const response = await notion.databases.query({
+        database_id: ATTENDANCE_DB_ID,
+        filter: {
+          and: filters
+        },
+        sorts: [
+          {
+            property: 'Date',
+            direction: 'descending'
+          },
+          {
+            property: 'Check In',
+            direction: 'descending'
+          }
+        ]
+      });
+      
+      return response.results.map(attendance => ({
+        id: attendance.id,
+        employeeName: attendance.properties['Employee Name']?.title?.[0]?.text?.content || '',
+        employeeId: attendance.properties['Employee ID']?.number,
+        date: attendance.properties['Date']?.date?.start,
+        checkIn: attendance.properties['Check In']?.date?.start,
+        checkOut: attendance.properties['Check Out']?.date?.start || null,
+        status: attendance.properties['Status']?.select?.name || 'Present',
+        late: attendance.properties['Late']?.checkbox || false,
+        workHours: attendance.properties['Work Hours']?.formula?.number || null,
+        notes: attendance.properties['Notes']?.rich_text?.[0]?.text?.content || ''
+      }));
+    } catch (error) {
+      console.error('Notion get attendance for period error:', error);
+      throw error;
+    }
+  },
+
+  // Получить текущий статус присутствия всех сотрудников
+  async getCurrentAttendanceStatus() {
+    try {
+      if (!ATTENDANCE_DB_ID) {
+        console.error('ATTENDANCE_DB_ID is not set!');
+        return [];
+      }
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString().split('T')[0];
+      
+      const response = await notion.databases.query({
+        database_id: ATTENDANCE_DB_ID,
+        filter: {
+          property: 'Date',
+          date: {
+            equals: todayISO
+          }
+        },
+        sorts: [
+          {
+            property: 'Check In',
+            direction: 'descending'
+          }
+        ]
+      });
+      
+      return response.results.map(attendance => ({
+        employeeName: attendance.properties['Employee Name']?.title?.[0]?.text?.content || '',
+        employeeId: attendance.properties['Employee ID']?.number,
+        checkIn: attendance.properties['Check In']?.date?.start,
+        checkOut: attendance.properties['Check Out']?.date?.start || null,
+        status: attendance.properties['Status']?.select?.name || 'Present',
+        isPresent: !attendance.properties['Check Out']?.date?.start,
+        workHours: attendance.properties['Work Hours']?.formula?.number || null
+      }));
+    } catch (error) {
+      console.error('Notion get current attendance status error:', error);
+      throw error;
     }
   }
 };
