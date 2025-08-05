@@ -18,6 +18,8 @@ console.log('- Users DB:', USERS_DB_ID || 'MISSING!');
 console.log('- Reports DB:', REPORTS_DB_ID || 'MISSING!');
 console.log('- Tasks DB:', TASKS_DB_ID || 'MISSING!');
 console.log('- Attendance DB:', ATTENDANCE_DB_ID || 'MISSING!');
+console.log('- Attendance DB (actual value):', ATTENDANCE_DB_ID);
+console.log('- Using Tasks DB for attendance:', ATTENDANCE_DB_ID === TASKS_DB_ID);
 
 // Проверяем, что все ID баз данных заданы
 if (!USERS_DB_ID || !REPORTS_DB_ID || !TASKS_DB_ID) {

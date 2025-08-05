@@ -721,15 +721,25 @@ app.get('/api/attendance/today', authMiddleware, async (req, res) => {
 
 // Отметить приход
 app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
+  console.log('📍 Check-in endpoint called');
+  console.log('User ID:', req.telegramUser?.id);
+  
   try {
     const user = await userService.getUserByTelegramId(req.telegramUser.id);
+    console.log('User found:', user?.name);
+    
     if (!user) {
+      console.error('User not found for ID:', req.telegramUser.id);
       return res.status(404).json({ error: 'User not found' });
     }
     
     // Проверяем, не отмечен ли уже приход сегодня
+    console.log('Checking existing attendance...');
     const existingAttendance = await notionService.getTodayAttendance(req.telegramUser.id);
+    console.log('Existing attendance:', existingAttendance ? 'Found' : 'Not found');
+    
     if (existingAttendance && existingAttendance.checkIn) {
+      console.log('Already checked in today');
       return res.status(400).json({ error: 'Already checked in today' });
     }
     
@@ -741,6 +751,8 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
       status: 'На работе',
       late: new Date().getHours() >= 9 // Опоздание, если после 9:00
     };
+    
+    console.log('Creating attendance record:', attendanceData);
     
     await notionService.createAttendance(attendanceData);
     
@@ -760,10 +772,13 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
       }
     }
     
+    console.log('✅ Check-in successful');
     res.json({ success: true });
   } catch (error) {
-    console.error('Error checking in:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Error checking in:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 

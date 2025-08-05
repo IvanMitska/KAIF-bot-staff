@@ -669,10 +669,15 @@ async function checkAttendanceStatus() {
 
 // Отметить приход
 window.checkIn = async function() {
+    console.log('CheckIn called');
+    console.log('API URL:', API_URL);
+    console.log('Init data:', tg.initData ? 'Present' : 'Missing');
+    
     try {
         const checkInBtn = document.getElementById('checkInBtn');
         checkInBtn.disabled = true;
         
+        console.log('Sending check-in request...');
         const response = await fetch(`${API_URL}/api/attendance/check-in`, {
             method: 'POST',
             headers: {
@@ -680,6 +685,8 @@ window.checkIn = async function() {
                 'Content-Type': 'application/json'
             }
         });
+        
+        console.log('Response status:', response.status);
         
         if (response.ok) {
             showNotification('Приход отмечен', 'success');
@@ -690,7 +697,9 @@ window.checkIn = async function() {
                 tg.HapticFeedback.notificationOccurred('success');
             }
         } else {
-            showNotification('Ошибка отметки прихода', 'error');
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('Check-in error response:', response.status, errorData);
+            showNotification(`Ошибка: ${errorData.error || 'Ошибка отметки прихода'}`, 'error');
             checkInBtn.disabled = false;
         }
     } catch (error) {
