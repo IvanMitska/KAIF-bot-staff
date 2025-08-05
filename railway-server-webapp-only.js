@@ -81,6 +81,7 @@ app.use('/webapp/public', express.static(path.join(__dirname, 'webapp/public')))
 // API endpoints
 const notionService = require('./src/services/notionService');
 const userService = require('./src/services/userService');
+const { getPhuketTime, formatPhuketTime, isLateForWork, getPhuketDateISO } = require('./src/utils/timezone');
 
 // Middleware для проверки авторизации
 async function authMiddleware(req, res, next) {
@@ -746,10 +747,10 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
     const attendanceData = {
       employeeName: user.name,
       employeeId: req.telegramUser.id,
-      date: new Date().toISOString().split('T')[0],
-      checkIn: new Date().toISOString(),
+      date: getPhuketDateISO(),
+      checkIn: new Date().toISOString(), // Оставляем ISO для базы данных
       status: 'На работе',
-      late: new Date().getHours() >= 9 // Опоздание, если после 9:00
+      late: isLateForWork() // Опоздание по времени Пхукета
     };
     
     console.log('Creating attendance record:', attendanceData);
@@ -761,7 +762,7 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
     const TelegramBot = require('node-telegram-bot-api');
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
     
-    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const time = formatPhuketTime(new Date());
     const message = `🟢 *${user.name}* пришел на работу\n⏰ Время: ${time}${attendanceData.late ? '\n⚠️ Опоздание!' : ''}`;
     
     for (const managerId of MANAGER_IDS) {
@@ -803,7 +804,7 @@ app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
     const TelegramBot = require('node-telegram-bot-api');
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
     
-    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const time = formatPhuketTime(new Date());
     const message = `🔴 *${user.name}* ушел с работы\n⏰ Время: ${time}\n⏱ Отработано: ${workHours} часов`;
     
     for (const managerId of MANAGER_IDS) {

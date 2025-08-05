@@ -1,4 +1,5 @@
 const { Client } = require('@notionhq/client');
+const { formatPhuketTime, getPhuketDateISO } = require('../utils/timezone');
 
 // Проверка наличия API ключа
 if (!process.env.NOTION_API_KEY) {
@@ -947,9 +948,7 @@ const notionService = {
         return null;
       }
       
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString().split('T')[0];
+      const todayISO = getPhuketDateISO();
       
       console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
       
@@ -1086,10 +1085,7 @@ const notionService = {
       
       // Создаем задачу в базе Tasks для учета времени
       const attendanceTitle = `Учет времени - ${attendanceData.employeeName} - ${attendanceData.date}`;
-      const checkInTime = new Date(attendanceData.checkIn).toLocaleTimeString('ru-RU', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
+      const checkInTime = formatPhuketTime(attendanceData.checkIn);
       
       // Пробуем создать с минимальным набором полей
       console.log('Attempting to create page with properties...');
@@ -1238,10 +1234,7 @@ ID: ${attendanceData.employeeId}
       }
       
       // Добавляем время ухода к описанию
-      const checkOutTime = new Date(checkOut).toLocaleTimeString('ru-RU', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
+      const checkOutTime = formatPhuketTime(checkOut);
       
       const updatedDescription = currentDescription + `\nВремя ухода: ${checkOutTime}`;
       
