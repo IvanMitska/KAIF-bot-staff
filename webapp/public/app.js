@@ -3,12 +3,29 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// Проверка initData
+console.log('Telegram WebApp initialized:', {
+    initData: tg.initData ? 'Present' : 'Missing',
+    initDataLength: tg.initData?.length || 0,
+    user: tg.initDataUnsafe?.user
+});
+
 // Установка темы
 document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#0F0F14');
 document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#FFFFFF');
 
 // API URL
 const API_URL = window.location.origin;
+
+// Функция показа уведомлений
+function showNotification(message, type = 'info') {
+    console.log(`Notification [${type}]:`, message);
+    if (tg.showAlert) {
+        tg.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
 
 // Глобальные переменные
 let currentUser = null;
@@ -93,11 +110,21 @@ function showPage(pageId) {
 // Загрузка профиля
 async function loadProfile() {
     try {
+        if (!tg.initData) {
+            console.error('No initData available');
+            showNotification('Ошибка авторизации. Откройте приложение через Telegram.', 'error');
+            return;
+        }
+        
+        console.log('Loading profile with initData length:', tg.initData.length);
+        
         const response = await fetch(`${API_URL}/api/profile`, {
             headers: {
                 'X-Telegram-Init-Data': tg.initData
             }
         });
+        
+        console.log('Profile response:', response.status);
         
         if (response.ok) {
             currentUser = await response.json();
@@ -163,11 +190,18 @@ async function checkReportStatus() {
 // Загрузка количества задач
 async function loadTasksCount() {
     try {
+        if (!tg.initData) {
+            console.error('No initData for tasks count');
+            return;
+        }
+        
         const response = await fetch(`${API_URL}/api/tasks/my`, {
             headers: {
                 'X-Telegram-Init-Data': tg.initData
             }
         });
+        
+        console.log('Tasks count response:', response.status);
         
         if (response.ok) {
             const tasks = await response.json();

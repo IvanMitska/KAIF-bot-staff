@@ -75,19 +75,27 @@ const userService = require('./src/services/userService');
 async function authMiddleware(req, res, next) {
   const initData = req.headers['x-telegram-init-data'];
   
+  console.log('Auth middleware - initData present:', !!initData);
+  console.log('Auth middleware - headers:', Object.keys(req.headers));
+  
   if (!initData) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    console.error('No initData in headers');
+    return res.status(401).json({ error: 'Unauthorized - No initData' });
   }
   
   try {
     const parsedData = new URLSearchParams(initData);
     const userString = parsedData.get('user');
     
+    console.log('Parsed user string:', userString ? 'Found' : 'Not found');
+    
     if (!userString) {
-      return res.status(401).json({ error: 'User data not found' });
+      console.error('No user data in initData');
+      return res.status(401).json({ error: 'User data not found in initData' });
     }
     
     req.telegramUser = JSON.parse(userString);
+    console.log('User authenticated:', req.telegramUser.id, req.telegramUser.first_name);
     
     // Автоматическая регистрация при первом входе
     const existingUser = await userService.getUserByTelegramId(req.telegramUser.id);
@@ -102,7 +110,8 @@ async function authMiddleware(req, res, next) {
     
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Invalid user data' });
+    console.error('Auth middleware error:', error);
+    return res.status(401).json({ error: 'Invalid user data: ' + error.message });
   }
 }
 

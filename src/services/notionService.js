@@ -1,18 +1,25 @@
 const { Client } = require('@notionhq/client');
 
+// Проверка наличия API ключа
+if (!process.env.NOTION_API_KEY) {
+  console.error('❌ CRITICAL ERROR: NOTION_API_KEY is not set!');
+  console.error('Please set NOTION_API_KEY in Railway environment variables');
+}
+
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const USERS_DB_ID = process.env.NOTION_DATABASE_USERS_ID;
 const REPORTS_DB_ID = process.env.NOTION_DATABASE_REPORTS_ID;
 const TASKS_DB_ID = process.env.NOTION_DATABASE_TASKS_ID;
 
-console.log('Notion databases configured:');
-console.log('- Users DB:', USERS_DB_ID);
-console.log('- Reports DB:', REPORTS_DB_ID);
-console.log('- Tasks DB:', TASKS_DB_ID);
+console.log('Notion configuration:');
+console.log('- API Key:', process.env.NOTION_API_KEY ? 'Present' : 'MISSING!');
+console.log('- Users DB:', USERS_DB_ID || 'MISSING!');
+console.log('- Reports DB:', REPORTS_DB_ID || 'MISSING!');
+console.log('- Tasks DB:', TASKS_DB_ID || 'MISSING!');
 
 // Проверяем, что все ID баз данных заданы
-if (!TASKS_DB_ID) {
-  console.error('ERROR: NOTION_DATABASE_TASKS_ID is not set in environment variables!');
+if (!USERS_DB_ID || !REPORTS_DB_ID || !TASKS_DB_ID) {
+  console.error('❌ ERROR: One or more Notion database IDs are missing!');
 }
 
 const notionService = {
