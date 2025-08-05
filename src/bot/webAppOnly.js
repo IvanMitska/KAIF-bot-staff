@@ -31,6 +31,16 @@ module.exports = (bot) => {
     
     console.log(`📱 Получена команда /start от пользователя ${userId} (@${msg.from.username})`);
     
+    // Проверка rate limit для /start - более мягкий лимит
+    const rateLimit = security.checkRateLimit(userId, 'start', 5, 60000); // 5 раз в минуту
+    if (!rateLimit.allowed) {
+      console.log(`⏱️ Rate limit для пользователя ${userId}: осталось ${rateLimit.resetIn} секунд`);
+      await bot.sendMessage(chatId, 
+        `⏱️ Слишком много попыток. Попробуйте через ${rateLimit.resetIn} секунду.`
+      );
+      return;
+    }
+    
     // Проверка авторизации
     const isAuthorized = security.isUserAuthorized(userId);
     console.log(`Проверка авторизации для ${userId}: ${isAuthorized}`);
@@ -46,12 +56,17 @@ module.exports = (bot) => {
     }
     
     try {
-      // Проверяем существующего пользователя
-      const existingUser = await userService.getUserByTelegramId(userId);
+      // Проверяем существующего пользователя только если Notion настроен
+      let welcomeText = `Привет! 👋\n\nВсе функции доступны в приложении:`;
       
-      const welcomeText = existingUser 
-        ? `Привет, ${existingUser.name}! 👋\n\nВсе функции доступны в приложении:`
-        : `Добро пожаловать! 👋\n\nДля начала работы откройте приложение:`;
+      try {
+        const existingUser = await userService.getUserByTelegramId(userId);
+        if (existingUser && existingUser.name) {
+          welcomeText = `Привет, ${existingUser.name}! 👋\n\nВсе функции доступны в приложении:`;
+        }
+      } catch (dbError) {
+        console.log('Не удалось получить пользователя из БД, используем приветствие по умолчанию');
+      }
       
       // Отправляем только кнопку Web App
       await bot.sendMessage(chatId, welcomeText, {
@@ -235,6 +250,45 @@ module.exports = (bot) => {
       console.error('Error processing photo:', error);
       await bot.sendMessage(chatId, '❌ Ошибка при сохранении фото. Попробуйте позже.');
     }
+  });
+  
+  // Команда /help - всегда доступна
+  bot.onText(/^\/help/, async (msg) => {
+    const chatId = msg.chat.id;
+    
+    await bot.sendMessage(chatId, 
+      'ℹ️ *Справка по боту*\n\n' +
+      '• /start - Открыть приложение\n' +
+      '• /help - Показать эту справку\n\n' +
+      'Если возникла ошибка, подождите минуту и попробуйте снова.',
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: '🚀 Открыть KAIF App',
+              web_app: { url: webAppUrl }
+            }
+          ]]
+        }
+      }
+    );
+  });
+  
+  // Команда /reset_limit (только для администраторов)
+  bot.onText(/^\/reset_limit/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Только для менеджеров
+    const MANAGER_IDS = [385436658, 1734337242];
+    if (!MANAGER_IDS.includes(userId)) {
+      return;
+    }
+    
+    // Очищаем rate limiter
+    const cleaned = security.cleanupRateLimiter();
+    await bot.sendMessage(chatId, `✅ Rate limiter очищен. Удалено записей: ${cleaned}`);
   });
   
   handlersRegistered = true;
