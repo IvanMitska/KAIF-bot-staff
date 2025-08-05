@@ -24,15 +24,19 @@ module.exports = (bot) => {
   
   console.log(`📱 Web App URL: ${webAppUrl}`);
   
-  // Команда /start - основная точка входа
-  bot.onText(/^\/start$/, async (msg) => {
+  // Команда /start - основная точка входа (может содержать параметры)
+  bot.onText(/^\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     
     console.log(`📱 Получена команда /start от пользователя ${userId} (@${msg.from.username})`);
     
     // Проверка авторизации
-    if (!security.isUserAuthorized(userId)) {
+    const isAuthorized = security.isUserAuthorized(userId);
+    console.log(`Проверка авторизации для ${userId}: ${isAuthorized}`);
+    console.log(`ALLOWED_USER_IDS: ${process.env.ALLOWED_USER_IDS || 'не установлена'}`);
+    
+    if (!isAuthorized) {
       console.log(`❌ Пользователь ${userId} не авторизован`);
       await bot.sendMessage(chatId, 
         '🚫 У вас нет доступа к этому боту.\n\n' +
@@ -63,14 +67,62 @@ module.exports = (bot) => {
       
     } catch (error) {
       console.error('Ошибка в /start:', error);
+      console.error('Stack trace:', error.stack);
       await bot.sendMessage(chatId, 
-        'Произошла ошибка. Попробуйте позже.'
+        'Произошла ошибка. Попробуйте еще раз.',
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: '🔄 Попробовать снова',
+                callback_data: 'retry_start'
+              }
+            ]]
+          }
+        }
       );
     }
   });
   
-  // Обработка других сообщений - НЕ регистрируем общий обработчик message
-  // чтобы избежать конфликтов
+  // Обработка других сообщений
+  bot.on('message', async (msg) => {
+    // Пропускаем команды (они обрабатываются отдельно)
+    if (msg.text && msg.text.startsWith('/')) {
+      return;
+    }
+    
+    // Пропускаем фото (обрабатываются отдельно)
+    if (msg.photo) {
+      return;
+    }
+    
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
+    // Проверка авторизации
+    if (!security.isUserAuthorized(userId)) {
+      await bot.sendMessage(chatId, 
+        '🚫 У вас нет доступа к этому боту.\n\n' +
+        'Обратитесь к администратору.'
+      );
+      return;
+    }
+    
+    // Для всех остальных сообщений предлагаем открыть Web App
+    await bot.sendMessage(chatId, 
+      'Все функции доступны в приложении:',
+      {
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: '🚀 Открыть KAIF App',
+              web_app: { url: webAppUrl }
+            }
+          ]]
+        }
+      }
+    );
+  });
   
   // Обработка callback queries
   bot.on('callback_query', async (callbackQuery) => {
@@ -78,7 +130,33 @@ module.exports = (bot) => {
       const userId = callbackQuery.from.id;
       const data = callbackQuery.data;
       
-      if (data === 'skip_photo') {
+      if (data === 'retry_start') {
+        // Повторная попытка открыть Web App
+        await bot.answerCallbackQuery(callbackQuery.id);
+        
+        try {
+          const existingUser = await userService.getUserByTelegramId(userId);
+          
+          const welcomeText = existingUser 
+            ? `Привет, ${existingUser.name}! 👋\n\nВсе функции доступны в приложении:`
+            : `Добро пожаловать! 👋\n\nДля начала работы откройте приложение:`;
+          
+          await bot.editMessageText(welcomeText, {
+            chat_id: callbackQuery.message.chat.id,
+            message_id: callbackQuery.message.message_id,
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '🚀 Открыть KAIF App',
+                  web_app: { url: webAppUrl }
+                }
+              ]]
+            }
+          });
+        } catch (error) {
+          console.error('Ошибка при retry_start:', error);
+        }
+      } else if (data === 'skip_photo') {
         // Очищаем ожидание фото
         if (global.pendingTaskPhotos) {
           global.pendingTaskPhotos.delete(userId);
