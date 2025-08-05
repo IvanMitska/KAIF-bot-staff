@@ -12,6 +12,40 @@ module.exports = (bot) => {
     return;
   }
   
+  // Логируем все входящие сообщения для отладки
+  bot.on('message', async (msg) => {
+    console.log(`📨 Получено сообщение от ${msg.from.id} (@${msg.from.username}): ${msg.text || '[не текст]'}`);
+    console.log('Тип чата:', msg.chat.type);
+    console.log('Chat ID:', msg.chat.id);
+    
+    // Обработка команды /start если она не была обработана onText
+    if (msg.text && msg.text.startsWith('/start')) {
+      console.log('⚡ Обработка /start через message handler');
+      
+      const chatId = msg.chat.id;
+      const userId = msg.from.id;
+      
+      try {
+        await bot.sendMessage(chatId, 
+          `Привет! 👋\n\nВсе функции доступны в приложении:`,
+          {
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '🚀 Открыть KAIF App',
+                  web_app: { url: webAppUrl }
+                }
+              ]]
+            }
+          }
+        );
+        console.log('✅ Сообщение отправлено через message handler');
+      } catch (error) {
+        console.error('❌ Ошибка в message handler:', error.message);
+      }
+    }
+  });
+  
   // Получаем URL Web App один раз
   let webAppUrl = process.env.WEBAPP_URL;
   if (!webAppUrl && process.env.RAILWAY_STATIC_URL) {
@@ -24,126 +58,52 @@ module.exports = (bot) => {
   
   console.log(`📱 Web App URL: ${webAppUrl}`);
   
-  // Команда /start - основная точка входа (может содержать параметры)
-  bot.onText(/^\/start/, async (msg) => {
+  // Команда /start - основная точка входа
+  bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     
-    console.log(`📱 Получена команда /start от пользователя ${userId} (@${msg.from.username})`);
-    
-    // Проверка rate limit для /start - более мягкий лимит
-    const rateLimit = security.checkRateLimit(userId, 'start', 5, 60000); // 5 раз в минуту
-    if (!rateLimit.allowed) {
-      console.log(`⏱️ Rate limit для пользователя ${userId}: осталось ${rateLimit.resetIn} секунд`);
-      await bot.sendMessage(chatId, 
-        `⏱️ Слишком много попыток. Попробуйте через ${rateLimit.resetIn} секунду.`
-      );
-      return;
-    }
-    
-    // Проверка авторизации
-    const isAuthorized = security.isUserAuthorized(userId);
-    console.log(`Проверка авторизации для ${userId}: ${isAuthorized}`);
-    console.log(`ALLOWED_USER_IDS: ${process.env.ALLOWED_USER_IDS || 'не установлена'}`);
-    
-    if (!isAuthorized) {
-      console.log(`❌ Пользователь ${userId} не авторизован`);
-      await bot.sendMessage(chatId, 
-        '🚫 У вас нет доступа к этому боту.\n\n' +
-        'Обратитесь к администратору.'
-      );
-      return;
-    }
+    console.log(`📱 Команда /start получена от пользователя ${userId}`);
+    console.log('URL для Web App:', webAppUrl);
     
     try {
-      // Проверяем существующего пользователя только если Notion настроен
-      let welcomeText = `Привет! 👋\n\nВсе функции доступны в приложении:`;
-      
-      try {
-        const existingUser = await userService.getUserByTelegramId(userId);
-        if (existingUser && existingUser.name) {
-          welcomeText = `Привет, ${existingUser.name}! 👋\n\nВсе функции доступны в приложении:`;
-        }
-      } catch (dbError) {
-        console.log('Не удалось получить пользователя из БД, используем приветствие по умолчанию');
-      }
-      
-      // Отправляем только кнопку Web App
-      await bot.sendMessage(chatId, welcomeText, {
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: '🚀 Открыть KAIF App',
-              web_app: { url: webAppUrl }
-            }
-          ]]
-        }
-      });
-      
-    } catch (error) {
-      console.error('Ошибка в /start:', error);
-      console.error('Stack trace:', error.stack);
-      await bot.sendMessage(chatId, 
-        'Произошла ошибка. Попробуйте еще раз.',
+      // Отправляем приветственное сообщение без проверки авторизации
+      const message = await bot.sendMessage(chatId, 
+        `Привет! 👋\n\nВсе функции доступны в приложении:`,
         {
           reply_markup: {
             inline_keyboard: [[
               {
-                text: '🔄 Попробовать снова',
-                callback_data: 'retry_start'
+                text: '🚀 Открыть KAIF App',
+                web_app: { url: webAppUrl }
               }
             ]]
           }
         }
       );
+      
+      console.log('✅ Сообщение /start отправлено успешно');
+      
+    } catch (error) {
+      console.error('❌ Ошибка в обработчике /start:', error.message);
+      
+      // Пробуем отправить простое текстовое сообщение
+      try {
+        await bot.sendMessage(chatId, 'Произошла ошибка. Попробуйте еще раз.');
+      } catch (sendError) {
+        console.error('❌ Не удалось отправить даже простое сообщение:', sendError.message);
+      }
     }
   });
   
-  // Обработка других сообщений
-  bot.on('message', async (msg) => {
-    // Пропускаем команды (они обрабатываются отдельно)
-    if (msg.text && msg.text.startsWith('/')) {
-      return;
-    }
-    
-    // Пропускаем фото (обрабатываются отдельно)
-    if (msg.photo) {
-      return;
-    }
-    
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
-    
-    // Проверка авторизации
-    if (!security.isUserAuthorized(userId)) {
-      await bot.sendMessage(chatId, 
-        '🚫 У вас нет доступа к этому боту.\n\n' +
-        'Обратитесь к администратору.'
-      );
-      return;
-    }
-    
-    // Для всех остальных сообщений предлагаем открыть Web App
-    await bot.sendMessage(chatId, 
-      'Все функции доступны в приложении:',
-      {
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: '🚀 Открыть KAIF App',
-              web_app: { url: webAppUrl }
-            }
-          ]]
-        }
-      }
-    );
-  });
   
   // Обработка callback queries
   bot.on('callback_query', async (callbackQuery) => {
     try {
       const userId = callbackQuery.from.id;
       const data = callbackQuery.data;
+      
+      console.log(`🔘 Callback query от ${userId}: ${data}`);
       
       if (data === 'retry_start') {
         // Повторная попытка открыть Web App
@@ -252,27 +212,34 @@ module.exports = (bot) => {
     }
   });
   
-  // Команда /help - всегда доступна
-  bot.onText(/^\/help/, async (msg) => {
+  // Команда /help
+  bot.onText(/\/help/, async (msg) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     
-    await bot.sendMessage(chatId, 
-      'ℹ️ *Справка по боту*\n\n' +
-      '• /start - Открыть приложение\n' +
-      '• /help - Показать эту справку\n\n' +
-      'Если возникла ошибка, подождите минуту и попробуйте снова.',
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: '🚀 Открыть KAIF App',
-              web_app: { url: webAppUrl }
-            }
-          ]]
+    console.log(`ℹ️ Команда /help от пользователя ${userId}`);
+    
+    try {
+      await bot.sendMessage(chatId, 
+        'ℹ️ *Справка по боту*\n\n' +
+        '• /start - Открыть приложение\n' +
+        '• /help - Показать эту справку\n\n' +
+        'Если возникла ошибка, подождите минуту и попробуйте снова.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: '🚀 Открыть KAIF App',
+                web_app: { url: webAppUrl }
+              }
+            ]]
+          }
         }
-      }
-    );
+      );
+    } catch (error) {
+      console.error('Ошибка в /help:', error);
+    }
   });
   
   // Команда /reset_limit (только для администраторов)
