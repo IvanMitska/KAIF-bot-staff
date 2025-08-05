@@ -853,26 +853,42 @@ body {
 
 /* Кнопки учета времени */
 .attendance-section {
-    background: linear-gradient(145deg, #1E1E28, #1A1A23);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    border-radius: 24px;
-    padding: 20px;
-    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.3),
-                -8px -8px 16px rgba(40, 40, 50, 0.1),
-                inset 1px 1px 2px rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.attendance-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.attendance-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
 
 .attendance-btn {
-    background: var(--bg-secondary);
-    border: 2px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a24 0%, #16161f 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    padding: 16px;
-    text-align: center;
     cursor: pointer;
-    transition: all var(--transition-normal);
-    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    color: var(--text-primary);
 }
 
 .attendance-btn::before {
@@ -882,49 +898,159 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(145deg, transparent, rgba(255, 255, 255, 0.03));
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.05), transparent 50%);
     opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.attendance-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    transition: opacity 0.3s;
+    pointer-events: none;
 }
 
 .attendance-btn:hover:not(:disabled)::before {
     opacity: 1;
 }
 
+.btn-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon {
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-text {
+    flex: 1;
+    text-align: left;
+}
+
+.btn-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.btn-time {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    height: 16px;
+}
+
+/* Check In стили */
+.check-in .btn-icon-wrapper {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.check-in .btn-icon {
+    color: white;
+}
+
+.check-in:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+}
+
+.check-in:hover:not(:disabled) .btn-icon-wrapper {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.7);
+}
+
+.check-in:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.check-in.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.check-in.active .btn-icon-wrapper {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Check Out стили */
+.check-out .btn-icon-wrapper {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.check-out .btn-icon {
+    color: white;
+}
+
+.check-out:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.5);
+}
+
+.check-out:hover:not(:disabled) .btn-icon-wrapper {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px -6px rgba(239, 68, 68, 0.7);
+}
+
+.check-out:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.check-out.active {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.check-out.active .btn-icon-wrapper {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Disabled состояние */
 .attendance-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-.check-in-btn:not(:disabled):hover {
-    border-color: var(--success);
-    background: rgba(78, 205, 196, 0.1);
-    box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+.attendance-btn:disabled .btn-icon-wrapper {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
 }
 
-.check-out-btn:not(:disabled):hover {
-    border-color: var(--danger);
-    background: rgba(255, 107, 107, 0.1);
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+/* Анимация появления времени */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.attendance-btn.active {
-    border-width: 2px;
+.btn-time:not(:empty) {
+    animation: fadeInUp 0.3s ease-out;
 }
 
-.check-in-btn.active {
-    border-color: var(--success);
-    background: rgba(78, 205, 196, 0.15);
-    box-shadow: inset 0 0 20px rgba(78, 205, 196, 0.2);
-}
-
-.check-out-btn.active {
-    border-color: var(--danger);
-    background: rgba(255, 107, 107, 0.15);
-    box-shadow: inset 0 0 20px rgba(255, 107, 107, 0.2);
+/* Адаптивность для мобильных */
+@media (max-width: 480px) {
+    .attendance-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .attendance-btn {
+        padding: 16px;
+    }
+    
+    .btn-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-label {
+        font-size: 15px;
+    }
 }

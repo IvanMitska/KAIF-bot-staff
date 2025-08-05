@@ -67,6 +67,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadTasks();
         }
     }, 30000);
+    
+    // Эффект следования за курсором для кнопок учета времени
+    document.querySelectorAll('.attendance-btn').forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            btn.style.setProperty('--mouse-x', `${x}%`);
+            btn.style.setProperty('--mouse-y', `${y}%`);
+        });
+    });
 });
 
 // Навигация между страницами
@@ -600,7 +611,7 @@ async function checkAttendanceStatus() {
                     
                     checkInBtn.disabled = true;
                     checkInBtn.classList.add('active');
-                    checkInTime.textContent = `Пришел в ${timeStr}`;
+                    checkInTime.textContent = timeStr;
                     checkInTime.style.display = 'block';
                     
                     if (attendance.checkOut) {
@@ -610,7 +621,7 @@ async function checkAttendanceStatus() {
                         
                         checkOutBtn.disabled = true;
                         checkOutBtn.classList.add('active');
-                        checkOutTime.textContent = `Ушел в ${timeStr}`;
+                        checkOutTime.textContent = timeStr;
                         checkOutTime.style.display = 'block';
                         
                         statusItem.className = 'status-item status-success';
