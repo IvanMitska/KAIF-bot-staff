@@ -538,6 +538,47 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
   }
 });
 
+// Получить отчеты для админ-панели (только для менеджеров)
+app.get('/api/admin/reports', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const { startDate, endDate, employeeId } = req.query;
+    
+    console.log('Admin reports request:', { startDate, endDate, employeeId });
+    
+    // Получаем отчеты за период
+    const reports = await notionService.getReportsForPeriod(startDate, endDate, employeeId);
+    
+    // Считаем статистику
+    const today = new Date().toISOString().split('T')[0];
+    const todayReports = reports.filter(r => r.date === today).length;
+    
+    // Получаем задачи для подсчета выполненных
+    const completedTasks = await notionService.getAllTasks('Выполнена');
+    const tasksInPeriod = completedTasks.filter(task => {
+      if (!task.completedDate) return false;
+      const taskDate = task.completedDate.split('T')[0];
+      return taskDate >= startDate && taskDate <= endDate;
+    });
+    
+    res.json({
+      reports,
+      totalReports: reports.length,
+      todayReports,
+      completedTasks: tasksInPeriod.length
+    });
+    
+  } catch (error) {
+    console.error('Error getting admin reports:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Временный endpoint для отладки задач
 app.get('/api/debug/tasks', authMiddleware, async (req, res) => {
   try {

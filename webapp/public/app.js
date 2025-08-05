@@ -573,6 +573,201 @@ function showHelp() {
 }
 
 // Отладка задач
+// Функции админ-панели
+window.showAdminPanel = function() {
+    const MANAGER_IDS = [385436658, 1734337242];
+    
+    if (!MANAGER_IDS.includes(currentUser?.telegramId)) {
+        showNotification('У вас нет доступа к админ-панели', 'error');
+        return;
+    }
+    
+    showPage('adminPanel');
+    loadAdminPanel();
+}
+
+async function loadAdminPanel() {
+    try {
+        // Загружаем список сотрудников для фильтра
+        const employeesResponse = await fetch(`${API_URL}/api/employees`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (employeesResponse.ok) {
+            const employees = await employeesResponse.json();
+            const employeeFilter = document.getElementById('employeeFilter');
+            
+            // Очищаем и заполняем select
+            employeeFilter.innerHTML = '<option value="all">Все сотрудники</option>';
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.telegramId;
+                option.textContent = emp.name;
+                employeeFilter.appendChild(option);
+            });
+            
+            // Обновляем количество активных сотрудников
+            document.getElementById('adminActiveEmployees').textContent = employees.length;
+        }
+        
+        // Загружаем отчеты
+        updateAdminPanel();
+        
+    } catch (error) {
+        console.error('Error loading admin panel:', error);
+        showNotification('Ошибка загрузки админ-панели', 'error');
+    }
+}
+
+window.updateAdminPanel = async function() {
+    const period = document.getElementById('periodFilter').value;
+    const employeeId = document.getElementById('employeeFilter').value;
+    const customDateRange = document.getElementById('customDateRange');
+    
+    // Показываем/скрываем выбор дат
+    if (period === 'custom') {
+        customDateRange.style.display = 'flex';
+    } else {
+        customDateRange.style.display = 'none';
+    }
+    
+    // Определяем даты
+    let startDate, endDate;
+    const today = new Date();
+    
+    switch(period) {
+        case 'today':
+            startDate = endDate = today.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1); // Понедельник
+            startDate = weekStart.toISOString().split('T')[0];
+            endDate = today.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            startDate = monthStart.toISOString().split('T')[0];
+            endDate = today.toISOString().split('T')[0];
+            break;
+        case 'custom':
+            startDate = document.getElementById('startDate').value;
+            endDate = document.getElementById('endDate').value;
+            if (!startDate || !endDate) return;
+            break;
+    }
+    
+    try {
+        // Загружаем отчеты
+        const params = new URLSearchParams({
+            startDate,
+            endDate,
+            employeeId: employeeId === 'all' ? '' : employeeId
+        });
+        
+        const response = await fetch(`${API_URL}/api/admin/reports?${params}`, {
+            headers: {
+                'X-Telegram-Init-Data': tg.initData
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Обновляем статистику
+            document.getElementById('adminTotalReports').textContent = data.totalReports;
+            document.getElementById('adminTodayReports').textContent = data.todayReports;
+            document.getElementById('adminCompletedTasks').textContent = data.completedTasks;
+            
+            // Отображаем отчеты
+            displayAdminReports(data.reports);
+        }
+        
+    } catch (error) {
+        console.error('Error updating admin panel:', error);
+        showNotification('Ошибка загрузки данных', 'error');
+    }
+}
+
+function displayAdminReports(reports) {
+    const container = document.getElementById('adminReportsList');
+    
+    if (reports.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                <p>Нет отчетов за выбранный период</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Группируем отчеты по датам
+    const groupedReports = {};
+    reports.forEach(report => {
+        const date = new Date(report.date).toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+        
+        if (!groupedReports[date]) {
+            groupedReports[date] = [];
+        }
+        groupedReports[date].push(report);
+    });
+    
+    let html = '';
+    Object.entries(groupedReports).forEach(([date, dayReports]) => {
+        html += `
+            <div style="margin-bottom: 24px;">
+                <h4 style="color: var(--text-secondary); font-size: 14px; margin-bottom: 12px;">${date}</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+        `;
+        
+        dayReports.forEach(report => {
+            const time = new Date(report.timestamp).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            html += `
+                <div style="background: var(--bg-card); border-radius: 12px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div>
+                            <h5 style="margin: 0; font-size: 16px; color: var(--text-primary);">${report.employeeName}</h5>
+                            <p style="margin: 0; font-size: 12px; color: var(--text-secondary);">Отправлен в ${time}</p>
+                        </div>
+                        <span style="background: var(--success-light); color: var(--success); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
+                            ${report.status}
+                        </span>
+                    </div>
+                    
+                    <div style="margin-top: 12px;">
+                        <p style="margin: 0 0 8px 0; font-size: 14px; color: var(--text-secondary);">Что сделано:</p>
+                        <p style="margin: 0; font-size: 14px; color: var(--text-primary); white-space: pre-wrap;">${report.whatDone}</p>
+                    </div>
+                    
+                    ${report.problems && report.problems !== 'Нет' ? `
+                        <div style="margin-top: 12px;">
+                            <p style="margin: 0 0 8px 0; font-size: 14px; color: var(--text-secondary);">Проблемы:</p>
+                            <p style="margin: 0; font-size: 14px; color: var(--warning); white-space: pre-wrap;">${report.problems}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
 async function debugTasks() {
     try {
         console.log('Debug: Current user:', tg.initDataUnsafe.user);

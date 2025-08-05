@@ -225,6 +225,68 @@ const notionService = {
     }
   },
 
+  async getReportsForPeriod(startDate, endDate, employeeId = null) {
+    try {
+      console.log('Getting reports for period:', { startDate, endDate, employeeId });
+      
+      const filters = [
+        {
+          property: 'Дата',
+          date: {
+            on_or_after: startDate
+          }
+        },
+        {
+          property: 'Дата',
+          date: {
+            on_or_before: endDate
+          }
+        }
+      ];
+      
+      if (employeeId && employeeId !== '') {
+        filters.push({
+          property: 'Telegram ID',
+          rich_text: {
+            equals: employeeId.toString()
+          }
+        });
+      }
+      
+      const response = await notion.databases.query({
+        database_id: REPORTS_DB_ID,
+        filter: {
+          and: filters
+        },
+        sorts: [
+          {
+            property: 'Дата',
+            direction: 'descending'
+          },
+          {
+            property: 'Время отправки',
+            direction: 'descending'
+          }
+        ]
+      });
+
+      return response.results.map(report => ({
+        id: report.id,
+        date: report.properties['Дата'].date.start,
+        employeeName: report.properties['Сотрудник'].rich_text[0]?.text.content || '',
+        telegramId: report.properties['Telegram ID'].rich_text[0]?.text.content || '',
+        whatDone: report.properties['Что сделал'].rich_text[0]?.text.content || '',
+        problems: report.properties['Проблемы'].rich_text[0]?.text.content || '',
+        goals: report.properties['Цели на завтра'].rich_text[0]?.text.content || '',
+        timestamp: report.properties['Время отправки'].date?.start || report.properties['Дата'].date.start,
+        status: report.properties['Статус'].select?.name || 'Отправлен'
+      }));
+    } catch (error) {
+      console.error('Notion get reports for period error:', error);
+      throw error;
+    }
+  },
+
   async getAllActiveUsers() {
     try {
       const response = await notion.databases.query({
@@ -490,7 +552,8 @@ const notionService = {
             status: task.properties['Статус']?.select?.name || 'Новая',
             priority: task.properties['Приоритет']?.select?.name || 'Средний',
             createdDate: task.properties['Дата создания']?.date?.start,
-            deadline: task.properties['Срок выполнения']?.date?.start
+            deadline: task.properties['Срок выполнения']?.date?.start,
+            completedDate: task.properties['Дата выполнения']?.date?.start
           };
         } catch (mapError) {
           console.error('Error mapping task:', task.id, mapError);
