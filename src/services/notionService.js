@@ -1015,6 +1015,11 @@ const notionService = {
 
   async createAttendance(attendanceData) {
     try {
+      console.log('=== CREATE ATTENDANCE DEBUG ===');
+      console.log('ATTENDANCE_DB_ID:', ATTENDANCE_DB_ID);
+      console.log('TASKS_DB_ID:', TASKS_DB_ID);
+      console.log('Are they equal?', ATTENDANCE_DB_ID === TASKS_DB_ID);
+      
       if (!ATTENDANCE_DB_ID) {
         throw new Error('ATTENDANCE_DB_ID is not configured');
       }
