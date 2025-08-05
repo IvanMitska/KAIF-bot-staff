@@ -932,7 +932,7 @@ const notionService = {
       
       console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
       
-      // Ищем задачу учета времени на сегодня
+      // Ищем задачу учета времени на сегодня - ищем по частичному совпадению заголовка и ID сотрудника
       const response = await notion.databases.query({
         database_id: ATTENDANCE_DB_ID,
         filter: {
@@ -944,25 +944,19 @@ const notionService = {
               }
             },
             {
-              property: 'Created Date',
-              date: {
-                equals: todayISO
+              property: 'Title',
+              title: {
+                contains: todayISO
               }
             },
             {
-              property: 'Description',
-              rich_text: {
-                contains: `ID: ${employeeId}`
+              property: 'Assignee',
+              number: {
+                equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
               }
             }
           ]
         },
-        sorts: [
-          {
-            property: 'Created Date',
-            direction: 'descending'
-          }
-        ],
         page_size: 1
       });
       
@@ -1056,9 +1050,6 @@ const notionService = {
           },
           'Status': {
             select: { name: 'В работе' }
-          },
-          'Created Date': {
-            date: { start: attendanceData.date }
           },
           'Description': {
             rich_text: [
