@@ -938,19 +938,19 @@ const notionService = {
         filter: {
           and: [
             {
-              property: 'Задача',
+              property: 'Title',
               title: {
                 contains: `Учет времени`
               }
             },
             {
-              property: 'Дата',
+              property: 'Created Date',
               date: {
                 equals: todayISO
               }
             },
             {
-              property: 'Описание',
+              property: 'Description',
               rich_text: {
                 contains: `ID: ${employeeId}`
               }
@@ -959,7 +959,7 @@ const notionService = {
         },
         sorts: [
           {
-            property: 'Дата создания',
+            property: 'Created Date',
             direction: 'descending'
           }
         ],
@@ -968,7 +968,7 @@ const notionService = {
       
       if (response.results.length > 0) {
         const page = response.results[0];
-        const description = page.properties['Описание']?.rich_text[0]?.text?.content || '';
+        const description = page.properties['Description']?.rich_text[0]?.text?.content || '';
         
         // Парсим данные из описания
         const checkInMatch = description.match(/Приход: (\d{2}:\d{2})/);
@@ -1005,7 +1005,7 @@ const notionService = {
           date: todayISO,
           checkIn: checkIn,
           checkOut: checkOut,
-          status: page.properties['Статус']?.select?.name || 'В процессе',
+          status: page.properties['Status']?.select?.name || 'В работе',
           late: description.includes('Опоздание: Да'),
           workHours: workHours,
           notes: description
@@ -1047,19 +1047,20 @@ const notionService = {
       const response = await notion.pages.create({
         parent: { database_id: ATTENDANCE_DB_ID },
         properties: {
-          'Задача': {
+          'Title': {
             title: [{ text: { content: attendanceTitle } }]
           },
-          'Исполнитель': {
-            multi_select: [{ name: attendanceData.employeeName }]
+          'Assignee': {
+            number: typeof attendanceData.employeeId === 'string' ? 
+              parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
           },
-          'Статус': {
-            select: { name: 'В процессе' }
+          'Status': {
+            select: { name: 'В работе' }
           },
-          'Дата': {
+          'Created Date': {
             date: { start: attendanceData.date }
           },
-          'Описание': {
+          'Description': {
             rich_text: [
               { 
                 text: { 
@@ -1092,7 +1093,7 @@ const notionService = {
       
       // Сначала получаем текущую страницу
       const page = await notion.pages.retrieve({ page_id: attendanceId });
-      const currentDescription = page.properties['Описание']?.rich_text[0]?.text?.content || '';
+      const currentDescription = page.properties['Description']?.rich_text[0]?.text?.content || '';
       
       // Добавляем время ухода к описанию
       const checkOutTime = new Date(checkOut).toLocaleTimeString('ru-RU', { 
@@ -1105,10 +1106,10 @@ const notionService = {
       const response = await notion.pages.update({
         page_id: attendanceId,
         properties: {
-          'Статус': {
+          'Status': {
             select: { name: 'Выполнена' }
           },
-          'Описание': {
+          'Description': {
             rich_text: [
               { 
                 text: { 
