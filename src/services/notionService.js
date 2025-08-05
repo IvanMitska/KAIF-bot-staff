@@ -918,6 +918,27 @@ const notionService = {
     }
   },
 
+  // Получить схему базы данных
+  async getDatabaseSchema(databaseId) {
+    try {
+      const database = await notion.databases.retrieve({ database_id: databaseId });
+      const properties = {};
+      
+      for (const [key, value] of Object.entries(database.properties)) {
+        properties[key] = {
+          type: value.type,
+          id: value.id
+        };
+      }
+      
+      console.log('Database schema:', JSON.stringify(properties, null, 2));
+      return properties;
+    } catch (error) {
+      console.error('Error getting database schema:', error);
+      throw error;
+    }
+  },
+
   // Методы для учета рабочего времени
   async getTodayAttendance(employeeId) {
     try {
@@ -1073,78 +1094,107 @@ const notionService = {
       // Пробуем создать с минимальным набором полей
       console.log('Attempting to create page with properties...');
       
-      // Попробуем разные варианты названия главного поля
-      const titleVariants = ['Title', 'Name', 'Название', 'Задача', 'Task'];
-      let response = null;
-      let successField = null;
+      // Получаем схему базы данных чтобы узнать правильные имена полей
+      console.log('Getting database schema...');
+      const schema = await this.getDatabaseSchema(ATTENDANCE_DB_ID);
       
-      for (const fieldName of titleVariants) {
-        try {
-          console.log(`Trying to create with field name: ${fieldName}`);
-          response = await notion.pages.create({
-            parent: { database_id: ATTENDANCE_DB_ID },
-            properties: {
-              [fieldName]: {
-                title: [{ text: { content: attendanceTitle } }]
-              }
-            }
-          });
-          successField = fieldName;
-          console.log(`Success! Field name "${fieldName}" works`);
+      // Находим поле title
+      let titleField = null;
+      for (const [fieldName, fieldInfo] of Object.entries(schema)) {
+        if (fieldInfo.type === 'title') {
+          titleField = fieldName;
+          console.log(`Found title field: "${fieldName}"`);
           break;
-        } catch (err) {
-          console.log(`Field "${fieldName}" failed:`, err.message);
-          continue;
         }
       }
       
-      if (!response) {
-        throw new Error('Could not create page with any title field variant');
+      if (!titleField) {
+        console.error('No title field found in database!');
+        console.error('Available fields:', JSON.stringify(schema, null, 2));
+        throw new Error('Database has no title field');
       }
       
-      console.log(`Page created successfully with field "${successField}"`);
+      // Создаем запись с правильным полем title
+      console.log(`Creating page with title field: "${titleField}"`);
+      const response = await notion.pages.create({
+        parent: { database_id: ATTENDANCE_DB_ID },
+        properties: {
+          [titleField]: {
+            title: [{ text: { content: attendanceTitle } }]
+          }
+        }
+      });
       
-      // Теперь попробуем обновить с остальными полями
+      if (!response) {
+        throw new Error('Failed to create attendance record');
+      }
+      
+      console.log(`Page created successfully with field "${titleField}"`);
+      
+      // Теперь попробуем обновить с остальными полями используя схему
       try {
         const updateProps = {};
+        const description = `Сотрудник: ${attendanceData.employeeName}
+ID: ${attendanceData.employeeId}
+Дата: ${attendanceData.date}
+Время прихода: ${checkInTime}`;
         
-        // Попробуем разные варианты для Assignee
-        const assigneeVariants = ['Assignee', 'Исполнитель', 'Assigned', 'Person'];
-        for (const field of assigneeVariants) {
-          try {
-            await notion.pages.update({
-              page_id: response.id,
-              properties: {
-                [field]: {
-                  number: typeof attendanceData.employeeId === 'string' ? 
-                    parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
-                }
-              }
-            });
-            console.log(`Assignee field "${field}" works`);
-            break;
-          } catch (e) {
-            console.log(`Assignee field "${field}" failed:`, e.message);
+        // Ищем поле для ID сотрудника (number type)
+        for (const [fieldName, fieldInfo] of Object.entries(schema)) {
+          if (fieldInfo.type === 'number' && 
+              (fieldName.toLowerCase().includes('assignee') || 
+               fieldName.toLowerCase().includes('исполнитель') ||
+               fieldName.toLowerCase().includes('id'))) {
+            try {
+              updateProps[fieldName] = {
+                number: typeof attendanceData.employeeId === 'string' ? 
+                  parseInt(attendanceData.employeeId, 10) : attendanceData.employeeId
+              };
+              console.log(`Using field "${fieldName}" for employee ID`);
+              break;
+            } catch (e) {
+              console.log(`Field "${fieldName}" failed:`, e.message);
+            }
           }
         }
         
-        // Добавляем описание в тело страницы если не можем в свойства
-        try {
+        // Ищем поле для статуса (select type)
+        for (const [fieldName, fieldInfo] of Object.entries(schema)) {
+          if (fieldInfo.type === 'select' && 
+              (fieldName.toLowerCase().includes('status') || 
+               fieldName.toLowerCase().includes('статус'))) {
+            updateProps[fieldName] = { select: { name: 'В работе' } };
+            console.log(`Using field "${fieldName}" for status`);
+            break;
+          }
+        }
+        
+        // Ищем поле для описания (rich_text type)
+        for (const [fieldName, fieldInfo] of Object.entries(schema)) {
+          if (fieldInfo.type === 'rich_text' && 
+              (fieldName.toLowerCase().includes('description') || 
+               fieldName.toLowerCase().includes('описание') ||
+               fieldName.toLowerCase().includes('content'))) {
+            updateProps[fieldName] = {
+              rich_text: [{ text: { content: description } }]
+            };
+            console.log(`Using field "${fieldName}" for description`);
+            break;
+          }
+        }
+        
+        // Обновляем страницу если есть что обновлять
+        if (Object.keys(updateProps).length > 0) {
           await notion.pages.update({
             page_id: response.id,
-            properties: {
-              'Status': { select: { name: 'В работе' } }
-            }
+            properties: updateProps
           });
-        } catch (e) {
-          console.log('Could not update status:', e.message);
+          console.log('Page updated with additional properties');
         }
         
       } catch (updateError) {
         console.error('Error updating page:', updateError.message);
       }
-      
-      return response;
       
       console.log('Attendance record created successfully:', response.id);
       return response;
