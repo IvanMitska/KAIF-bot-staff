@@ -12,14 +12,24 @@ const requiredEnvVars = [
   'NOTION_API_KEY',
   'NOTION_DATABASE_REPORTS_ID',
   'NOTION_DATABASE_USERS_ID',
-  'NOTION_DATABASE_TASKS_ID',
+  'NOTION_DATABASE_TASKS_ID'
+];
+
+const optionalEnvVars = [
   'NOTION_DATABASE_ATTENDANCE_ID'
 ];
 
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+const missingOptional = optionalEnvVars.filter(varName => !process.env[varName] || process.env[varName] === 'YOUR_ATTENDANCE_DATABASE_ID');
+
 if (missingVars.length > 0) {
-  console.error('❌ Отсутствуют переменные окружения:', missingVars.join(', '));
+  console.error('❌ Отсутствуют ОБЯЗАТЕЛЬНЫЕ переменные окружения:', missingVars.join(', '));
   console.error('Добавьте их в Railway dashboard → Variables');
+}
+
+if (missingOptional.length > 0) {
+  console.warn('⚠️ Отсутствуют опциональные переменные:', missingOptional.join(', '));
+  console.warn('Некоторые функции могут быть недоступны');
 }
 
 // Функция для отправки запроса фото
@@ -916,30 +926,48 @@ app.get('/', (req, res) => {
 
 // Запускаем бота если все переменные есть
 if (missingVars.length === 0) {
-  // Запускаем минимальный бот
-  const { spawn } = require('child_process');
-  const botProcess = spawn('node', ['src/bot-minimal.js'], {
-    stdio: 'inherit',
-    env: process.env
-  });
+  console.log('🤖 Запуск Telegram бота...');
+  console.log('📁 Текущая директория:', process.cwd());
+  console.log('🔍 Проверка наличия файла бота...');
   
-  botProcess.on('error', (err) => {
-    console.error('Failed to start bot:', err);
-  });
+  const fs = require('fs');
+  const botPath = path.join(__dirname, 'src', 'bot-minimal.js');
   
-  botProcess.on('exit', (code) => {
-    console.log(`Bot process exited with code ${code}`);
-    if (code !== 0) {
-      // Перезапуск через 5 секунд при ошибке
-      setTimeout(() => {
-        console.log('Restarting bot...');
-        spawn('node', ['src/bot-minimal.js'], {
-          stdio: 'inherit',
-          env: process.env
-        });
-      }, 5000);
-    }
-  });
+  if (!fs.existsSync(botPath)) {
+    console.error('❌ Файл бота не найден:', botPath);
+  } else {
+    console.log('✅ Файл бота найден:', botPath);
+    
+    // Запускаем минимальный бот
+    const { spawn } = require('child_process');
+    const botProcess = spawn('node', [botPath], {
+      stdio: 'inherit',
+      env: process.env
+    });
+    
+    console.log('✅ Процесс бота запущен с PID:', botProcess.pid);
+    
+    botProcess.on('error', (err) => {
+      console.error('❌ Failed to start bot:', err);
+    });
+    
+    botProcess.on('exit', (code) => {
+      console.log(`⚠️ Bot process exited with code ${code}`);
+      if (code !== 0) {
+        // Перезапуск через 5 секунд при ошибке
+        setTimeout(() => {
+          console.log('🔄 Restarting bot...');
+          const newBotProcess = spawn('node', [botPath], {
+            stdio: 'inherit',
+            env: process.env
+          });
+          console.log('✅ Бот перезапущен с PID:', newBotProcess.pid);
+        }, 5000);
+      }
+    });
+  }
+} else {
+  console.error('⚠️ Бот не запущен из-за отсутствующих переменных окружения');
 }
 
 // Запуск сервера
