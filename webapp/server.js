@@ -166,14 +166,23 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     const MANAGER_IDS = [385436658, 1734337242];
     const userId = req.telegramUser.id;
     
+    console.log('Raw request body:', req.body);
+    console.log('Raw userId from telegram:', userId, 'type:', typeof userId);
+    console.log('assigneeId from body:', req.body.assigneeId, 'type:', typeof req.body.assigneeId);
+    
     // Преобразуем в числа для корректного сравнения
     const userIdNum = parseInt(userId);
-    const assigneeId = req.body.assigneeId ? parseInt(req.body.assigneeId) : userIdNum;
+    // Если assigneeId не передан или undefined, используем ID текущего пользователя
+    const assigneeId = (req.body.assigneeId !== undefined && req.body.assigneeId !== null && req.body.assigneeId !== '') 
+        ? parseInt(req.body.assigneeId) 
+        : userIdNum;
     
-    console.log('Creating task - userId:', userIdNum, 'assigneeId:', assigneeId, 'isManager:', MANAGER_IDS.includes(userIdNum));
+    console.log('After parsing - userIdNum:', userIdNum, 'assigneeId:', assigneeId);
+    console.log('Comparison result:', assigneeId !== userIdNum, 'isManager:', MANAGER_IDS.includes(userIdNum));
     
     // Проверка прав: если ставят задачу не себе, должен быть менеджер
     if (assigneeId !== userIdNum && !MANAGER_IDS.includes(userIdNum)) {
+      console.log('Access denied: user tries to assign to someone else without being a manager');
       return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
     }
     

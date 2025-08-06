@@ -1522,12 +1522,15 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     // Если обычный пользователь - скрываем поле выбора исполнителя
     if (!window.isManager) {
         select.removeAttribute('required'); // Убираем required для обычных пользователей
+        select.removeAttribute('name'); // Убираем name, чтобы поле не отправлялось
+        select.value = ''; // Очищаем значение
         const formGroup = select.closest('.form-group');
         if (formGroup) {
             formGroup.style.display = 'none'; // Полностью скрываем поле
         }
     } else {
         // Менеджер - показываем всех сотрудников
+        select.setAttribute('name', 'employee'); // Восстанавливаем name для менеджеров
         select.setAttribute('required', 'required'); // Восстанавливаем required для менеджеров
         select.disabled = false;
         const formGroup = select.closest('.form-group');
