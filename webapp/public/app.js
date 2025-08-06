@@ -1519,24 +1519,18 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     
     const select = document.getElementById('taskEmployee');
     
-    // Если обычный пользователь - показываем только себя
+    // Если обычный пользователь - скрываем поле выбора исполнителя
     if (!window.isManager) {
-        select.innerHTML = `<option value="${tg.initDataUnsafe.user.id}" selected>${currentUser.name} (Я)</option>`;
-        select.disabled = true; // Блокируем выбор
-        
-        // Скрываем label или добавляем пояснение
         const formGroup = select.closest('.form-group');
         if (formGroup) {
-            const label = formGroup.querySelector('label');
-            if (label) {
-                label.textContent = 'Исполнитель (только для себя)';
-            }
+            formGroup.style.display = 'none'; // Полностью скрываем поле
         }
     } else {
         // Менеджер - показываем всех сотрудников
         select.disabled = false;
         const formGroup = select.closest('.form-group');
         if (formGroup) {
+            formGroup.style.display = 'block'; // Показываем поле
             const label = formGroup.querySelector('label');
             if (label) {
                 label.textContent = 'Исполнитель';
@@ -1593,13 +1587,24 @@ async function submitTask(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
+    
+    // Если не менеджер, не передаем assigneeId (сервер автоматически поставит на себя)
+    const isManager = currentUser && [385436658, 1734337242].includes(currentUser.telegramId);
+    
     const task = {
-        assigneeId: parseInt(formData.get('employee')),
         title: formData.get('title'),
         description: formData.get('description') || '',
         deadline: formData.get('deadline'),
         priority: formData.get('priority')
     };
+    
+    // Добавляем assigneeId только если менеджер и выбран сотрудник
+    if (isManager) {
+        const employeeId = formData.get('employee');
+        if (employeeId) {
+            task.assigneeId = parseInt(employeeId);
+        }
+    }
     
     const submitBtn = event.target.querySelector('.submit-btn');
     const originalText = submitBtn.textContent;

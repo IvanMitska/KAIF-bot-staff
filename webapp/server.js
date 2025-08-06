@@ -160,17 +160,20 @@ app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   }
 });
 
-// Создать задачу (только для менеджеров)
+// Создать задачу
 app.post('/api/tasks', authMiddleware, async (req, res) => {
   try {
     const MANAGER_IDS = [385436658, 1734337242];
+    const userId = req.telegramUser.id;
+    const assigneeId = req.body.assigneeId || userId; // Если не указан исполнитель, ставим себе
     
-    if (!MANAGER_IDS.includes(req.telegramUser.id)) {
-      return res.status(403).json({ error: 'Forbidden' });
+    // Проверка прав: если ставят задачу не себе, должен быть менеджер
+    if (assigneeId !== userId && !MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
     }
     
-    const user = await userService.getUserByTelegramId(req.telegramUser.id);
-    const assignee = await userService.getUserByTelegramId(req.body.assigneeId);
+    const user = await userService.getUserByTelegramId(userId);
+    const assignee = await userService.getUserByTelegramId(assigneeId);
     
     if (!user || !assignee) {
       return res.status(404).json({ error: 'User not found' });
@@ -179,12 +182,12 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     const taskData = {
       title: req.body.title,
       description: req.body.description || '',
-      assigneeId: req.body.assigneeId,
+      assigneeId: assigneeId,
       assigneeName: assignee.name,
-      creatorId: req.telegramUser.id,
+      creatorId: userId,
       creatorName: user.name,
       status: 'Новая',
-      priority: req.body.priority || 'medium',
+      priority: req.body.priority || 'Средний',
       deadline: req.body.deadline || null
     };
     
@@ -275,6 +278,31 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error('Users error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить список сотрудников для выбора (доступно всем)
+app.get('/api/employees', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = req.telegramUser.id;
+    
+    // Если не менеджер, возвращаем только себя
+    if (!MANAGER_IDS.includes(userId)) {
+      const user = await userService.getUserByTelegramId(userId);
+      if (user) {
+        res.json([user]);
+      } else {
+        res.json([]);
+      }
+    } else {
+      // Менеджер видит всех
+      const users = await notionService.getUsers();
+      res.json(users);
+    }
+  } catch (error) {
+    console.error('Employees error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
