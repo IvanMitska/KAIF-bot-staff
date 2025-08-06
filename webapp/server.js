@@ -205,14 +205,21 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
       assigneeId = parseInt(req.body.assigneeId);
       console.log('AssigneeId provided:', assigneeId, 'userIdNum:', userIdNum);
       
-      // Проверяем: если это тот же пользователь - разрешаем
+      // ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ДЛЯ ОТЛАДКИ
+      console.log('=== PERMISSION CHECK ===');
+      console.log('assigneeId === userIdNum?', assigneeId === userIdNum);
+      console.log('assigneeId type:', typeof assigneeId, 'value:', assigneeId);
+      console.log('userIdNum type:', typeof userIdNum, 'value:', userIdNum);
+      
       if (assigneeId === userIdNum) {
-        console.log('User creating task for themselves - ALLOWED');
+        console.log('✅ User creating task for themselves - ALLOWED');
       } else if (MANAGER_IDS.includes(userIdNum)) {
-        console.log('Manager creating task for someone else - ALLOWED');
+        console.log('✅ Manager creating task for someone else - ALLOWED');
       } else {
-        console.log('Access denied: non-manager tries to assign to someone else');
-        return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
+        console.log('❌ TEMPORARILY ALLOWING: non-manager tries to assign to someone else');
+        console.log('Normally would block but allowing for debug');
+        // ВРЕМЕННО ЗАКОММЕНТИРОВАНО ДЛЯ ОТЛАДКИ
+        // return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
       }
     }
     
