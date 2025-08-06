@@ -7,24 +7,34 @@ async function quickTaskKeyboard(userId) {
     inline_keyboard: []
   };
   
+  const MANAGER_IDS = [385436658, 1734337242];
+  const isManager = MANAGER_IDS.includes(userId);
+  
   try {
-    // Получаем всех пользователей из базы
-    const users = await getUsers();
-    
-    // Фильтруем пользователей - исключаем только самого себя
-    const availableUsers = users.filter(u => u.telegramId !== userId);
-    
-    // Добавляем кнопки для первых 5 пользователей
-    availableUsers.slice(0, 5).forEach(user => {
-      keyboard.inline_keyboard.push([
-        { text: `📝 ${user.name}`, callback_data: `quick_task_${user.telegramId}` }
-      ]);
-    });
-    
-    // Кнопка для обычного создания
+    // Кнопка для создания задачи себе
     keyboard.inline_keyboard.push([
-      { text: '➕ Другой пользователь', callback_data: 'new_task' }
+      { text: '📝 Себе', callback_data: `quick_task_self` }
     ]);
+    
+    if (isManager) {
+      // Получаем всех пользователей из базы
+      const users = await getUsers();
+      
+      // Фильтруем пользователей - исключаем только самого себя
+      const availableUsers = users.filter(u => u.telegramId !== userId);
+      
+      // Добавляем кнопки для первых 5 пользователей
+      availableUsers.slice(0, 5).forEach(user => {
+        keyboard.inline_keyboard.push([
+          { text: `📝 ${user.name}`, callback_data: `quick_task_${user.telegramId}` }
+        ]);
+      });
+      
+      // Кнопка для обычного создания
+      keyboard.inline_keyboard.push([
+        { text: '➕ Другой пользователь', callback_data: 'new_task' }
+      ]);
+    }
     
     keyboard.inline_keyboard.push([
       { text: '◀️ Назад', callback_data: 'back_to_menu' }
@@ -41,21 +51,19 @@ async function handleQuickTaskMenu(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
-  // Проверяем, что это менеджер
   const MANAGER_IDS = [385436658, 1734337242];
-  if (!MANAGER_IDS.includes(userId)) {
-    await bot.answerCallbackQuery(callbackQuery.id, {
-      text: '❌ Только менеджеры могут создавать задачи',
-      show_alert: true
-    });
-    return;
-  }
+  const isManager = MANAGER_IDS.includes(userId);
   
   const keyboard = await quickTaskKeyboard(userId);
   
-  await bot.editMessageText(
+  const message = isManager ?
     '⚡ *Быстрое создание задачи*\n\n' +
-    'Выберите пользователя для назначения задачи:',
+    'Выберите пользователя для назначения задачи:' :
+    '⚡ *Быстрое создание задачи*\n\n' +
+    'Вы можете создать задачу себе:';
+  
+  await bot.editMessageText(
+    message,
     {
       chat_id: chatId,
       message_id: callbackQuery.message.message_id,
@@ -71,10 +79,31 @@ async function handleQuickTaskEmployee(bot, callbackQuery, employeeId) {
   const userId = callbackQuery.from.id;
   
   try {
-    const employee = await getUser(employeeId);
-    if (!employee) {
-      await bot.sendMessage(chatId, '❌ Сотрудник не найден');
-      return;
+    let employee;
+    
+    // Проверяем, задача для себя или для другого
+    if (employeeId === 'self') {
+      employee = await getUser(userId);
+      if (!employee) {
+        await bot.sendMessage(chatId, '❌ Вы не зарегистрированы в системе');
+        return;
+      }
+    } else {
+      // Проверяем права для постановки задач другим
+      const MANAGER_IDS = [385436658, 1734337242];
+      if (!MANAGER_IDS.includes(userId)) {
+        await bot.answerCallbackQuery(callbackQuery.id, {
+          text: '❌ Вы можете создавать задачи только себе',
+          show_alert: true
+        });
+        return;
+      }
+      
+      employee = await getUser(employeeId);
+      if (!employee) {
+        await bot.sendMessage(chatId, '❌ Сотрудник не найден');
+        return;
+      }
     }
     
     // Ждем ввода задачи в одном сообщении

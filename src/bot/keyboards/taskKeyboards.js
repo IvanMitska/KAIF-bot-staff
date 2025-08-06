@@ -13,6 +13,7 @@ const taskKeyboards = {
   
   employeeMenu: () => ({
     inline_keyboard: [
+      [{ text: '➕ Создать задачу себе', callback_data: 'new_task' }],
       [{ text: '📋 Мои задачи', callback_data: 'my_tasks' }],
       [{ text: '🔄 Новые задачи', callback_data: 'my_new_tasks' }],
       [{ text: '⏳ В работе', callback_data: 'my_in_progress_tasks' }],

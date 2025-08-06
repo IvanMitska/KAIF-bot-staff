@@ -99,15 +99,22 @@ async function handleNewTask(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   
-  if (!MANAGER_IDS.includes(userId)) {
-    await bot.sendMessage(chatId, '❌ Только менеджер может создавать задачи');
-    return;
-  }
+  const isManager = MANAGER_IDS.includes(userId);
   
-  // Получаем список всех пользователей (включая менеджеров)
+  // Получаем список пользователей
   const users = await getAllUsers();
-  // Исключаем только самого себя из списка
-  const availableUsers = users.filter(u => u.telegramId !== userId);
+  let availableUsers = [];
+  
+  if (isManager) {
+    // Менеджеры могут ставить задачи всем (включая себя)
+    availableUsers = users;
+  } else {
+    // Обычные сотрудники могут ставить задачи только себе
+    const selfUser = users.find(u => u.telegramId === userId);
+    if (selfUser) {
+      availableUsers = [selfUser];
+    }
+  }
   
   if (availableUsers.length === 0) {
     await bot.sendMessage(chatId, '❌ Нет доступных пользователей для назначения задач');
@@ -121,8 +128,12 @@ async function handleNewTask(bot, callbackQuery) {
     taskData: {}
   };
   
+  const message = isManager ? 
+    '👤 Выберите сотрудника для назначения задачи:' :
+    '📝 Создание задачи для себя:';
+  
   await bot.editMessageText(
-    '👤 Выберите сотрудника для назначения задачи:',
+    message,
     {
       chat_id: chatId,
       message_id: callbackQuery.message.message_id,

@@ -29,7 +29,12 @@ async function handleCallbackQuery(bot, callbackQuery) {
     }
     
     if (data.startsWith('quick_task_')) {
-      const employeeId = parseInt(data.replace('quick_task_', ''));
+      const employeeIdStr = data.replace('quick_task_', '');
+      if (employeeIdStr === 'self') {
+        await handleQuickTaskEmployee(bot, callbackQuery, 'self');
+        return;
+      }
+      const employeeId = parseInt(employeeIdStr);
       if (!isNaN(employeeId)) {
         await handleQuickTaskEmployee(bot, callbackQuery, employeeId);
         return;
