@@ -176,19 +176,34 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     
     // Преобразуем в числа для корректного сравнения
     const userIdNum = parseInt(userId);
-    // Если assigneeId не передан или undefined, используем ID текущего пользователя
-    const assigneeId = (req.body.assigneeId !== undefined && req.body.assigneeId !== null && req.body.assigneeId !== '') 
-        ? parseInt(req.body.assigneeId) 
-        : userIdNum;
     
-    console.log('After parsing - userIdNum:', userIdNum, 'assigneeId:', assigneeId);
-    console.log('Comparison result:', assigneeId !== userIdNum, 'isManager:', MANAGER_IDS.includes(userIdNum));
+    // ВАЖНО: Если assigneeId вообще не передан, значит пользователь создает задачу себе
+    const hasAssigneeId = req.body.hasOwnProperty('assigneeId') && 
+                          req.body.assigneeId !== undefined && 
+                          req.body.assigneeId !== null && 
+                          req.body.assigneeId !== '';
     
-    // Проверка прав: если ставят задачу не себе, должен быть менеджер
-    if (assigneeId !== userIdNum && !MANAGER_IDS.includes(userIdNum)) {
-      console.log('Access denied: user tries to assign to someone else without being a manager');
-      return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
+    console.log('Has assigneeId in request?', hasAssigneeId);
+    
+    let assigneeId;
+    
+    if (!hasAssigneeId) {
+      // Нет assigneeId - пользователь создает задачу себе
+      assigneeId = userIdNum;
+      console.log('No assigneeId provided - creating task for self:', userIdNum);
+    } else {
+      // assigneeId передан - проверяем права
+      assigneeId = parseInt(req.body.assigneeId);
+      console.log('AssigneeId provided:', assigneeId, 'userIdNum:', userIdNum);
+      
+      // Только если assigneeId отличается от userId и пользователь не менеджер - блокируем
+      if (assigneeId !== userIdNum && !MANAGER_IDS.includes(userIdNum)) {
+        console.log('Access denied: non-manager tries to assign to someone else');
+        return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
+      }
     }
+    
+    console.log('Final assigneeId:', assigneeId, 'userIdNum:', userIdNum);
     
     const user = await userService.getUserByTelegramId(userIdNum);
     const assignee = await userService.getUserByTelegramId(assigneeId);

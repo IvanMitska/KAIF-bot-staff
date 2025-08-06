@@ -1523,14 +1523,12 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     
     const select = document.getElementById('taskEmployee');
     
-    // Если обычный пользователь - скрываем поле выбора исполнителя
+    // Если обычный пользователь - полностью удаляем поле выбора исполнителя
     if (!window.isManager) {
-        select.removeAttribute('required'); // Убираем required для обычных пользователей
-        select.removeAttribute('name'); // Убираем name, чтобы поле не отправлялось
-        select.value = ''; // Очищаем значение
         const formGroup = select.closest('.form-group');
         if (formGroup) {
-            formGroup.style.display = 'none'; // Полностью скрываем поле
+            // Полностью удаляем элемент из DOM, чтобы он точно не отправлялся
+            formGroup.remove();
         }
     } else {
         // Менеджер - показываем всех сотрудников
@@ -1615,12 +1613,18 @@ async function submitTask(event) {
     // Добавляем assigneeId только если менеджер и выбран сотрудник
     if (isManager) {
         const employeeId = formData.get('employee');
-        if (employeeId) {
+        console.log('Manager mode - employee from form:', employeeId);
+        if (employeeId && employeeId !== '') {
             task.assigneeId = parseInt(employeeId);
         }
+    } else {
+        // Для обычных пользователей явно НЕ добавляем assigneeId
+        console.log('Regular user mode - NOT adding assigneeId to request');
+        // Убедимся, что поле точно не попадет в запрос
+        delete task.assigneeId;
     }
     
-    console.log('Task data to send:', task);
+    console.log('Task data to send:', JSON.stringify(task));
     
     const submitBtn = event.target.querySelector('.submit-btn');
     const originalText = submitBtn.textContent;
