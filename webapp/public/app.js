@@ -1591,6 +1591,9 @@ async function submitTask(event) {
     // Если не менеджер, не передаем assigneeId (сервер автоматически поставит на себя)
     const isManager = currentUser && [385436658, 1734337242].includes(currentUser.telegramId);
     
+    console.log('Creating task, isManager:', isManager);
+    console.log('Current user:', currentUser);
+    
     const task = {
         title: formData.get('title'),
         description: formData.get('description') || '',
@@ -1605,6 +1608,8 @@ async function submitTask(event) {
             task.assigneeId = parseInt(employeeId);
         }
     }
+    
+    console.log('Task data to send:', task);
     
     const submitBtn = event.target.querySelector('.submit-btn');
     const originalText = submitBtn.textContent;
@@ -1626,20 +1631,38 @@ async function submitTask(event) {
                 tg.HapticFeedback.notificationOccurred('success');
             }
             
-            tg.showAlert('Задача успешно создана! ✅', () => {
-                closeTaskModal();
-                if (document.getElementById('tasks').classList.contains('active')) {
-                    loadTasks();
-                }
-            });
+            // Закрываем модальное окно сразу
+            closeTaskModal();
+            
+            // Показываем уведомление
+            if (tg.showAlert) {
+                tg.showAlert('Задача успешно создана! ✅');
+            }
+            
+            // Обновляем список задач если он открыт
+            if (document.getElementById('tasks').classList.contains('active')) {
+                await loadTasks();
+            }
+            
+            // Также показываем уведомление в интерфейсе
+            showNotification('Задача успешно создана! ✅', 'success');
         } else {
-            throw new Error('Ошибка создания');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Ошибка создания');
         }
     } catch (error) {
+        console.error('Error creating task:', error);
         if (tg.HapticFeedback) {
             tg.HapticFeedback.notificationOccurred('error');
         }
-        tg.showAlert('Ошибка при создании задачи');
+        
+        const errorMessage = error.message || 'Ошибка при создании задачи';
+        
+        if (tg.showAlert) {
+            tg.showAlert(errorMessage);
+        }
+        
+        showNotification(errorMessage, 'error');
     } finally {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
