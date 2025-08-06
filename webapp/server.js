@@ -177,27 +177,32 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     // Преобразуем в числа для корректного сравнения
     const userIdNum = parseInt(userId);
     
-    // ВАЖНО: Если assigneeId вообще не передан, значит пользователь создает задачу себе
+    // ВРЕМЕННОЕ РЕШЕНИЕ: Всегда разрешаем создавать задачи себе
     const hasAssigneeId = req.body.hasOwnProperty('assigneeId') && 
                           req.body.assigneeId !== undefined && 
                           req.body.assigneeId !== null && 
                           req.body.assigneeId !== '';
     
     console.log('Has assigneeId in request?', hasAssigneeId);
+    console.log('User is creating task, userId:', userIdNum);
     
     let assigneeId;
     
     if (!hasAssigneeId) {
-      // Нет assigneeId - пользователь создает задачу себе
+      // Нет assigneeId - пользователь создает задачу себе - ВСЕГДА РАЗРЕШАЕМ
       assigneeId = userIdNum;
       console.log('No assigneeId provided - creating task for self:', userIdNum);
     } else {
-      // assigneeId передан - проверяем права
+      // assigneeId передан
       assigneeId = parseInt(req.body.assigneeId);
       console.log('AssigneeId provided:', assigneeId, 'userIdNum:', userIdNum);
       
-      // Только если assigneeId отличается от userId и пользователь не менеджер - блокируем
-      if (assigneeId !== userIdNum && !MANAGER_IDS.includes(userIdNum)) {
+      // Проверяем: если это тот же пользователь - разрешаем
+      if (assigneeId === userIdNum) {
+        console.log('User creating task for themselves - ALLOWED');
+      } else if (MANAGER_IDS.includes(userIdNum)) {
+        console.log('Manager creating task for someone else - ALLOWED');
+      } else {
         console.log('Access denied: non-manager tries to assign to someone else');
         return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
       }
@@ -206,10 +211,19 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     console.log('Final assigneeId:', assigneeId, 'userIdNum:', userIdNum);
     
     const user = await userService.getUserByTelegramId(userIdNum);
-    const assignee = await userService.getUserByTelegramId(assigneeId);
+    console.log('Creator user found:', user ? 'YES' : 'NO', user?.name);
     
-    if (!user || !assignee) {
-      return res.status(404).json({ error: 'User not found' });
+    const assignee = await userService.getUserByTelegramId(assigneeId);
+    console.log('Assignee user found:', assignee ? 'YES' : 'NO', assignee?.name);
+    
+    if (!user) {
+      console.error('Creator not found in database, userId:', userIdNum);
+      return res.status(404).json({ error: 'Создатель задачи не найден в базе данных' });
+    }
+    
+    if (!assignee) {
+      console.error('Assignee not found in database, assigneeId:', assigneeId);
+      return res.status(404).json({ error: 'Исполнитель не найден в базе данных' });
     }
     
     const taskData = {
