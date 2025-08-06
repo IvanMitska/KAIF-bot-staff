@@ -1632,6 +1632,13 @@ async function submitTask(event) {
     submitBtn.disabled = true;
     
     try {
+        console.log('Sending request to:', `${API_URL}/api/tasks`);
+        console.log('Request headers:', {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing'
+        });
+        console.log('Request body:', JSON.stringify(task));
+        
         const response = await fetch(`${API_URL}/api/tasks`, {
             method: 'POST',
             headers: {
@@ -1640,6 +1647,9 @@ async function submitTask(event) {
             },
             body: JSON.stringify(task)
         });
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
         
         if (response.ok) {
             if (tg.HapticFeedback) {

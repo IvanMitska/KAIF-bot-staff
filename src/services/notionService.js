@@ -961,7 +961,7 @@ const notionService = {
           filter: {
             and: [
               {
-                property: 'Title',
+                property: 'ID',
                 title: {
                   contains: todayISO
                 }
@@ -969,13 +969,13 @@ const notionService = {
               {
                 or: [
                   {
-                    property: 'Title',
+                    property: 'ID',
                     title: {
                       contains: 'check-in'
                     }
                   },
                   {
-                    property: 'Title', 
+                    property: 'ID', 
                     title: {
                       contains: 'check-out'
                     }
@@ -991,16 +991,16 @@ const notionService = {
         
         // Фильтруем результаты вручную по employeeId
         const todayAttendance = response.results.find(page => {
-          // Получаем заголовок
-          const title = page.properties['Title']?.title?.[0]?.text?.content || '';
+          // Получаем ID (заголовок)
+          const id = page.properties['ID']?.title?.[0]?.text?.content || '';
           
           // Проверяем assigneeId
-          const assigneeId = page.properties['Assignee ID']?.number;
+          const assigneeId = page.properties['Исполнитель ID']?.number;
           
           // Проверяем, что это задача check-in/check-out для нужного сотрудника на сегодня
-          const isForEmployee = assigneeId === employeeId || title.includes(employeeId.toString());
-          const isToday = title.includes(todayISO);
-          const isAttendance = title.includes('check-in') || title.includes('check-out');
+          const isForEmployee = assigneeId === employeeId || id.includes(employeeId.toString());
+          const isToday = id.includes(todayISO);
+          const isAttendance = id.includes('check-in') || id.includes('check-out');
           
           return isForEmployee && isToday && isAttendance;
         });
