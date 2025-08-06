@@ -50,9 +50,11 @@ function validateTelegramWebAppData(initData) {
 
 // Middleware для проверки авторизации
 async function authMiddleware(req, res, next) {
+  console.log('Auth middleware called for:', req.method, req.path);
   const initData = req.headers['x-telegram-init-data'];
   
   if (!initData) {
+    console.log('Auth failed: No initData');
     return res.status(401).json({ error: 'Unauthorized' });
   }
   
@@ -65,13 +67,16 @@ async function authMiddleware(req, res, next) {
   const userString = parsedData.get('user');
   
   if (!userString) {
+    console.log('Auth failed: No user string');
     return res.status(401).json({ error: 'User data not found' });
   }
   
   try {
     req.telegramUser = JSON.parse(userString);
+    console.log('Auth success: User authenticated -', req.telegramUser.id, req.telegramUser.first_name);
     next();
   } catch (error) {
+    console.log('Auth failed: Invalid user data -', error.message);
     return res.status(401).json({ error: 'Invalid user data' });
   }
 }
@@ -162,6 +167,9 @@ app.get('/api/tasks/my', authMiddleware, async (req, res) => {
 
 // Создать задачу
 app.post('/api/tasks', authMiddleware, async (req, res) => {
+  console.log('=== TASK CREATION ENDPOINT CALLED ===');
+  console.log('User from auth:', req.telegramUser);
+  
   try {
     const MANAGER_IDS = [385436658, 1734337242];
     const userId = req.telegramUser.id;
@@ -238,12 +246,20 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
       deadline: req.body.deadline || null
     };
     
+    console.log('Creating task with data:', JSON.stringify(taskData));
     const taskId = await notionService.createTask(taskData);
+    console.log('Task created successfully with ID:', taskId);
     
     res.json({ success: true, taskId });
   } catch (error) {
-    console.error('Create task error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('=== CREATE TASK ERROR ===');
+    console.error('Error details:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Отправляем более детальную ошибку клиенту
+    const errorMessage = error.message || 'Server error';
+    res.status(500).json({ error: errorMessage });
   }
 });
 
