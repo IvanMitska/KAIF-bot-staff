@@ -165,14 +165,19 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
   try {
     const MANAGER_IDS = [385436658, 1734337242];
     const userId = req.telegramUser.id;
-    const assigneeId = req.body.assigneeId || userId; // Если не указан исполнитель, ставим себе
+    
+    // Преобразуем в числа для корректного сравнения
+    const userIdNum = parseInt(userId);
+    const assigneeId = req.body.assigneeId ? parseInt(req.body.assigneeId) : userIdNum;
+    
+    console.log('Creating task - userId:', userIdNum, 'assigneeId:', assigneeId, 'isManager:', MANAGER_IDS.includes(userIdNum));
     
     // Проверка прав: если ставят задачу не себе, должен быть менеджер
-    if (assigneeId !== userId && !MANAGER_IDS.includes(userId)) {
+    if (assigneeId !== userIdNum && !MANAGER_IDS.includes(userIdNum)) {
       return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
     }
     
-    const user = await userService.getUserByTelegramId(userId);
+    const user = await userService.getUserByTelegramId(userIdNum);
     const assignee = await userService.getUserByTelegramId(assigneeId);
     
     if (!user || !assignee) {
@@ -184,7 +189,7 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
       description: req.body.description || '',
       assigneeId: assigneeId,
       assigneeName: assignee.name,
-      creatorId: userId,
+      creatorId: userIdNum,
       creatorName: user.name,
       status: 'Новая',
       priority: req.body.priority || 'Средний',
