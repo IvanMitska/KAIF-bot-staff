@@ -1523,12 +1523,22 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     
     const select = document.getElementById('taskEmployee');
     
-    // Если обычный пользователь - полностью удаляем поле выбора исполнителя
+    if (!select) {
+        console.error('Employee select not found!');
+        return;
+    }
+    
+    // Если обычный пользователь - скрываем поле выбора исполнителя
     if (!window.isManager) {
+        console.log('User is not manager - hiding employee selection');
+        // НЕ удаляем из DOM, а только скрываем и убираем required
+        select.removeAttribute('required');
+        select.disabled = true;
+        select.value = '';
+        
         const formGroup = select.closest('.form-group');
         if (formGroup) {
-            // Полностью удаляем элемент из DOM, чтобы он точно не отправлялся
-            formGroup.remove();
+            formGroup.style.display = 'none';
         }
     } else {
         // Менеджер - показываем всех сотрудников
@@ -1591,9 +1601,11 @@ function closeTaskModal() {
 
 // Отправить задачу
 async function submitTask(event) {
+    console.log('=== submitTask called ===');
     event.preventDefault();
     
     const formData = new FormData(event.target);
+    console.log('Form data collected');
     
     // Если не менеджер, не передаем assigneeId (сервер автоматически поставит на себя)
     // Используем tg.initDataUnsafe.user.id, а не currentUser.telegramId!
