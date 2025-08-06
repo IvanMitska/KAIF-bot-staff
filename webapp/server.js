@@ -166,9 +166,13 @@ app.post('/api/tasks', authMiddleware, async (req, res) => {
     const MANAGER_IDS = [385436658, 1734337242];
     const userId = req.telegramUser.id;
     
-    console.log('Raw request body:', req.body);
+    console.log('=== TASK CREATION DEBUG ===');
+    console.log('Raw request body:', JSON.stringify(req.body));
     console.log('Raw userId from telegram:', userId, 'type:', typeof userId);
     console.log('assigneeId from body:', req.body.assigneeId, 'type:', typeof req.body.assigneeId);
+    console.log('Is assigneeId undefined?', req.body.assigneeId === undefined);
+    console.log('Is assigneeId null?', req.body.assigneeId === null);
+    console.log('Is assigneeId empty string?', req.body.assigneeId === '');
     
     // Преобразуем в числа для корректного сравнения
     const userIdNum = parseInt(userId);

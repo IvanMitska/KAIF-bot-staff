@@ -205,7 +205,10 @@ async function loadProfile() {
                 
                 // Проверяем, является ли пользователь менеджером
                 const MANAGER_IDS = [385436658, 1734337242]; // Boris, Ivan
-                const isManager = MANAGER_IDS.includes(tg.initDataUnsafe.user?.id);
+                const currentTelegramId = tg.initDataUnsafe.user?.id;
+                const isManager = currentTelegramId && MANAGER_IDS.includes(currentTelegramId);
+                
+                console.log('User initialization - Telegram ID:', currentTelegramId, 'isManager:', isManager);
                 
                 if (isManager) {
                     document.getElementById('managerSection')?.style.setProperty('display', 'block');
@@ -218,6 +221,7 @@ async function loadProfile() {
                 
                 // Сохраняем статус менеджера глобально
                 window.isManager = isManager;
+                window.currentTelegramId = currentTelegramId;
             }
         }
     } catch (error) {
@@ -1594,10 +1598,12 @@ async function submitTask(event) {
     const formData = new FormData(event.target);
     
     // Если не менеджер, не передаем assigneeId (сервер автоматически поставит на себя)
-    const isManager = currentUser && [385436658, 1734337242].includes(currentUser.telegramId);
+    // Используем tg.initDataUnsafe.user.id, а не currentUser.telegramId!
+    const currentUserId = tg.initDataUnsafe?.user?.id;
+    const isManager = currentUserId && [385436658, 1734337242].includes(currentUserId);
     
-    console.log('Creating task, isManager:', isManager);
-    console.log('Current user:', currentUser);
+    console.log('Creating task, currentUserId:', currentUserId, 'isManager:', isManager);
+    console.log('Current user from profile:', currentUser);
     
     const task = {
         title: formData.get('title'),
