@@ -1528,31 +1528,36 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
         return;
     }
     
-    // Если обычный пользователь - скрываем поле выбора исполнителя
+    // ВАЖНО: Показываем поле выбора исполнителя для ВСЕХ, но с разным содержимым
+    const formGroup = select.closest('.form-group');
+    if (formGroup) {
+        formGroup.style.display = 'block'; // Всегда показываем поле
+    }
+    
+    // Делаем поле обязательным для всех
+    select.setAttribute('name', 'employee');
+    select.setAttribute('required', 'required');
+    select.disabled = false;
+    
     if (!window.isManager) {
-        console.log('User is not manager - hiding employee selection');
-        // НЕ удаляем из DOM, а только скрываем и убираем required
-        select.removeAttribute('required');
-        select.disabled = true;
-        select.value = '';
+        // Обычный пользователь - может выбрать только себя
+        console.log('User is not manager - showing only self option');
         
-        const formGroup = select.closest('.form-group');
-        if (formGroup) {
-            formGroup.style.display = 'none';
+        // Получаем ID и имя текущего пользователя
+        const currentUserId = tg.initDataUnsafe?.user?.id;
+        const currentUserName = currentUser?.name || tg.initDataUnsafe?.user?.first_name || 'Я';
+        
+        if (currentUserId) {
+            // Показываем только опцию "себе" с правильным ID
+            select.innerHTML = `<option value="${currentUserId}" selected>${currentUserName} (себе)</option>`;
+            console.log(`Set self-option: ${currentUserId} - ${currentUserName}`);
+        } else {
+            console.error('ERROR: Current user ID not found!');
+            select.innerHTML = `<option value="">Ошибка: пользователь не найден</option>`;
         }
     } else {
         // Менеджер - показываем всех сотрудников
-        select.setAttribute('name', 'employee'); // Восстанавливаем name для менеджеров
-        select.setAttribute('required', 'required'); // Восстанавливаем required для менеджеров
-        select.disabled = false;
-        const formGroup = select.closest('.form-group');
-        if (formGroup) {
-            formGroup.style.display = 'block'; // Показываем поле
-            const label = formGroup.querySelector('label');
-            if (label) {
-                label.textContent = 'Исполнитель';
-            }
-        }
+        console.log('User is manager - loading all employees');
         
         if (employeeId && employeeName) {
             select.innerHTML = `<option value="${employeeId}" selected>${employeeName}</option>`;
@@ -1622,18 +1627,22 @@ async function submitTask(event) {
         priority: formData.get('priority')
     };
     
-    // Добавляем assigneeId только если менеджер и выбран сотрудник
-    if (isManager) {
-        const employeeId = formData.get('employee');
-        console.log('Manager mode - employee from form:', employeeId);
-        if (employeeId && employeeId !== '') {
-            task.assigneeId = parseInt(employeeId);
-        }
+    // ВАЖНО: Теперь ВСЕГДА берем assigneeId из формы, так как поле всегда заполнено
+    const employeeId = formData.get('employee');
+    console.log('Employee ID from form:', employeeId);
+    
+    if (employeeId && employeeId !== '') {
+        task.assigneeId = parseInt(employeeId);
+        console.log('Setting assigneeId:', task.assigneeId);
     } else {
-        // Для обычных пользователей явно НЕ добавляем assigneeId
-        console.log('Regular user mode - NOT adding assigneeId to request');
-        // Убедимся, что поле точно не попадет в запрос
-        delete task.assigneeId;
+        // Если по какой-то причине ID не получен, используем ID текущего пользователя
+        const currentUserId = tg.initDataUnsafe?.user?.id;
+        if (currentUserId) {
+            task.assigneeId = parseInt(currentUserId);
+            console.log('Fallback: using current user ID:', task.assigneeId);
+        } else {
+            console.error('ERROR: No user ID available!');
+        }
     }
     
     console.log('Task data to send:', JSON.stringify(task));
