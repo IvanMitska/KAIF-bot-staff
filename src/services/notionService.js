@@ -952,38 +952,57 @@ const notionService = {
       
       console.log('Getting today attendance for employee:', employeeId, 'date:', todayISO);
       
-      // Сначала попробуем найти задачу только по Assignee
-      console.log('Searching for attendance with minimal filter...');
+      // Для посещаемости используем базу задач - ищем специальные задачи check-in/check-out
+      console.log('Searching for attendance records in tasks database...');
       
       try {
         const response = await notion.databases.query({
           database_id: ATTENDANCE_DB_ID,
           filter: {
-            property: 'Assignee',
-            number: {
-              equals: typeof employeeId === 'string' ? parseInt(employeeId, 10) : employeeId
-            }
+            and: [
+              {
+                property: 'Title',
+                title: {
+                  contains: todayISO
+                }
+              },
+              {
+                or: [
+                  {
+                    property: 'Title',
+                    title: {
+                      contains: 'check-in'
+                    }
+                  },
+                  {
+                    property: 'Title', 
+                    title: {
+                      contains: 'check-out'
+                    }
+                  }
+                ]
+              }
+            ]
           },
           page_size: 100
         });
         
         console.log(`Found ${response.results.length} tasks for employee ${employeeId}`);
         
-        // Фильтруем результаты вручную
+        // Фильтруем результаты вручную по employeeId
         const todayAttendance = response.results.find(page => {
-          // Пробуем получить заголовок из разных возможных полей
-          let title = '';
-          const possibleTitleFields = ['Title', 'Name', 'Название', 'Задача', 'Task'];
+          // Получаем заголовок
+          const title = page.properties['Title']?.title?.[0]?.text?.content || '';
           
-          for (const field of possibleTitleFields) {
-            if (page.properties[field]?.title?.[0]?.text?.content) {
-              title = page.properties[field].title[0].text.content;
-              break;
-            }
-          }
+          // Проверяем assigneeId
+          const assigneeId = page.properties['Assignee ID']?.number;
           
-          // Проверяем, что это задача учета времени на сегодня
-          return title.includes('Учет времени') && title.includes(todayISO);
+          // Проверяем, что это задача check-in/check-out для нужного сотрудника на сегодня
+          const isForEmployee = assigneeId === employeeId || title.includes(employeeId.toString());
+          const isToday = title.includes(todayISO);
+          const isAttendance = title.includes('check-in') || title.includes('check-out');
+          
+          return isForEmployee && isToday && isAttendance;
         });
         
         if (todayAttendance) {
