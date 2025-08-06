@@ -165,108 +165,69 @@ app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   }
 });
 
-// Создать задачу
+// Создать задачу - РАДИКАЛЬНО УПРОЩЕННАЯ ВЕРСИЯ
 app.post('/api/tasks', authMiddleware, async (req, res) => {
-  console.log('=== TASK CREATION ENDPOINT CALLED ===');
-  console.log('User from auth:', req.telegramUser);
+  console.log('=== СОЗДАНИЕ ЗАДАЧИ ===');
   
   try {
     const MANAGER_IDS = [385436658, 1734337242];
-    const userId = req.telegramUser.id;
+    const currentUserId = parseInt(req.telegramUser.id);
     
-    console.log('=== TASK CREATION DEBUG ===');
-    console.log('Raw request body:', JSON.stringify(req.body));
-    console.log('Raw userId from telegram:', userId, 'type:', typeof userId);
-    console.log('assigneeId from body:', req.body.assigneeId, 'type:', typeof req.body.assigneeId);
-    console.log('Is assigneeId undefined?', req.body.assigneeId === undefined);
-    console.log('Is assigneeId null?', req.body.assigneeId === null);
-    console.log('Is assigneeId empty string?', req.body.assigneeId === '');
+    // ПРОСТАЯ ЛОГИКА:
+    // 1. Если assigneeId не передан или пустой - создаем задачу себе
+    // 2. Если assigneeId = currentUserId - создаем задачу себе  
+    // 3. Если assigneeId != currentUserId - проверяем, менеджер ли это
     
-    // Преобразуем в числа для корректного сравнения
-    const userIdNum = parseInt(userId);
+    let targetUserId = currentUserId; // По умолчанию - себе
     
-    // ВРЕМЕННОЕ РЕШЕНИЕ: Всегда разрешаем создавать задачи себе
-    const hasAssigneeId = req.body.hasOwnProperty('assigneeId') && 
-                          req.body.assigneeId !== undefined && 
-                          req.body.assigneeId !== null && 
-                          req.body.assigneeId !== '';
-    
-    console.log('Has assigneeId in request?', hasAssigneeId);
-    console.log('User is creating task, userId:', userIdNum);
-    
-    let assigneeId;
-    
-    if (!hasAssigneeId) {
-      // Нет assigneeId - пользователь создает задачу себе - ВСЕГДА РАЗРЕШАЕМ
-      assigneeId = userIdNum;
-      console.log('No assigneeId provided - creating task for self:', userIdNum);
-    } else {
-      // assigneeId передан
-      assigneeId = parseInt(req.body.assigneeId);
-      console.log('AssigneeId provided:', assigneeId, 'userIdNum:', userIdNum);
+    // Если передан assigneeId и он не пустой
+    if (req.body.assigneeId && req.body.assigneeId !== '') {
+      targetUserId = parseInt(req.body.assigneeId);
       
-      // ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ДЛЯ ОТЛАДКИ
-      console.log('=== PERMISSION CHECK ===');
-      console.log('assigneeId === userIdNum?', assigneeId === userIdNum);
-      console.log('assigneeId type:', typeof assigneeId, 'value:', assigneeId);
-      console.log('userIdNum type:', typeof userIdNum, 'value:', userIdNum);
-      
-      if (assigneeId === userIdNum) {
-        console.log('✅ User creating task for themselves - ALLOWED');
-      } else if (MANAGER_IDS.includes(userIdNum)) {
-        console.log('✅ Manager creating task for someone else - ALLOWED');
-      } else {
-        console.log('❌ TEMPORARILY ALLOWING: non-manager tries to assign to someone else');
-        console.log('Normally would block but allowing for debug');
-        // ВРЕМЕННО ЗАКОММЕНТИРОВАНО ДЛЯ ОТЛАДКИ
-        // return res.status(403).json({ error: 'Вы можете создавать задачи только для себя' });
+      // Если пытается назначить на другого и НЕ менеджер - блокируем
+      if (targetUserId !== currentUserId && !MANAGER_IDS.includes(currentUserId)) {
+        console.log(`❌ Пользователь ${currentUserId} пытается назначить на ${targetUserId} - ЗАПРЕЩЕНО`);
+        return res.status(403).json({ 
+          error: 'Вы можете создавать задачи только для себя' 
+        });
       }
     }
     
-    console.log('Final assigneeId:', assigneeId, 'userIdNum:', userIdNum);
+    console.log(`✅ Пользователь ${currentUserId} создает задачу для ${targetUserId}`);
     
-    const user = await userService.getUserByTelegramId(userIdNum);
-    console.log('Creator user found:', user ? 'YES' : 'NO', user?.name);
+    // Получаем данные пользователей
+    const creator = await userService.getUserByTelegramId(currentUserId);
+    const assignee = await userService.getUserByTelegramId(targetUserId);
     
-    const assignee = await userService.getUserByTelegramId(assigneeId);
-    console.log('Assignee user found:', assignee ? 'YES' : 'NO', assignee?.name);
-    
-    if (!user) {
-      console.error('Creator not found in database, userId:', userIdNum);
-      return res.status(404).json({ error: 'Создатель задачи не найден в базе данных' });
+    if (!creator || !assignee) {
+      return res.status(404).json({ 
+        error: 'Пользователь не найден в базе данных' 
+      });
     }
     
-    if (!assignee) {
-      console.error('Assignee not found in database, assigneeId:', assigneeId);
-      return res.status(404).json({ error: 'Исполнитель не найден в базе данных' });
-    }
-    
+    // Создаем задачу
     const taskData = {
       title: req.body.title,
       description: req.body.description || '',
-      assigneeId: assigneeId,
+      assigneeId: targetUserId,
       assigneeName: assignee.name,
-      creatorId: userIdNum,
-      creatorName: user.name,
+      creatorId: currentUserId,
+      creatorName: creator.name,
       status: 'Новая',
       priority: req.body.priority || 'Средний',
       deadline: req.body.deadline || null
     };
     
-    console.log('Creating task with data:', JSON.stringify(taskData));
     const taskId = await notionService.createTask(taskData);
-    console.log('Task created successfully with ID:', taskId);
+    console.log('✅ Задача создана с ID:', taskId);
     
     res.json({ success: true, taskId });
-  } catch (error) {
-    console.error('=== CREATE TASK ERROR ===');
-    console.error('Error details:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
     
-    // Отправляем более детальную ошибку клиенту
-    const errorMessage = error.message || 'Server error';
-    res.status(500).json({ error: errorMessage });
+  } catch (error) {
+    console.error('❌ Ошибка создания задачи:', error);
+    res.status(500).json({ 
+      error: 'Ошибка при создании задачи' 
+    });
   }
 });
 
