@@ -956,57 +956,27 @@ const notionService = {
       console.log('Searching for attendance records in tasks database...');
       
       try {
+        // Упрощаем поиск - ищем по паттерну check-in-{employeeId}-{date}
+        const searchPattern = `check-in-${employeeId}-${todayISO}`;
+        console.log('Searching for pattern:', searchPattern);
+        
         const response = await notion.databases.query({
           database_id: ATTENDANCE_DB_ID,
           filter: {
-            and: [
-              {
-                property: 'ID',
-                title: {
-                  contains: todayISO
-                }
-              },
-              {
-                or: [
-                  {
-                    property: 'ID',
-                    title: {
-                      contains: 'check-in'
-                    }
-                  },
-                  {
-                    property: 'ID', 
-                    title: {
-                      contains: 'check-out'
-                    }
-                  }
-                ]
-              }
-            ]
+            property: 'ID',
+            title: {
+              contains: searchPattern
+            }
           },
           page_size: 100
         });
         
-        console.log(`Found ${response.results.length} tasks for employee ${employeeId}`);
+        console.log(`Found ${response.results.length} records matching pattern`);
         
-        // Фильтруем результаты вручную по employeeId
-        const todayAttendance = response.results.find(page => {
-          // Получаем ID (заголовок)
-          const id = page.properties['ID']?.title?.[0]?.text?.content || '';
-          
-          // Проверяем assigneeId
-          const assigneeId = page.properties['Исполнитель ID']?.number;
-          
-          // Проверяем, что это задача check-in/check-out для нужного сотрудника на сегодня
-          const isForEmployee = assigneeId === employeeId || id.includes(employeeId.toString());
-          const isToday = id.includes(todayISO);
-          const isAttendance = id.includes('check-in') || id.includes('check-out');
-          
-          return isForEmployee && isToday && isAttendance;
-        });
-        
-        if (todayAttendance) {
-          console.log('Found today attendance record');
+        // Если нашли запись, берем первую (должна быть только одна на день)
+        if (response.results.length > 0) {
+          const todayAttendance = response.results[0];
+          console.log('Found today attendance record:', todayAttendance.id);
           return this.parseAttendanceFromPage(todayAttendance, todayISO);
         }
         
@@ -1131,7 +1101,8 @@ const notionService = {
       });
       
       // Создаем задачу в базе Tasks для учета времени
-      const attendanceTitle = `Учет времени - ${attendanceData.employeeName} - ${attendanceData.date}`;
+      // ВАЖНО: Включаем "check-in" в заголовок для поиска
+      const attendanceTitle = `check-in-${attendanceData.employeeId}-${attendanceData.date}`;
       const checkInTime = formatPhuketTime(attendanceData.checkIn);
       
       // Пробуем создать с минимальным набором полей
