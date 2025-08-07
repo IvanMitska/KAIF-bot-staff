@@ -680,6 +680,7 @@ async function checkAttendanceStatus() {
                     } else {
                         // На работе
                         console.log('Setting checkOut button to ENABLED (no checkOut time)');
+                        checkOutBtn.classList.add('force-enabled'); // Добавляем класс принудительной активации
                         checkOutBtn.disabled = false;
                         checkOutBtn.removeAttribute('disabled');
                         checkOutBtn.classList.remove('disabled');
@@ -833,7 +834,10 @@ window.forceEnableCheckOut = function() {
     
     // Убираем проверку на checked-in, просто активируем если кнопка существует
     if (checkOutBtn) {
-        console.log('Force enabling checkout button (no conditions)...');
+        console.log('Force enabling checkout button with force-enabled class...');
+        
+        // ВАЖНО: Добавляем специальный класс для принудительной активации
+        checkOutBtn.classList.add('force-enabled');
         
         // Убираем ВСЕ блокировки
         checkOutBtn.disabled = false;
@@ -842,25 +846,29 @@ window.forceEnableCheckOut = function() {
         checkOutBtn.classList.remove('btn-disabled');
         
         // Сбрасываем все стили блокировки
-        checkOutBtn.style.opacity = '1';
-        checkOutBtn.style.cursor = 'pointer';
-        checkOutBtn.style.pointerEvents = 'auto';
-        checkOutBtn.style.filter = 'none';
-        checkOutBtn.style.userSelect = 'auto';
-        checkOutBtn.style.touchAction = 'auto';
+        checkOutBtn.style.removeProperty('opacity');
+        checkOutBtn.style.removeProperty('cursor');
+        checkOutBtn.style.removeProperty('pointer-events');
+        checkOutBtn.style.removeProperty('filter');
+        checkOutBtn.style.removeProperty('user-select');
+        checkOutBtn.style.removeProperty('touch-action');
         
         // Убираем табиндекс блокировки
         checkOutBtn.removeAttribute('tabindex');
         checkOutBtn.setAttribute('tabindex', '0');
         
-        // Восстанавливаем обработчик события
+        // Восстанавливаем обработчик события - пробуем разные способы
         checkOutBtn.onclick = window.checkOut;
+        checkOutBtn.addEventListener('click', window.checkOut, { once: true });
+        
+        // Также устанавливаем через setAttribute для надёжности
+        checkOutBtn.setAttribute('onclick', 'checkOut()');
         
         // Убираем все возможные блокировки от родителей
         let parent = checkOutBtn.parentElement;
-        while (parent) {
+        while (parent && parent !== document.body) {
             if (parent.style) {
-                parent.style.pointerEvents = 'auto';
+                parent.style.removeProperty('pointer-events');
             }
             parent = parent.parentElement;
         }
@@ -868,21 +876,24 @@ window.forceEnableCheckOut = function() {
         // Восстанавливаем стили кнопки
         const wrapper = checkOutBtn.querySelector('.btn-icon-wrapper');
         if (wrapper) {
-            wrapper.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-            wrapper.style.pointerEvents = 'auto';
+            wrapper.style.removeProperty('background');
+            wrapper.style.removeProperty('pointer-events');
+            wrapper.classList.add('force-enabled');
         }
         
         // Убираем классы блокировки от всех дочерних элементов
         checkOutBtn.querySelectorAll('*').forEach(el => {
-            el.style.pointerEvents = 'auto';
+            el.style.removeProperty('pointer-events');
             el.classList.remove('disabled');
+            el.classList.add('force-enabled');
         });
         
         console.log('Checkout button FULLY force enabled:', {
             disabled: checkOutBtn.disabled,
             classList: checkOutBtn.className,
+            hasForceEnabled: checkOutBtn.classList.contains('force-enabled'),
             onclick: checkOutBtn.onclick ? 'set' : 'not set',
-            style: checkOutBtn.style.cssText
+            onclickAttr: checkOutBtn.getAttribute('onclick')
         });
         
         return true;

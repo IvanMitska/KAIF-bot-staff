@@ -1009,14 +1009,35 @@ body {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
-/* Disabled состояние */
-.attendance-btn:disabled {
+/* Disabled состояние - НЕ применяется к force-enabled */
+.attendance-btn:disabled:not(.force-enabled) {
     opacity: 0.4;
     cursor: not-allowed;
 }
 
-.attendance-btn:disabled .btn-icon-wrapper {
+.attendance-btn:disabled:not(.force-enabled) .btn-icon-wrapper {
     background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+}
+
+/* КРИТИЧНО: Форсированная активация checkout кнопки */
+.check-out.force-enabled,
+.check-out.force-enabled:disabled {
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    filter: none !important;
+    user-select: auto !important;
+    touch-action: auto !important;
+}
+
+.check-out.force-enabled .btn-icon-wrapper,
+.check-out.force-enabled:disabled .btn-icon-wrapper {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    pointer-events: auto !important;
+}
+
+.check-out.force-enabled * {
+    pointer-events: auto !important;
 }
 
 /* Переопределение для кнопки checkout когда есть активный checkin */
