@@ -765,15 +765,27 @@ window.checkIn = async function() {
             showNotification('Приход отмечен', 'success');
             await checkAttendanceStatus();
             
-            // Принудительно активируем кнопку через небольшую задержку
-            setTimeout(() => {
-                window.forceEnableCheckOut();
-            }, 500);
+            // АГРЕССИВНАЯ активация кнопки checkout - пробуем несколько раз
+            console.log('Starting aggressive checkout button activation...');
+            
+            // Сразу активируем
+            window.forceEnableCheckOut();
+            
+            // И еще несколько раз с интервалами для надёжности
+            const intervals = [100, 300, 500, 1000, 2000];
+            intervals.forEach(delay => {
+                setTimeout(() => {
+                    console.log(`Trying to enable checkout after ${delay}ms`);
+                    window.forceEnableCheckOut();
+                }, delay);
+            });
             
             // Дополнительная проверка через API
             setTimeout(async () => {
                 await window.checkAndEnableCheckOut();
-            }, 1000);
+                // И еще раз форсированно после проверки
+                window.forceEnableCheckOut();
+            }, 1500);
             
             // Вибрация
             if (tg.HapticFeedback) {
@@ -819,25 +831,64 @@ window.forceEnableCheckOut = function() {
     const checkOutBtn = document.getElementById('checkOutBtn');
     const checkInBtn = document.getElementById('checkInBtn');
     
-    if (checkOutBtn && checkInBtn && checkInBtn.classList.contains('checked-in')) {
-        console.log('Force enabling checkout button...');
+    // Убираем проверку на checked-in, просто активируем если кнопка существует
+    if (checkOutBtn) {
+        console.log('Force enabling checkout button (no conditions)...');
+        
+        // Убираем ВСЕ блокировки
         checkOutBtn.disabled = false;
         checkOutBtn.removeAttribute('disabled');
         checkOutBtn.classList.remove('disabled');
+        checkOutBtn.classList.remove('btn-disabled');
+        
+        // Сбрасываем все стили блокировки
         checkOutBtn.style.opacity = '1';
         checkOutBtn.style.cursor = 'pointer';
         checkOutBtn.style.pointerEvents = 'auto';
         checkOutBtn.style.filter = 'none';
+        checkOutBtn.style.userSelect = 'auto';
+        checkOutBtn.style.touchAction = 'auto';
         
-        // Убираем все возможные блокировки
+        // Убираем табиндекс блокировки
+        checkOutBtn.removeAttribute('tabindex');
+        checkOutBtn.setAttribute('tabindex', '0');
+        
+        // Восстанавливаем обработчик события
+        checkOutBtn.onclick = window.checkOut;
+        
+        // Убираем все возможные блокировки от родителей
+        let parent = checkOutBtn.parentElement;
+        while (parent) {
+            if (parent.style) {
+                parent.style.pointerEvents = 'auto';
+            }
+            parent = parent.parentElement;
+        }
+        
+        // Восстанавливаем стили кнопки
         const wrapper = checkOutBtn.querySelector('.btn-icon-wrapper');
         if (wrapper) {
             wrapper.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            wrapper.style.pointerEvents = 'auto';
         }
         
-        console.log('Checkout button force enabled');
+        // Убираем классы блокировки от всех дочерних элементов
+        checkOutBtn.querySelectorAll('*').forEach(el => {
+            el.style.pointerEvents = 'auto';
+            el.classList.remove('disabled');
+        });
+        
+        console.log('Checkout button FULLY force enabled:', {
+            disabled: checkOutBtn.disabled,
+            classList: checkOutBtn.className,
+            onclick: checkOutBtn.onclick ? 'set' : 'not set',
+            style: checkOutBtn.style.cssText
+        });
+        
         return true;
     }
+    
+    console.error('Checkout button not found!');
     return false;
 };
 
