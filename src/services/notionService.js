@@ -1323,7 +1323,19 @@ ID: ${attendanceData.employeeId}
       });
       
       console.log('Attendance check-out updated successfully');
-      return response;
+      
+      // Вычисляем отработанные часы
+      const checkInMatch = currentDescription.match(/Время прихода: ([\d:]+)/);
+      if (checkInMatch) {
+        const checkInTime = checkInMatch[1];
+        const checkInDate = new Date(`${getPhuketDateISO()}T${checkInTime}:00`);
+        const checkOutDate = new Date(checkOut);
+        const hoursWorked = ((checkOutDate - checkInDate) / (1000 * 60 * 60)).toFixed(1);
+        console.log('Hours worked:', hoursWorked);
+        return hoursWorked;
+      }
+      
+      return '0';
     } catch (error) {
       console.error('Notion update attendance check-out error:', error);
       throw error;

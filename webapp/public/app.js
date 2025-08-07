@@ -970,8 +970,12 @@ window.checkOut = async function() {
                 tg.HapticFeedback.notificationOccurred('success');
             }
         } else {
-            showNotification('Ошибка отметки ухода', 'error');
+            const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
+            console.error('Check-out error:', errorData);
+            showNotification(errorData.error || 'Ошибка отметки ухода', 'error');
             checkOutBtn.disabled = false;
+            // Восстанавливаем класс force-enabled
+            checkOutBtn.classList.add('force-enabled');
         }
     } catch (error) {
         console.error('Error checking out:', error);
