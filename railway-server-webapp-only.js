@@ -734,6 +734,10 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
+    // Геолокация
+    const location = req.body?.location || null;
+    const geoInfo = evaluateLocation(location);
+    
     // Проверяем, не отмечен ли уже приход сегодня
     console.log('Checking existing attendance...');
     const existingAttendance = await notionService.getTodayAttendance(req.telegramUser.id);
@@ -748,9 +752,10 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
       employeeName: user.name,
       employeeId: req.telegramUser.id,
       date: getPhuketDateISO(),
-      checkIn: new Date().toISOString(), // Оставляем ISO для базы данных
+      checkIn: new Date().toISOString(),
       status: 'На работе',
-      late: isLateForWork() // Опоздание по времени Пхукета
+      late: isLateForWork(),
+      location
     };
     
     console.log('Creating attendance record:', attendanceData);
@@ -763,7 +768,11 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
     
     const time = formatPhuketTime(new Date());
-    const message = `🟢 *${user.name}* пришел на работу\n⏰ Время: ${time}${attendanceData.late ? '\n⚠️ Опоздание!' : ''}`;
+    let message = `🟢 *${user.name}* пришел на работу\n⏰ Время: ${time}${attendanceData.late ? '\n⚠️ Опоздание!' : ''}`;
+    if (geoInfo) {
+      message += `\n📍 Локация: ${geoInfo.description}`;
+      if (geoInfo.mapUrl) message += `\n🔗 ${geoInfo.mapUrl}`;
+    }
     
     for (const managerId of MANAGER_IDS) {
       try {
@@ -796,7 +805,7 @@ app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
     }
     
     const checkOut = new Date().toISOString();
-    const workHours = await notionService.updateAttendanceCheckOut(attendance.id, checkOut);
+    const workHours = await notionService.updateAttendanceCheckOut(attendance.id, checkOut, req.body?.location || null);
     
     // Отправляем уведомление менеджерам
     const user = await userService.getUserByTelegramId(req.telegramUser.id);
@@ -805,7 +814,12 @@ app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
     
     const time = formatPhuketTime(new Date());
-    const message = `🔴 *${user.name}* ушел с работы\n⏰ Время: ${time}\n⏱ Отработано: ${workHours} часов`;
+    const geoInfo = evaluateLocation(req.body?.location || null);
+    let message = `🔴 *${user.name}* ушел с работы\n⏰ Время: ${time}\n⏱ Отработано: ${workHours} часов`;
+    if (geoInfo) {
+      message += `\n📍 Локация: ${geoInfo.description}`;
+      if (geoInfo.mapUrl) message += `\n🔗 ${geoInfo.mapUrl}`;
+    }
     
     for (const managerId of MANAGER_IDS) {
       try {
@@ -994,3 +1008,29 @@ app.listen(PORT, () => {
   console.log(`🌐 Web App URL: https://${publicUrl}/webapp/public`);
   console.log(`🔗 Railway Domain: ${publicUrl}`);
 });
+
+// Геозона офиса и helpers
+const OFFICE_LAT = parseFloat(process.env.OFFICE_LAT || '7.9519');
+const OFFICE_LON = parseFloat(process.env.OFFICE_LON || '98.3381');
+const OFFICE_RADIUS_METERS = parseInt(process.env.OFFICE_RADIUS_METERS || '250');
+
+function evaluateLocation(location) {
+  if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+    return null;
+  }
+  const distance = haversineDistanceMeters(location.lat, location.lon, OFFICE_LAT, OFFICE_LON);
+  const inside = distance <= OFFICE_RADIUS_METERS;
+  const desc = `${inside ? 'В офисе' : 'ВНЕ офиса'} • ±${Math.round(location.accuracy || 0)}м • ${distance.toFixed(0)}м от офиса`;
+  const mapUrl = `https://maps.google.com/?q=${location.lat},${location.lon}`;
+  return { inside, distance, description: desc, mapUrl };
+}
+
+function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
+  const toRad = (v) => v * Math.PI / 180;
+  const R = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}

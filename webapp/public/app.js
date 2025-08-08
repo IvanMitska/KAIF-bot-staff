@@ -741,6 +741,29 @@ async function checkAttendanceStatus() {
     }
 }
 
+// Вспомогательная функция: получить геолокацию пользователя
+async function getCurrentLocation(options = { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }) {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    const onSuccess = (pos) => {
+      resolve({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      });
+    };
+    const onError = () => resolve(null);
+    try {
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, options);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
 // Отметить приход
 window.checkIn = async function() {
     console.log('CheckIn called');
@@ -751,13 +774,17 @@ window.checkIn = async function() {
         const checkInBtn = document.getElementById('checkInBtn');
         checkInBtn.disabled = true;
         
+        // Берем геолокацию (не блокирующе, но с ожиданием до таймаута)
+        const location = await getCurrentLocation();
+        
         console.log('Sending check-in request...');
         const response = await fetch(`${API_URL}/api/attendance/check-in`, {
-            method: 'POST',
-            headers: {
-                'X-Telegram-Init-Data': tg.initData,
-                'Content-Type': 'application/json'
-            }
+          method: 'POST',
+          headers: {
+            'X-Telegram-Init-Data': tg.initData,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ location })
         });
         
         console.log('Response status:', response.status);
@@ -952,12 +979,16 @@ window.checkOut = async function() {
         const checkOutBtn = document.getElementById('checkOutBtn');
         checkOutBtn.disabled = true;
         
+        // Геолокация при уходе
+        const location = await getCurrentLocation();
+        
         const response = await fetch(`${API_URL}/api/attendance/check-out`, {
-            method: 'POST',
-            headers: {
-                'X-Telegram-Init-Data': tg.initData,
-                'Content-Type': 'application/json'
-            }
+          method: 'POST',
+          headers: {
+            'X-Telegram-Init-Data': tg.initData,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ location })
         });
         
         if (response.ok) {

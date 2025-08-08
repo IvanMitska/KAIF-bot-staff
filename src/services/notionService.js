@@ -1151,7 +1151,10 @@ const notionService = {
         const description = `Сотрудник: ${attendanceData.employeeName}
 ID: ${attendanceData.employeeId}
 Дата: ${attendanceData.date}
-Время прихода: ${checkInTime}`;
+Время прихода: ${checkInTime}` +
+          (attendanceData.location && attendanceData.location.lat && attendanceData.location.lon
+            ? `\nЛокация прихода: ${attendanceData.location.lat.toFixed(5)}, ${attendanceData.location.lon.toFixed(5)}${attendanceData.location.accuracy ? ` (±${Math.round(attendanceData.location.accuracy)}м)` : ''}`
+            : '');
         
         // Ищем поле для ID сотрудника (number type)
         for (const [fieldName, fieldInfo] of Object.entries(schema)) {
@@ -1218,7 +1221,7 @@ ID: ${attendanceData.employeeId}
     }
   },
 
-  async updateAttendanceCheckOut(attendanceId, checkOut) {
+  async updateAttendanceCheckOut(attendanceId, checkOut, location = null) {
     try {
       if (!attendanceId || !checkOut) {
         throw new Error('Missing attendanceId or checkOut time');
@@ -1254,7 +1257,10 @@ ID: ${attendanceData.employeeId}
       // Добавляем время ухода к описанию
       const checkOutTime = formatPhuketTime(checkOut);
       
-      const updatedDescription = currentDescription + `\nВремя ухода: ${checkOutTime}`;
+      let updatedDescription = currentDescription + `\nВремя ухода: ${checkOutTime}`;
+      if (location && typeof location.lat === 'number' && typeof location.lon === 'number') {
+        updatedDescription += `\nЛокация ухода: ${location.lat.toFixed(5)}, ${location.lon.toFixed(5)}${location.accuracy ? ` (±${Math.round(location.accuracy)}м)` : ''}`;
+      }
       
       // Ищем поле статуса адаптивно
       let statusField = null;
