@@ -770,8 +770,8 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
     const time = formatPhuketTime(new Date());
     let message = `🟢 *${user.name}* пришел на работу\n⏰ Время: ${time}${attendanceData.late ? '\n⚠️ Опоздание!' : ''}`;
     if (geoInfo) {
-      message += `\n📍 Локация: ${geoInfo.description}`;
-      if (geoInfo.mapUrl) message += `\n🔗 ${geoInfo.mapUrl}`;
+      message += `\n📍 ${geoInfo.description}`;
+      // Не показываем ссылку на карту для приватности
     }
     
     for (const managerId of MANAGER_IDS) {
@@ -817,8 +817,8 @@ app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
     const geoInfo = evaluateLocation(req.body?.location || null);
     let message = `🔴 *${user.name}* ушел с работы\n⏰ Время: ${time}\n⏱ Отработано: ${workHours} часов`;
     if (geoInfo) {
-      message += `\n📍 Локация: ${geoInfo.description}`;
-      if (geoInfo.mapUrl) message += `\n🔗 ${geoInfo.mapUrl}`;
+      message += `\n📍 ${geoInfo.description}`;
+      // Не показываем ссылку на карту для приватности
     }
     
     for (const managerId of MANAGER_IDS) {
@@ -1020,9 +1020,10 @@ function evaluateLocation(location) {
   }
   const distance = haversineDistanceMeters(location.lat, location.lon, OFFICE_LAT, OFFICE_LON);
   const inside = distance <= OFFICE_RADIUS_METERS;
-  const desc = `${inside ? 'В офисе' : 'ВНЕ офиса'} • ±${Math.round(location.accuracy || 0)}м • ${distance.toFixed(0)}м от офиса`;
-  const mapUrl = `https://maps.google.com/?q=${location.lat},${location.lon}`;
-  return { inside, distance, description: desc, mapUrl };
+  // Упрощенное описание - только статус без деталей
+  const desc = inside ? '✅ В офисе' : '❌ Вне офиса';
+  // Не возвращаем mapUrl для приватности
+  return { inside, distance, description: desc };
 }
 
 function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
