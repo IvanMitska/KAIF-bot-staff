@@ -1269,19 +1269,18 @@ function loadTodayReports(reports) {
     let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
     
     reports.forEach(report => {
-        const reportTime = new Date(report.createdAt).toLocaleTimeString('ru-RU', {
+        const reportTime = report.timestamp ? new Date(report.timestamp).toLocaleTimeString('ru-RU', {
             hour: '2-digit',
             minute: '2-digit'
-        });
+        }) : 'Время не указано';
         
         html += `
             <div style="background: var(--bg-card); border-radius: 12px; padding: 16px; border-left: 3px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                     <div>
-                        <div style="font-weight: 600; color: var(--text-primary); font-size: 16px;">${report.userName}</div>
+                        <div style="font-weight: 600; color: var(--text-primary); font-size: 16px;">${report.employeeName || 'Неизвестный сотрудник'}</div>
                         <div style="font-size: 12px; color: var(--text-secondary);">Отправлено в ${reportTime}</div>
                     </div>
-                    ${report.position ? `<span style="font-size: 12px; padding: 4px 8px; background: var(--bg-secondary); border-radius: 6px; color: var(--text-secondary);">${report.position}</span>` : ''}
                 </div>
                 
                 <div style="margin-bottom: 12px;">
@@ -1289,7 +1288,7 @@ function loadTodayReports(reports) {
                     <div style="color: var(--text-primary); font-size: 14px; line-height: 1.5;">${report.whatDone || 'Не указано'}</div>
                 </div>
                 
-                ${report.problems ? `
+                ${report.problems && report.problems !== 'нет' && report.problems !== 'Нет' ? `
                     <div>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">⚠️ Проблемы:</div>
                         <div style="color: var(--warning); font-size: 14px; line-height: 1.5;">${report.problems}</div>
