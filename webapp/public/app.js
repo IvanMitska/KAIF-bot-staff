@@ -1085,6 +1085,7 @@ async function loadDashboard() {
             loadTopEmployees(dashboardStats.topEmployees);
             loadTasksStatus(dashboardStats.tasksStatus);
             loadMissingReports(employees, todayData.reports);
+            loadTodayReports(todayData.reports);
             loadAttendanceStatus();
         }
         
@@ -1244,6 +1245,56 @@ function loadMissingReports(allEmployees, todayReports) {
                         style="padding: 8px 16px; background: var(--warning); border: none; border-radius: 8px; color: black; font-size: 12px; font-weight: 600; cursor: pointer;">
                     Напомнить
                 </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Отчеты сотрудников за сегодня
+function loadTodayReports(reports) {
+    const container = document.getElementById('todayReportsList');
+    
+    if (!reports || reports.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: var(--text-secondary);">Нет отчетов за сегодня</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+    
+    reports.forEach(report => {
+        const reportTime = new Date(report.createdAt).toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div style="background: var(--bg-card); border-radius: 12px; padding: 16px; border-left: 3px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary); font-size: 16px;">${report.userName}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Отправлено в ${reportTime}</div>
+                    </div>
+                    ${report.position ? `<span style="font-size: 12px; padding: 4px 8px; background: var(--bg-secondary); border-radius: 6px; color: var(--text-secondary);">${report.position}</span>` : ''}
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">✍️ Что сделано:</div>
+                    <div style="color: var(--text-primary); font-size: 14px; line-height: 1.5;">${report.whatDone || 'Не указано'}</div>
+                </div>
+                
+                ${report.problems ? `
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">⚠️ Проблемы:</div>
+                        <div style="color: var(--warning); font-size: 14px; line-height: 1.5;">${report.problems}</div>
+                    </div>
+                ` : ''}
             </div>
         `;
     });
