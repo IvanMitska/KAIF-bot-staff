@@ -1012,29 +1012,38 @@ const notionService = {
         }
       }
       
-      // Парсим информацию из описания
-      const checkInMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
-      const checkOutMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
+      // Сначала пытаемся извлечь полные ISO даты
+      const checkInISOMatch = descriptionContent.match(/CheckIn ISO: ([\S]+)/);
+      const checkOutISOMatch = descriptionContent.match(/CheckOut ISO: ([\S]+)/);
       
-      const checkInTimeStr = checkInMatch ? checkInMatch[1] : null;
-      const checkOutTimeStr = checkOutMatch ? checkOutMatch[1] : null;
-      
-      // Конвертируем время в полную дату ISO
       let checkInISO = null;
       let checkOutISO = null;
       
-      if (checkInTimeStr) {
-        const [hours, minutes] = checkInTimeStr.split(':');
-        const checkInDate = new Date(dateISO);
-        checkInDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        checkInISO = checkInDate.toISOString();
+      if (checkInISOMatch) {
+        checkInISO = checkInISOMatch[1];
+      } else {
+        // Fallback на старый формат
+        const checkInMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
+        if (checkInMatch) {
+          const checkInTimeStr = checkInMatch[1];
+          const [hours, minutes] = checkInTimeStr.split(':');
+          // Создаем дату в часовом поясе Пхукета
+          const checkInDate = new Date(dateISO + 'T' + checkInTimeStr + ':00.000+07:00');
+          checkInISO = checkInDate.toISOString();
+        }
       }
       
-      if (checkOutTimeStr) {
-        const [hours, minutes] = checkOutTimeStr.split(':');
-        const checkOutDate = new Date(dateISO);
-        checkOutDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        checkOutISO = checkOutDate.toISOString();
+      if (checkOutISOMatch) {
+        checkOutISO = checkOutISOMatch[1];
+      } else {
+        // Fallback на старый формат
+        const checkOutMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
+        if (checkOutMatch) {
+          const checkOutTimeStr = checkOutMatch[1];
+          // Создаем дату в часовом поясе Пхукета
+          const checkOutDate = new Date(dateISO + 'T' + checkOutTimeStr + ':00.000+07:00');
+          checkOutISO = checkOutDate.toISOString();
+        }
       }
       
       // Получаем статус из разных возможных полей
@@ -1105,6 +1114,12 @@ const notionService = {
       const attendanceTitle = `check-in-${attendanceData.employeeId}-${attendanceData.date}`;
       const checkInTime = formatPhuketTime(attendanceData.checkIn);
       
+      console.log('Check-in time formatting:', {
+        originalISO: attendanceData.checkIn,
+        formattedTime: checkInTime,
+        dateISO: attendanceData.date
+      });
+      
       // Пробуем создать с минимальным набором полей
       console.log('Attempting to create page with properties...');
       
@@ -1151,7 +1166,8 @@ const notionService = {
         const description = `Сотрудник: ${attendanceData.employeeName}
 ID: ${attendanceData.employeeId}
 Дата: ${attendanceData.date}
-Время прихода: ${checkInTime}` +
+Время прихода: ${checkInTime}
+CheckIn ISO: ${attendanceData.checkIn}` +
           (attendanceData.location && attendanceData.location.lat && attendanceData.location.lon
             ? `\nЛокация прихода: ${attendanceData.location.lat.toFixed(5)}, ${attendanceData.location.lon.toFixed(5)}${attendanceData.location.accuracy ? ` (±${Math.round(attendanceData.location.accuracy)}м)` : ''}`
             : '');
@@ -1257,7 +1273,16 @@ ID: ${attendanceData.employeeId}
       // Добавляем время ухода к описанию
       const checkOutTime = formatPhuketTime(checkOut);
       
+      // Извлекаем ISO время прихода из описания для корректного расчета
+      let checkInISO = null;
+      const checkInISOMatch = currentDescription.match(/CheckIn ISO: ([\S]+)/);
+      if (checkInISOMatch) {
+        checkInISO = checkInISOMatch[1];
+      }
+      
       let updatedDescription = currentDescription + `\nВремя ухода: ${checkOutTime}`;
+      updatedDescription += `\nCheckOut ISO: ${checkOut}`; // Сохраняем ISO время для последующих расчетов
+      
       if (location && typeof location.lat === 'number' && typeof location.lon === 'number') {
         updatedDescription += `\nЛокация ухода: ${location.lat.toFixed(5)}, ${location.lon.toFixed(5)}${location.accuracy ? ` (±${Math.round(location.accuracy)}м)` : ''}`;
       }
@@ -1301,15 +1326,58 @@ ID: ${attendanceData.employeeId}
       
       console.log('Attendance check-out updated successfully');
       
-      // Вычисляем отработанные часы
-      const checkInMatch = currentDescription.match(/Время прихода: ([\d:]+)/);
-      if (checkInMatch) {
-        const checkInTime = checkInMatch[1];
-        const checkInDate = new Date(`${getPhuketDateISO()}T${checkInTime}:00`);
+      // Вычисляем отработанные часы используя полные ISO даты
+      if (checkInISO) {
+        const checkInDate = new Date(checkInISO);
         const checkOutDate = new Date(checkOut);
-        const hoursWorked = ((checkOutDate - checkInDate) / (1000 * 60 * 60)).toFixed(1);
-        console.log('Hours worked:', hoursWorked);
+        const milliseconds = checkOutDate - checkInDate;
+        const hoursWorked = (milliseconds / (1000 * 60 * 60)).toFixed(1);
+        
+        console.log('Work hours calculation (ISO):', {
+          checkInISO,
+          checkOut,
+          checkInDate: checkInDate.toISOString(),
+          checkOutDate: checkOutDate.toISOString(),
+          milliseconds,
+          hoursWorked
+        });
+        
+        // Проверяем на негативное значение (если checkOut раньше checkIn)
+        if (parseFloat(hoursWorked) < 0) {
+          console.error('Negative work hours detected! Check time zones.');
+          return '0';
+        }
+        
         return hoursWorked;
+      } else {
+        // Fallback на старый метод если ISO не найден
+        const checkInMatch = currentDescription.match(/Время прихода: ([\d:]+)/);
+        if (checkInMatch) {
+          const checkInTime = checkInMatch[1];
+          const [inHours, inMinutes] = checkInTime.split(':').map(Number);
+          
+          // Получаем дату из checkOut
+          const checkOutDate = new Date(checkOut);
+          
+          // Создаем дату checkIn в том же дне
+          const checkInDate = new Date(checkOut);
+          // Устанавливаем UTC часы (вычитаем 7 для Пхукета)
+          checkInDate.setUTCHours(inHours - 7, inMinutes, 0, 0);
+          
+          const milliseconds = checkOutDate - checkInDate;
+          const hoursWorked = (milliseconds / (1000 * 60 * 60)).toFixed(1);
+          
+          console.log('Work hours calculation (fallback):', {
+            checkInTime,
+            checkOut,
+            checkInDate: checkInDate.toISOString(),
+            checkOutDate: checkOutDate.toISOString(),
+            milliseconds,
+            hoursWorked
+          });
+          
+          return hoursWorked;
+        }
       }
       
       return '0';
@@ -1368,18 +1436,79 @@ ID: ${attendanceData.employeeId}
         ]
       });
       
-      return response.results.map(attendance => ({
-        id: attendance.id,
-        employeeName: attendance.properties['Employee Name']?.title?.[0]?.text?.content || '',
-        employeeId: attendance.properties['Employee ID']?.number,
-        date: attendance.properties['Date']?.date?.start,
-        checkIn: attendance.properties['Check In']?.date?.start,
-        checkOut: attendance.properties['Check Out']?.date?.start || null,
-        status: attendance.properties['Status']?.select?.name || 'Present',
-        late: attendance.properties['Late']?.checkbox || false,
-        workHours: attendance.properties['Work Hours']?.formula?.number || null,
-        notes: attendance.properties['Notes']?.rich_text?.[0]?.text?.content || ''
-      }));
+      return response.results.map(attendance => {
+        // Парсим дату из ID задачи
+        const titleField = Object.keys(attendance.properties).find(key => 
+          attendance.properties[key].type === 'title'
+        );
+        const title = titleField ? attendance.properties[titleField]?.title?.[0]?.text?.content || '' : '';
+        const dateMatch = title.match(/check-in-\d+-(\d{4}-\d{2}-\d{2})/);
+        const dateISO = dateMatch ? dateMatch[1] : null;
+        
+        // Получаем описание
+        let descriptionContent = '';
+        const descriptionFields = ['Description', 'Описание', 'Content', 'Содержание'];
+        
+        for (const field of descriptionFields) {
+          if (attendance.properties[field]?.rich_text?.[0]?.text?.content) {
+            descriptionContent = attendance.properties[field].rich_text[0].text.content;
+            break;
+          }
+        }
+        
+        // Извлекаем информацию
+        const employeeNameMatch = descriptionContent.match(/Сотрудник: (.+)/);
+        const employeeIdMatch = descriptionContent.match(/ID: (\d+)/);
+        const checkInISOMatch = descriptionContent.match(/CheckIn ISO: ([\S]+)/);
+        const checkOutISOMatch = descriptionContent.match(/CheckOut ISO: ([\S]+)/);
+        const checkInTimeMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
+        const checkOutTimeMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
+        
+        // Определяем время
+        let checkInISO = checkInISOMatch ? checkInISOMatch[1] : null;
+        let checkOutISO = checkOutISOMatch ? checkOutISOMatch[1] : null;
+        
+        // Fallback для старых записей
+        if (!checkInISO && checkInTimeMatch && dateISO) {
+          const checkInDate = new Date(dateISO + 'T' + checkInTimeMatch[1] + ':00.000+07:00');
+          checkInISO = checkInDate.toISOString();
+        }
+        
+        if (!checkOutISO && checkOutTimeMatch && dateISO) {
+          const checkOutDate = new Date(dateISO + 'T' + checkOutTimeMatch[1] + ':00.000+07:00');
+          checkOutISO = checkOutDate.toISOString();
+        }
+        
+        // Рассчитываем часы
+        let workHours = null;
+        if (checkInISO && checkOutISO) {
+          const checkInTime = new Date(checkInISO);
+          const checkOutTime = new Date(checkOutISO);
+          const hoursWorked = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+          workHours = Math.round(hoursWorked * 10) / 10;
+        }
+        
+        // Определяем опоздание (после 9:00 утра)
+        let late = false;
+        if (checkInISO) {
+          const checkInTime = new Date(checkInISO);
+          const checkInHours = checkInTime.getUTCHours() + 7; // Пхукет UTC+7
+          late = checkInHours >= 9;
+        }
+        
+        return {
+          id: attendance.id,
+          employeeName: employeeNameMatch ? employeeNameMatch[1] : '',
+          employeeId: employeeIdMatch ? parseInt(employeeIdMatch[1], 10) : null,
+          date: dateISO,
+          checkIn: checkInISO,
+          checkOut: checkOutISO,
+          status: checkOutISO ? 'Ушел' : 'На работе',
+          isPresent: !checkOutISO && !!checkInISO,
+          late: late,
+          workHours: workHours
+        };
+      });
     } catch (error) {
       console.error('Notion get attendance for period error:', error);
       throw error;
@@ -1394,35 +1523,75 @@ ID: ${attendanceData.employeeId}
         return [];
       }
       
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString().split('T')[0];
+      const todayISO = getPhuketDateISO();
+      const searchPattern = `check-in-.*-${todayISO}`;
       
+      // Ищем все записи за сегодня
       const response = await notion.databases.query({
         database_id: ATTENDANCE_DB_ID,
         filter: {
-          property: 'Date',
-          date: {
-            equals: todayISO
+          property: 'ID',
+          title: {
+            contains: todayISO
           }
         },
-        sorts: [
-          {
-            property: 'Check In',
-            direction: 'descending'
-          }
-        ]
+        page_size: 100
       });
       
-      return response.results.map(attendance => ({
-        employeeName: attendance.properties['Employee Name']?.title?.[0]?.text?.content || '',
-        employeeId: attendance.properties['Employee ID']?.number,
-        checkIn: attendance.properties['Check In']?.date?.start,
-        checkOut: attendance.properties['Check Out']?.date?.start || null,
-        status: attendance.properties['Status']?.select?.name || 'Present',
-        isPresent: !attendance.properties['Check Out']?.date?.start,
-        workHours: attendance.properties['Work Hours']?.formula?.number || null
-      }));
+      return response.results.map(attendance => {
+        // Получаем описание
+        let descriptionContent = '';
+        const descriptionFields = ['Description', 'Описание', 'Content', 'Содержание'];
+        
+        for (const field of descriptionFields) {
+          if (attendance.properties[field]?.rich_text?.[0]?.text?.content) {
+            descriptionContent = attendance.properties[field].rich_text[0].text.content;
+            break;
+          }
+        }
+        
+        // Извлекаем информацию
+        const employeeNameMatch = descriptionContent.match(/Сотрудник: (.+)/);
+        const employeeIdMatch = descriptionContent.match(/ID: (\d+)/);
+        const checkInISOMatch = descriptionContent.match(/CheckIn ISO: ([\S]+)/);
+        const checkOutISOMatch = descriptionContent.match(/CheckOut ISO: ([\S]+)/);
+        const checkInTimeMatch = descriptionContent.match(/Время прихода: ([\d:]+)/);
+        const checkOutTimeMatch = descriptionContent.match(/Время ухода: ([\d:]+)/);
+        
+        // Определяем время
+        let checkInISO = checkInISOMatch ? checkInISOMatch[1] : null;
+        let checkOutISO = checkOutISOMatch ? checkOutISOMatch[1] : null;
+        
+        // Fallback для старых записей
+        if (!checkInISO && checkInTimeMatch) {
+          const checkInDate = new Date(todayISO + 'T' + checkInTimeMatch[1] + ':00.000+07:00');
+          checkInISO = checkInDate.toISOString();
+        }
+        
+        if (!checkOutISO && checkOutTimeMatch) {
+          const checkOutDate = new Date(todayISO + 'T' + checkOutTimeMatch[1] + ':00.000+07:00');
+          checkOutISO = checkOutDate.toISOString();
+        }
+        
+        // Рассчитываем часы
+        let workHours = null;
+        if (checkInISO && checkOutISO) {
+          const checkInTime = new Date(checkInISO);
+          const checkOutTime = new Date(checkOutISO);
+          const hoursWorked = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+          workHours = Math.round(hoursWorked * 10) / 10;
+        }
+        
+        return {
+          employeeName: employeeNameMatch ? employeeNameMatch[1] : '',
+          employeeId: employeeIdMatch ? parseInt(employeeIdMatch[1], 10) : null,
+          checkIn: checkInISO,
+          checkOut: checkOutISO,
+          status: checkOutISO ? 'Ушел' : 'На работе',
+          isPresent: !checkOutISO && !!checkInISO,
+          workHours: workHours
+        };
+      });
     } catch (error) {
       console.error('Notion get current attendance status error:', error);
       throw error;

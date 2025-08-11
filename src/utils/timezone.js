@@ -15,17 +15,29 @@ function getPhuketTime() {
 
 /**
  * Форматировать время для отображения
- * @param {Date|string} date - Дата для форматирования
- * @returns {string} - Отформатированное время HH:MM
+ * @param {Date|string} date - Дата для форматирования (ожидается UTC/ISO время)
+ * @returns {string} - Отформатированное время HH:MM в часовом поясе Пхукета
  */
 function formatPhuketTime(date) {
   const dateObj = date instanceof Date ? date : new Date(date);
-  // Конвертируем в время Пхукета
-  const utcTime = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
-  const phuketTime = new Date(utcTime + (7 * 60 * 60 * 1000));
   
-  const hours = phuketTime.getHours().toString().padStart(2, '0');
-  const minutes = phuketTime.getMinutes().toString().padStart(2, '0');
+  // Если это ISO строка, она уже в UTC, просто добавляем 7 часов
+  // Если это локальная дата, сначала конвертируем в UTC
+  let phuketTime;
+  
+  // Проверяем, является ли вход ISO строкой (заканчивается на Z или содержит +/-)
+  const dateStr = date.toString ? date.toString() : String(date);
+  if (dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('T')) {
+    // Это ISO формат, он уже в UTC
+    phuketTime = new Date(dateObj.getTime() + (7 * 60 * 60 * 1000));
+  } else {
+    // Это локальное время, конвертируем через UTC
+    const utcTime = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+    phuketTime = new Date(utcTime + (7 * 60 * 60 * 1000));
+  }
+  
+  const hours = phuketTime.getUTCHours().toString().padStart(2, '0');
+  const minutes = phuketTime.getUTCMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 }
 

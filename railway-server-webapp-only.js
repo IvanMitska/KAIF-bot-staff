@@ -748,17 +748,22 @@ app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Already checked in today' });
     }
     
+    const checkInTime = new Date();
     const attendanceData = {
       employeeName: user.name,
       employeeId: req.telegramUser.id,
       date: getPhuketDateISO(),
-      checkIn: new Date().toISOString(),
+      checkIn: checkInTime.toISOString(), // Оставляем UTC время для точных расчетов
       status: 'На работе',
       late: isLateForWork(),
       location
     };
     
-    console.log('Creating attendance record:', attendanceData);
+    console.log('Creating attendance record:', {
+      ...attendanceData,
+      localTime: checkInTime.toString(),
+      phuketTime: formatPhuketTime(checkInTime)
+    });
     
     await notionService.createAttendance(attendanceData);
     
@@ -804,7 +809,16 @@ app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Already checked out today' });
     }
     
-    const checkOut = new Date().toISOString();
+    const checkOutTime = new Date();
+    const checkOut = checkOutTime.toISOString(); // Оставляем UTC время для точных расчетов
+    
+    console.log('Check-out request:', {
+      attendanceId: attendance.id,
+      checkOut,
+      localTime: checkOutTime.toString(),
+      phuketTime: formatPhuketTime(checkOutTime)
+    });
+    
     const workHours = await notionService.updateAttendanceCheckOut(attendance.id, checkOut, req.body?.location || null);
     
     // Отправляем уведомление менеджерам
