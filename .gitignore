@@ -30,3 +30,18 @@ working-*.js
 # Temporary files
 temp/
 tmp/
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+cache.db
+kaif-bot.db
+
+# Backup files
+*.backup
+*.bak
+
+# Sync logs
+sync.log
+sync-*.log

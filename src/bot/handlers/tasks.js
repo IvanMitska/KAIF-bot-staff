@@ -1,4 +1,4 @@
-const { getUser } = require('../../services/notionService');
+const { getUser } = require('../../services/optimizedNotionService');
 const { taskKeyboards } = require('../keyboards/taskKeyboards');
 const replyKeyboards = require('../keyboards/reply');
 const { userStates } = require('../state');
@@ -143,7 +143,7 @@ async function handleNewTask(bot, callbackQuery) {
 }
 
 async function getAllUsers() {
-  const { getUsers } = require('../../services/notionService');
+  const { getUsers } = require('../../services/optimizedNotionService');
   try {
     return await getUsers();
   } catch (error) {

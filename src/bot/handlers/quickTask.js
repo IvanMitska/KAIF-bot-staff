@@ -1,4 +1,4 @@
-const { createTask, getUsers } = require('../../services/notionService');
+const { createTask, getUsers } = require('../../services/optimizedNotionService');
 const moment = require('moment-timezone');
 
 // Маппинг имен на Telegram ID
@@ -160,7 +160,7 @@ async function handleQuickTask(bot, msg) {
     
     if (selfTask) {
       // Ставим задачу себе
-      assignee = await require('../../services/notionService').getUser(userId);
+      assignee = await require('../../services/optimizedNotionService').getUser(userId);
       if (!assignee) {
         await bot.sendMessage(chatId, '❌ Вы не зарегистрированы в системе');
         return;
@@ -214,7 +214,7 @@ async function handleQuickTask(bot, msg) {
     const priority = parsePriority(taskText);
     
     // Создаем задачу
-    const creator = await require('../../services/notionService').getUser(userId);
+    const creator = await require('../../services/optimizedNotionService').getUser(userId);
     const taskData = {
       title: taskDescription.slice(0, 50) + (taskDescription.length > 50 ? '...' : ''),
       description: taskDescription,

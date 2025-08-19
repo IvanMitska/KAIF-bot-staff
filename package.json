@@ -5,14 +5,18 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node railway-server-webapp-only.js",
+    "start:optimized": "node start-optimized.js",
     "start:full": "node railway-server.js",
     "start:local": "node start.js",
     "start:bot": "node src/app.js",
     "start:webapp": "node webapp/server.js",
+    "start:webapp-optimized": "node webapp/server-optimized.js",
     "dev": "nodemon src/app.js",
     "webapp": "node webapp/server.js",
     "webapp:dev": "nodemon webapp/server.js",
     "all": "concurrently \"npm run dev\" \"npm run webapp:dev\"",
+    "migrate": "node migrate-to-optimized.js",
+    "init:cache": "node init-optimized.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -27,9 +31,14 @@
     "@notionhq/client": "^2.2.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "googleapis": "^156.0.0",
     "moment-timezone": "^0.5.43",
     "node-cron": "^3.0.3",
-    "node-telegram-bot-api": "^0.64.0"
+    "node-telegram-bot-api": "^0.64.0",
+    "pg": "^8.11.3"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",

@@ -1,4 +1,4 @@
-const { getUser, createTask } = require('../../services/notionService');
+const { getUser, createTask } = require('../../services/optimizedNotionService');
 const { taskKeyboards } = require('../keyboards/taskKeyboards');
 const { userStates } = require('../state');
 const moment = require('moment-timezone');

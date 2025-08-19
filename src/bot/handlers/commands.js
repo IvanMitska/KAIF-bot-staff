@@ -1,4 +1,4 @@
-const notionService = require('../../services/notionService');
+const notionService = require('../../services/optimizedNotionService');
 const userService = require('../../services/userService');
 const keyboards = require('../keyboards/inline');
 
@@ -17,7 +17,7 @@ module.exports = (bot) => {
     if (!ADMIN_IDS.includes(userId)) return;
     
     try {
-      const { getAllTasks } = require('../../services/notionService');
+      const { getAllTasks } = require('../../services/optimizedNotionService');
       
       // Получаем все задачи без фильтра
       const allTasks = await getAllTasks();

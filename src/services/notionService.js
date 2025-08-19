@@ -452,9 +452,12 @@ const notionService = {
       
       console.log('Filters for assignee tasks:', JSON.stringify(filters, null, 2));
 
-      // Временно отключаем фильтр для отладки
+      // Используем правильные фильтры для запроса
       const queryParams = {
         database_id: TASKS_DB_ID,
+        filter: filters.length > 1 ? {
+          and: filters
+        } : filters[0],
         sorts: [
           {
             property: 'Приоритет',
@@ -467,26 +470,16 @@ const notionService = {
         ]
       };
       
-      // Временно получаем все задачи для отладки
-      console.log('WARNING: Fetching all tasks without filter for debugging');
-      
       const response = await notion.databases.query(queryParams);
 
       console.log('Found tasks for assignee:', response.results.length);
       if (response.results.length > 0) {
-        console.log('Assignee task statuses:', response.results.map(task => 
+        console.log('First few task statuses:', response.results.slice(0, 5).map(task => 
           task.properties['Статус'].select?.name || 'No status'
         ));
       }
-
-      // Фильтруем задачи вручную
-      const filteredResults = response.results.filter(task => {
-        const taskAssigneeId = task.properties['Исполнитель ID']?.number;
-        console.log('Task assignee ID:', taskAssigneeId, 'vs requested:', numericId);
-        return taskAssigneeId === numericId;
-      });
       
-      console.log('Filtered tasks:', filteredResults.length);
+      const filteredResults = response.results;
       
       return filteredResults.map(task => {
         try {
@@ -553,7 +546,11 @@ const notionService = {
             id: task.id,
             taskId: task.properties['ID']?.title?.[0]?.text?.content || 'NO_ID',
             title: task.properties['Название']?.rich_text?.[0]?.text?.content || '',
+            description: task.properties['Описание']?.rich_text?.[0]?.text?.content || '',
+            assigneeId: task.properties['Исполнитель ID']?.number,
             assigneeName: task.properties['Исполнитель']?.rich_text?.[0]?.text?.content || '',
+            creatorId: task.properties['Постановщик ID']?.number,
+            creatorName: task.properties['Постановщик']?.rich_text?.[0]?.text?.content || '',
             status: task.properties['Статус']?.select?.name || 'Новая',
             priority: task.properties['Приоритет']?.select?.name || 'Средний',
             createdDate: task.properties['Дата создания']?.date?.start,

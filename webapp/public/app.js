@@ -1036,12 +1036,15 @@ window.switchAdminTab = function(tab) {
     document.querySelectorAll('.admin-tab').forEach(btn => {
         btn.classList.remove('active');
     });
+    
+    // Скрываем все контент-вкладки
     document.querySelectorAll('.admin-tab-content').forEach(content => {
-        content.classList.remove('active');
+        content.style.display = 'none';
     });
     
+    // Показываем выбранную вкладку
     document.getElementById(`${tab}Tab`).classList.add('active');
-    document.getElementById(`${tab}Content`).classList.add('active');
+    document.getElementById(`${tab}Content`).style.display = 'block';
     
     // Загружаем контент в зависимости от вкладки
     if (tab === 'dashboard') {
