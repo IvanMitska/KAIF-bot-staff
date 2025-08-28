@@ -379,10 +379,8 @@ function showPage(pageId) {
         tg.HapticFeedback.impactOccurred('light');
     }
     
-    // Разрешаем следующее переключение через короткое время
-    setTimeout(() => {
-        isPageSwitching = false;
-    }, 50);
+    // Разрешаем следующее переключение мгновенно
+    isPageSwitching = false;
 }
 
 // Обновление позиции индикатора навигации
