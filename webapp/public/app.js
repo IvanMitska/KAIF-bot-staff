@@ -309,43 +309,41 @@ function animateCounterUpdate(element, newValue) {
     }, duration / steps);
 }
 
+// Переменная для предотвращения множественных переключений
+let isPageSwitching = false;
+
 // Навигация между страницами
 function showPage(pageId) {
+    // Предотвращаем множественные клики
+    if (isPageSwitching) {
+        return;
+    }
+    
     const currentPage = document.querySelector('.page.active');
     const targetPage = document.getElementById(pageId);
     
     if (!targetPage) return;
     
-    // Простая и плавная анимация переключения
-    if (currentPage && currentPage !== targetPage) {
-        currentPage.style.opacity = '0';
-        currentPage.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            currentPage.classList.remove('active');
-            currentPage.style.opacity = '';
-            currentPage.style.transform = '';
-            
-            // Показываем новую страницу
-            targetPage.classList.add('active');
-            targetPage.style.opacity = '0';
-            targetPage.style.transform = 'translateY(20px)';
-            
-            // Плавное появление новой страницы
-            requestAnimationFrame(() => {
-                targetPage.style.transition = 'all 0.3s ease-out';
-                targetPage.style.opacity = '1';
-                targetPage.style.transform = 'translateY(0)';
-                
-                setTimeout(() => {
-                    targetPage.style.transition = '';
-                }, 300);
-            });
-        }, 200);
-    } else {
-        // Если это первая загрузка страницы
-        targetPage.classList.add('active');
+    // Если пытаемся переключиться на ту же страницу
+    if (currentPage === targetPage) {
+        return;
     }
+    
+    isPageSwitching = true;
+    
+    // Мгновенное переключение без задержек и анимаций
+    if (currentPage) {
+        currentPage.classList.remove('active');
+        currentPage.style.opacity = '';
+        currentPage.style.transform = '';
+        currentPage.style.transition = '';
+    }
+    
+    // Сразу показываем новую страницу
+    targetPage.classList.add('active');
+    targetPage.style.opacity = '';
+    targetPage.style.transform = '';
+    targetPage.style.transition = '';
     
     // Обновляем навигацию
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -379,10 +377,10 @@ function showPage(pageId) {
         tg.HapticFeedback.impactOccurred('light');
     }
     
-    // Переинициализируем Lucide иконки для новой страницы
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    // Разрешаем следующее переключение через короткое время
+    setTimeout(() => {
+        isPageSwitching = false;
+    }, 50);
 }
 
 // Обновление позиции индикатора навигации
