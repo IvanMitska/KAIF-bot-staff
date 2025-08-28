@@ -314,11 +314,6 @@ let isPageSwitching = false;
 
 // Навигация между страницами
 function showPage(pageId) {
-    // Предотвращаем множественные клики
-    if (isPageSwitching) {
-        return;
-    }
-    
     const currentPage = document.querySelector('.page.active');
     const targetPage = document.getElementById(pageId);
     
@@ -326,6 +321,12 @@ function showPage(pageId) {
     
     // Если пытаемся переключиться на ту же страницу
     if (currentPage === targetPage) {
+        return;
+    }
+    
+    // Быстрая проверка на множественные клики, но не блокируем надолго
+    if (isPageSwitching) {
+        setTimeout(() => showPage(pageId), 10);
         return;
     }
     
