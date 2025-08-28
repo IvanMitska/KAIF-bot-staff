@@ -50,6 +50,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('CheckOut button initially disabled');
     }
     
+    // Инициализируем современный UI
+    initializeModernUI();
+    
     // Загружаем профиль
     await loadProfile();
     
@@ -96,8 +99,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 30000);
     
+    // Инициализация навигационного индикатора
+    setTimeout(() => {
+        const activeBtn = document.querySelector('.nav-btn.active');
+        if (activeBtn) {
+            updateNavIndicator(activeBtn);
+        }
+    }, 100);
+});
+
+// Инициализация современного UI
+function initializeModernUI() {
+    // Добавляем ripple эффект ко всем кнопкам
+    addRippleEffect();
+    
+    // Инициализируем анимации карточек
+    initializeCardAnimations();
+    
+    // Добавляем hover эффекты
+    addHoverEffects();
+    
+    console.log('Modern UI initialized');
+}
+
+// Добавление ripple эффекта
+function addRippleEffect() {
+    document.addEventListener('click', (e) => {
+        const button = e.target.closest('.attendance-btn.modern, .submit-btn.modern, .fab-main, .action-card.modern');
+        if (button) {
+            createRipple(e, button);
+        }
+    });
+}
+
+// Создание ripple эффекта
+function createRipple(event, element) {
+    const ripple = document.createElement('div');
+    ripple.className = 'btn-ripple';
+    
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Инициализация анимаций карточек
+function initializeCardAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0) scale(1)';
+            }
+        });
+    }, observerOptions);
+    
+    // Наблюдаем за карточками
+    document.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern').forEach((card) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px) scale(0.95)';
+        card.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+        observer.observe(card);
+    });
+}
+
+// Добавление hover эффектов
+function addHoverEffects() {
     // Эффект следования за курсором для кнопок учета времени
-    document.querySelectorAll('.attendance-btn').forEach(btn => {
+    document.querySelectorAll('.attendance-btn.modern').forEach(btn => {
         btn.addEventListener('mousemove', (e) => {
             const rect = btn.getBoundingClientRect();
             const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -106,7 +190,58 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.style.setProperty('--mouse-y', `${y}%`);
         });
     });
-});
+    
+    // Параллакс эффект для карточек
+    document.querySelectorAll('.action-card.modern').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.02)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+        });
+    });
+}
+
+// Анимированное обновление счетчика
+function animateCounterUpdate(element, newValue) {
+    const currentValue = parseInt(element.textContent) || 0;
+    if (currentValue === newValue) return;
+    
+    const duration = 500;
+    const steps = 30;
+    const stepValue = (newValue - currentValue) / steps;
+    let currentStep = 0;
+    
+    const interval = setInterval(() => {
+        currentStep++;
+        const value = Math.round(currentValue + (stepValue * currentStep));
+        element.textContent = value;
+        
+        if (currentStep >= steps) {
+            element.textContent = newValue;
+            clearInterval(interval);
+            
+            // Добавляем пульсацию если значение увеличилось
+            if (newValue > currentValue) {
+                element.style.transform = 'scale(1.2)';
+                element.style.color = 'var(--primary)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                    element.style.color = '';
+                }, 300);
+            }
+        }
+    }, duration / steps);
+}
 
 // Навигация между страницами
 function showPage(pageId) {
@@ -116,18 +251,23 @@ function showPage(pageId) {
     });
     
     // Показываем выбранную страницу
-    document.getElementById(pageId).classList.add('active');
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
     
     // Обновляем навигацию
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Находим соответствующую кнопку навигации
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const pageIndex = ['home', 'report', 'tasks', 'stats', 'profile'].indexOf(pageId);
-    if (pageIndex !== -1 && navButtons[pageIndex]) {
-        navButtons[pageIndex].classList.add('active');
+    // Находим соответствующую кнопку навигации по data-page атрибуту
+    const activeNavBtn = document.querySelector(`[data-page="${pageId}"]`);
+    if (activeNavBtn) {
+        activeNavBtn.classList.add('active');
+        
+        // Обновляем позицию индикатора навигации
+        updateNavIndicator(activeNavBtn);
     }
     
     // Загружаем данные для страницы
@@ -146,6 +286,23 @@ function showPage(pageId) {
     // Вибрация при переключении
     if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
+    }
+    
+    // Переинициализируем Lucide иконки для новой страницы
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
+// Обновление позиции индикатора навигации
+function updateNavIndicator(activeBtn) {
+    const indicator = document.querySelector('.nav-indicator');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const index = Array.from(navBtns).indexOf(activeBtn);
+    
+    if (indicator && index !== -1) {
+        const percentage = (index * 100) / navBtns.length;
+        indicator.style.left = `${percentage}%`;
     }
 }
 
@@ -277,7 +434,11 @@ async function loadTasksCount() {
             const activeTasks = tasks.filter(t => t.status !== 'Выполнена').length;
             const newTasks = tasks.filter(t => t.status === 'Новая').length;
             
-            document.getElementById('activeTasksCount').textContent = activeTasks;
+            // Анимированное обновление счетчика
+            const activeTasksElement = document.getElementById('activeTasksCount');
+            if (activeTasksElement) {
+                animateCounterUpdate(activeTasksElement, activeTasks);
+            }
             
             // Показываем бейдж с новыми задачами
             updateTaskBadge(newTasks);
@@ -306,18 +467,29 @@ async function loadTasksCount() {
 
 // Обновление бейджа с количеством новых задач
 function updateTaskBadge(count) {
-    // Обновляем бейдж на кнопке навигации
-    const taskNavBtn = document.querySelector('.nav-btn[onclick*="tasks"]');
+    // Обновляем бейдж на кнопке навигации (новая версия с правильным селектором)
+    const taskNavBtn = document.querySelector('[data-page="tasks"]');
     if (taskNavBtn) {
-        let badge = taskNavBtn.querySelector('.nav-badge');
+        const iconWrapper = taskNavBtn.querySelector('.nav-icon-wrapper');
+        let badge = iconWrapper ? iconWrapper.querySelector('.nav-badge') : null;
+        
         if (count > 0) {
-            if (!badge) {
+            if (!badge && iconWrapper) {
                 badge = document.createElement('span');
                 badge.className = 'nav-badge';
-                taskNavBtn.appendChild(badge);
+                badge.id = 'tasksBadge';
+                iconWrapper.appendChild(badge);
             }
-            badge.textContent = count;
-            badge.style.display = 'block';
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = 'block';
+                
+                // Анимация появления бейджа
+                badge.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    badge.style.transform = 'scale(1)';
+                }, 100);
+            }
         } else if (badge) {
             badge.style.display = 'none';
         }

@@ -3,100 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
-    <title>KAIF App</title>
+    <title>KAIF Staff App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
+    <!-- Фоновая анимация -->
+    <div class="background-animation"></div>
+    
     <!-- Навигация -->
     <nav class="navigation">
-        <button class="nav-btn active" onclick="showPage('home')">
-            <span class="nav-icon">🏠</span>
+        <div class="nav-indicator"></div>
+        <button class="nav-btn active" onclick="showPage('home')" data-page="home">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="home"></i>
+            </div>
             <span class="nav-label">Главная</span>
         </button>
-        <button class="nav-btn" onclick="showPage('report')">
-            <span class="nav-icon">📝</span>
+        <button class="nav-btn" onclick="showPage('report')" data-page="report">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="file-text"></i>
+            </div>
             <span class="nav-label">Отчеты</span>
         </button>
-        <button class="nav-btn" onclick="showPage('tasks')">
-            <span class="nav-icon">✅</span>
+        <button class="nav-btn" onclick="showPage('tasks')" data-page="tasks">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="check-square"></i>
+                <span class="nav-badge" id="tasksBadge" style="display: none;"></span>
+            </div>
             <span class="nav-label">Задачи</span>
         </button>
-        <button class="nav-btn" onclick="showPage('stats')">
-            <span class="nav-icon">📊</span>
+        <button class="nav-btn" onclick="showPage('stats')" data-page="stats">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="bar-chart-3"></i>
+            </div>
             <span class="nav-label">Статистика</span>
         </button>
-        <button class="nav-btn" onclick="showPage('profile')">
-            <span class="nav-icon">👤</span>
+        <button class="nav-btn" onclick="showPage('profile')" data-page="profile">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="user"></i>
+            </div>
             <span class="nav-label">Профиль</span>
         </button>
     </nav>
     
+    <!-- Плавающие кнопки действий -->
+    <div class="floating-actions">
+        <button class="fab-main" id="fabMain" onclick="toggleFab()">
+            <i data-lucide="plus"></i>
+        </button>
+        <div class="fab-menu" id="fabMenu">
+            <button class="fab-item" onclick="showPage('report'); toggleFab()">
+                <i data-lucide="file-text"></i>
+                <span>Отчет</span>
+            </button>
+            <button class="fab-item" onclick="showCreateTaskModal(); toggleFab()">
+                <i data-lucide="plus-circle"></i>
+                <span>Задача</span>
+            </button>
+        </div>
+    </div>
+    
     <div class="container">
         <!-- Главная страница -->
         <div id="home" class="page active">
-            <div class="header">
-                <h1>Привет, <span id="userName">Ivan</span>! 👋</h1>
-                <p>Добро пожаловать в KAIF Staff</p>
+            <div class="page-header">
+                <div class="welcome-section">
+                    <div class="greeting-wrapper">
+                        <h1 class="greeting-text">
+                            Привет, <span id="userName" class="user-name">Ivan</span>! 
+                            <span class="greeting-emoji">👋</span>
+                        </h1>
+                        <p class="welcome-subtitle">Добро пожаловать в KAIF Staff</p>
+                    </div>
+                    <div class="date-time-widget">
+                        <div class="current-time" id="currentTime"></div>
+                        <div class="current-date" id="currentDate"></div>
+                    </div>
+                </div>
             </div>
             
             <!-- Кнопки учета времени -->
             <div class="attendance-section">
-                <h2 class="attendance-title">Учет рабочего времени</h2>
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i data-lucide="clock" class="section-icon"></i>
+                        Учет рабочего времени
+                    </h2>
+                </div>
                 <div class="attendance-buttons">
-                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in">
+                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in modern">
                         <div class="btn-icon-wrapper">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
-                            </svg>
+                            <i data-lucide="log-in" class="btn-icon"></i>
                         </div>
                         <div class="btn-text">
                             <span class="btn-label">Пришел на работу</span>
                             <span id="checkInTime" class="btn-time"></span>
                         </div>
+                        <div class="btn-ripple"></div>
                     </button>
-                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out">
+                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out modern">
                         <div class="btn-icon-wrapper">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" fill="currentColor"/>
-                            </svg>
+                            <i data-lucide="log-out" class="btn-icon"></i>
                         </div>
                         <div class="btn-text">
                             <span class="btn-label">Ушел с работы</span>
                             <span id="checkOutTime" class="btn-time"></span>
                         </div>
+                        <div class="btn-ripple"></div>
                     </button>
                 </div>
             </div>
             
-            <div class="action-cards">
-                <div class="action-card" onclick="showPage('report')">
-                    <div class="action-icon">📝</div>
-                    <div class="action-content">
-                        <h3>Отправить отчет</h3>
-                        <p>Ежедневный отчет о работе</p>
-                    </div>
+            <!-- Быстрые действия -->
+            <div class="quick-actions">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i data-lucide="zap" class="section-icon"></i>
+                        Быстрые действия
+                    </h2>
                 </div>
-                
-                <div class="action-card" onclick="showPage('tasks')">
-                    <div class="action-icon">✅</div>
-                    <div class="action-content">
-                        <h3>Мои задачи</h3>
-                        <p><span id="activeTasksCount">0</span> активных</p>
+                <div class="action-grid">
+                    <div class="action-card modern" onclick="showPage('report')">
+                        <div class="action-icon-wrapper">
+                            <i data-lucide="file-text" class="action-icon"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Отправить отчет</h3>
+                            <p>Ежедневный отчет о работе</p>
+                        </div>
+                        <div class="action-arrow">
+                            <i data-lucide="chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="action-card modern" onclick="showPage('tasks')">
+                        <div class="action-icon-wrapper">
+                            <i data-lucide="check-square" class="action-icon"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Мои задачи</h3>
+                            <p><span id="activeTasksCount">0</span> активных</p>
+                        </div>
+                        <div class="action-arrow">
+                            <i data-lucide="chevron-right"></i>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="status-section">
-                <h2 style="font-size: 18px; margin-bottom: 16px; color: var(--text-secondary);">Статус на сегодня</h2>
-                <div class="status-card">
-                    <div id="reportStatusItem" class="status-item status-warning">
-                        <span class="status-icon">⚠️</span>
-                        <span class="status-text">Отчет не отправлен</span>
+            <!-- Статус дня -->
+            <div class="daily-status">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i data-lucide="calendar" class="section-icon"></i>
+                        Статус на сегодня
+                    </h2>
+                </div>
+                <div class="status-grid">
+                    <div id="reportStatusItem" class="status-item warning">
+                        <div class="status-icon-wrapper">
+                            <i data-lucide="alert-circle"></i>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-text">Отчет не отправлен</span>
+                        </div>
                     </div>
-                    <div id="attendanceStatusItem" class="status-item">
-                        <span class="status-icon">⏰</span>
-                        <span class="status-text">Загрузка...</span>
+                    <div id="attendanceStatusItem" class="status-item loading">
+                        <div class="status-icon-wrapper">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-text">Загрузка...</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -104,148 +187,248 @@
         
         <!-- Страница отчетов -->
         <div id="report" class="page">
-            <button class="back-btn" onclick="showPage('home')">← Назад</button>
-            
-            <div class="header">
-                <h1>Ежедневный отчет</h1>
-                <p id="reportDate">2 августа 2025</p>
+            <div class="page-header">
+                <button class="back-btn modern" onclick="showPage('home')">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Назад</span>
+                </button>
+                
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <i data-lucide="file-text" class="title-icon"></i>
+                        Ежедневный отчет
+                    </h1>
+                    <p id="reportDate" class="page-subtitle">2 августа 2025</p>
+                </div>
             </div>
             
-            <form id="reportForm">
-                <div class="form-group">
-                    <label>✍️ Что сделали сегодня?</label>
-                    <textarea name="whatDone" required placeholder="Опишите выполненную работу..."></textarea>
+            <form id="reportForm" class="modern-form">
+                <div class="form-card">
+                    <div class="form-group modern">
+                        <label class="form-label">
+                            <i data-lucide="edit-3" class="label-icon"></i>
+                            Что сделали сегодня?
+                        </label>
+                        <textarea name="whatDone" required placeholder="Опишите выполненную работу..." class="form-textarea modern"></textarea>
+                    </div>
+                    
+                    <div class="form-group modern">
+                        <label class="form-label">
+                            <i data-lucide="alert-triangle" class="label-icon"></i>
+                            Какие были проблемы?
+                        </label>
+                        <textarea name="problems" placeholder="Опишите проблемы или напишите 'нет'..." class="form-textarea modern"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn modern">
+                        <span class="btn-text">Отправить отчет</span>
+                        <i data-lucide="send" class="btn-icon"></i>
+                        <div class="btn-ripple"></div>
+                    </button>
                 </div>
-                
-                <div class="form-group">
-                    <label>⚠️ Какие были проблемы?</label>
-                    <textarea name="problems" placeholder="Опишите проблемы или напишите 'нет'..."></textarea>
-                </div>
-                
-                <button type="submit" class="submit-btn">Отправить отчет</button>
             </form>
         </div>
         
         <!-- Страница задач -->
         <div id="tasks" class="page">
-            <button class="back-btn" onclick="showPage('home')">← Назад</button>
-            
-            <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h1 style="margin: 0;">Мои задачи</h1>
-                <button id="createTaskBtn" onclick="showCreateTaskModal()" style="display: none; background: var(--gradient-primary); border: none; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                    ➕ Создать
+            <div class="page-header">
+                <button class="back-btn modern" onclick="showPage('home')">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Назад</span>
                 </button>
+                
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <i data-lucide="check-square" class="title-icon"></i>
+                        Мои задачи
+                    </h1>
+                    <button id="createTaskBtn" class="create-task-btn" onclick="showCreateTaskModal()" style="display: none;">
+                        <i data-lucide="plus"></i>
+                        <span>Создать</span>
+                    </button>
+                </div>
             </div>
             
             <!-- Переключатель типа задач -->
-            <div class="task-type-switcher" style="display: flex; background: var(--bg-secondary); border-radius: 12px; padding: 4px; margin-bottom: 20px;">
-                <button id="myTasksBtn" class="task-type-btn active" onclick="switchTaskType('my')" style="flex: 1; padding: 10px; background: var(--bg-card); border: none; border-radius: 8px; color: var(--text-primary); cursor: pointer; transition: all 0.3s;">
-                    📥 Мои задачи
+            <div class="task-type-switcher modern">
+                <button id="myTasksBtn" class="task-type-btn active" onclick="switchTaskType('my')">
+                    <i data-lucide="inbox" class="btn-icon"></i>
+                    <span>Мои задачи</span>
                 </button>
-                <button id="createdTasksBtn" class="task-type-btn" onclick="switchTaskType('created')" style="flex: 1; padding: 10px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: all 0.3s; display: none;">
-                    📤 Поставленные
+                <button id="createdTasksBtn" class="task-type-btn" onclick="switchTaskType('created')" style="display: none;">
+                    <i data-lucide="send" class="btn-icon"></i>
+                    <span>Поставленные</span>
                 </button>
             </div>
             
-            <div class="task-filters">
+            <!-- Фильтры задач -->
+            <div class="task-filters modern">
                 <button class="filter-btn active" onclick="filterTasks('all')">
-                    Все <span class="count">0</span>
+                    <span class="filter-text">Все</span>
+                    <span class="count">0</span>
                 </button>
                 <button class="filter-btn" onclick="filterTasks('new')">
-                    🔴 Новые <span class="count">0</span>
+                    <div class="filter-indicator new"></div>
+                    <span class="filter-text">Новые</span>
+                    <span class="count">0</span>
                 </button>
                 <button class="filter-btn" onclick="filterTasks('in-progress')">
-                    🟡 В работе <span class="count">0</span>
+                    <div class="filter-indicator in-progress"></div>
+                    <span class="filter-text">В работе</span>
+                    <span class="count">0</span>
                 </button>
                 <button class="filter-btn" onclick="filterTasks('completed')">
-                    🟢 Выполнены <span class="count">0</span>
+                    <div class="filter-indicator completed"></div>
+                    <span class="filter-text">Выполнены</span>
+                    <span class="count">0</span>
                 </button>
             </div>
             
-            <div id="tasksList">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 16px;">Загрузка задач...</p>
+            <!-- Список задач -->
+            <div id="tasksList" class="tasks-container">
+                <div class="loading modern">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Загрузка задач...</p>
                 </div>
             </div>
         </div>
         
         <!-- Страница статистики -->
         <div id="stats" class="page">
-            <button class="back-btn" onclick="showPage('home')">← Назад</button>
-            
-            <div class="header">
-                <h1>Статистика</h1>
+            <div class="page-header">
+                <button class="back-btn modern" onclick="showPage('home')">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Назад</span>
+                </button>
+                
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <i data-lucide="bar-chart-3" class="title-icon"></i>
+                        Статистика
+                    </h1>
+                </div>
             </div>
             
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-value" id="totalReports">0</div>
-                    <div class="stat-label">Всего отчетов</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-value" id="completedTasks">0</div>
-                    <div class="stat-label">Выполнено задач</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-value" id="currentStreak">0</div>
-                    <div class="stat-label">Дней подряд</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-value" id="completionRate">0%</div>
-                    <div class="stat-label">Выполнение</div>
+            <div class="stats-overview">
+                <div class="stats-grid modern">
+                    <div class="stat-card modern">
+                        <div class="stat-header">
+                            <i data-lucide="calendar" class="stat-icon"></i>
+                            <div class="stat-trend positive">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="totalReports">0</div>
+                        <div class="stat-label">Всего отчетов</div>
+                    </div>
+                    
+                    <div class="stat-card modern">
+                        <div class="stat-header">
+                            <i data-lucide="check-circle" class="stat-icon"></i>
+                            <div class="stat-trend positive">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">Выполнено задач</div>
+                    </div>
+                    
+                    <div class="stat-card modern">
+                        <div class="stat-header">
+                            <i data-lucide="flame" class="stat-icon"></i>
+                            <div class="stat-trend neutral">
+                                <i data-lucide="minus"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="currentStreak">0</div>
+                        <div class="stat-label">Дней подряд</div>
+                    </div>
+                    
+                    <div class="stat-card modern">
+                        <div class="stat-header">
+                            <i data-lucide="activity" class="stat-icon"></i>
+                            <div class="stat-trend positive">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="completionRate">0%</div>
+                        <div class="stat-label">Выполнение</div>
+                    </div>
                 </div>
             </div>
         </div>
         
         <!-- Страница профиля -->
         <div id="profile" class="page">
-            <button class="back-btn" onclick="showPage('home')">← Назад</button>
-            
-            <div class="header">
-                <h1>Профиль</h1>
+            <div class="page-header">
+                <button class="back-btn modern" onclick="showPage('home')">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Назад</span>
+                </button>
+                
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <i data-lucide="user" class="title-icon"></i>
+                        Профиль
+                    </h1>
+                </div>
             </div>
             
             <div class="profile-content">
-                <div class="action-card">
-                    <div style="text-align: center; padding: 20px;">
-                        <div style="font-size: 64px; margin-bottom: 16px;">👤</div>
-                        <h2 id="profileName" style="margin-bottom: 8px;">Загрузка...</h2>
-                        <p id="profilePosition" style="color: var(--text-secondary); margin-bottom: 16px;">...</p>
-                        <p style="color: var(--text-muted); font-size: 14px;">ID: <span id="profileId">...</span></p>
+                <!-- Карточка профиля -->
+                <div class="profile-card modern">
+                    <div class="profile-avatar">
+                        <i data-lucide="user" class="avatar-icon"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profileName" class="profile-name">Загрузка...</h2>
+                        <p id="profilePosition" class="profile-position">...</p>
+                        <div class="profile-id">
+                            <i data-lucide="hash" class="id-icon"></i>
+                            <span id="profileId">...</span>
+                        </div>
                     </div>
                 </div>
                 
-                <div style="margin-top: 24px;">
-                    <div class="action-card" onclick="showHelp()">
-                        <div class="action-icon">❓</div>
+                <!-- Действия профиля -->
+                <div class="profile-actions">
+                    <div class="action-card modern" onclick="showHelp()">
+                        <div class="action-icon-wrapper">
+                            <i data-lucide="help-circle" class="action-icon"></i>
+                        </div>
                         <div class="action-content">
                             <h3>Помощь</h3>
                             <p>Инструкции и поддержка</p>
                         </div>
+                        <div class="action-arrow">
+                            <i data-lucide="chevron-right"></i>
+                        </div>
                     </div>
                     
-                    <div id="managerSection" style="display: none;">
-                        <div class="action-card" onclick="showEmployees()">
-                            <div class="action-icon">👥</div>
+                    <div id="managerSection" class="manager-section" style="display: none;">
+                        <div class="action-card modern" onclick="showEmployees()">
+                            <div class="action-icon-wrapper">
+                                <i data-lucide="users" class="action-icon"></i>
+                            </div>
                             <div class="action-content">
                                 <h3>Сотрудники</h3>
                                 <p>Управление командой</p>
                             </div>
+                            <div class="action-arrow">
+                                <i data-lucide="chevron-right"></i>
+                            </div>
                         </div>
                         
-                        <div class="action-card" onclick="showAdminPanel()">
-                            <div class="action-icon">📊</div>
+                        <div class="action-card modern" onclick="showAdminPanel()">
+                            <div class="action-icon-wrapper">
+                                <i data-lucide="settings" class="action-icon"></i>
+                            </div>
                             <div class="action-content">
                                 <h3>Админ-панель</h3>
                                 <p>Отчеты и статистика</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i data-lucide="chevron-right"></i>
                             </div>
                         </div>
                     </div>
@@ -638,5 +821,62 @@
     </div>
     
     <script src="app.js"></script>
+    
+    <!-- Инициализация Lucide иконок -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализируем Lucide иконки
+            lucide.createIcons();
+            
+            // Обновляем время каждую секунду
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        });
+        
+        // Функция обновления даты и времени
+        function updateDateTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('currentTime');
+            const dateElement = document.getElementById('currentDate');
+            
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleTimeString('ru-RU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('ru-RU', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                });
+            }
+        }
+        
+        // Функция для переключения FAB меню
+        function toggleFab() {
+            const fabMain = document.getElementById('fabMain');
+            const fabMenu = document.getElementById('fabMenu');
+            
+            if (fabMenu.classList.contains('active')) {
+                fabMain.classList.remove('active');
+                fabMenu.classList.remove('active');
+            } else {
+                fabMain.classList.add('active');
+                fabMenu.classList.add('active');
+            }
+        }
+        
+        // Закрытие FAB меню при клике вне его
+        document.addEventListener('click', function(event) {
+            const floatingActions = document.querySelector('.floating-actions');
+            if (!floatingActions.contains(event.target)) {
+                document.getElementById('fabMain').classList.remove('active');
+                document.getElementById('fabMenu').classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
