@@ -359,18 +359,20 @@ function showPage(pageId) {
         updateNavIndicator(activeNavBtn);
     }
     
-    // Загружаем данные для страницы
-    switch(pageId) {
-        case 'tasks':
-            loadTasks();
-            break;
-        case 'stats':
-            loadStats();
-            break;
-        case 'profile':
-            loadFullProfile();
-            break;
-    }
+    // Асинхронно загружаем данные для страницы (не блокируем UI)
+    setTimeout(() => {
+        switch(pageId) {
+            case 'tasks':
+                loadTasks();
+                break;
+            case 'stats':
+                loadStats();
+                break;
+            case 'profile':
+                loadFullProfile();
+                break;
+        }
+    }, 0);
     
     // Вибрация при переключении
     if (tg.HapticFeedback) {

@@ -1485,7 +1485,6 @@ body {
 /* Страницы с улучшенными переходами */
 .page {
     display: none;
-    animation: pageEnter 0.6s var(--elastic);
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
@@ -1495,35 +1494,6 @@ body {
     display: block;
 }
 
-.page.animate-in {
-    animation: slideInRight 0.5s var(--smooth);
-}
-
-.page.animate-out {
-    animation: slideOutLeft 0.3s var(--smooth);
-}
-
-@keyframes pageEnter {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes slideOutLeft {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-100px);
-    }
-}
 
 /* Расширенные анимации */
 @keyframes pulse {
