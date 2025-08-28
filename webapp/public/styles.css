@@ -61,6 +61,9 @@ html, body {
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     --spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
     
     /* Размеры */
     --border-radius-sm: 8px;
@@ -173,11 +176,19 @@ body {
     align-items: center;
     gap: 4px;
     z-index: 1;
+    border-radius: var(--border-radius-lg);
+}
+
+.nav-btn:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--text-secondary);
+    transform: translateY(-1px);
 }
 
 .nav-btn.active {
     color: var(--primary);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.05);
+    background: rgba(99, 102, 241, 0.12);
 }
 
 .nav-icon-wrapper {
@@ -197,8 +208,13 @@ body {
 }
 
 .nav-btn.active .nav-icon-wrapper i {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.7));
+}
+
+.nav-btn:hover:not(.active) .nav-icon-wrapper i {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.3));
 }
 
 .nav-badge {
@@ -257,13 +273,23 @@ body {
 }
 
 .fab-main.active {
-    transform: rotate(45deg) scale(1.1);
-    box-shadow: var(--shadow-xl);
+    transform: rotate(45deg) scale(1.15);
+    box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.4);
+    animation: fabPulse 2s ease-in-out infinite;
 }
 
 .fab-main:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-xl);
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: var(--shadow-xl), 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+@keyframes fabPulse {
+    0%, 100% { 
+        box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.4);
+    }
+    50% { 
+        box-shadow: var(--shadow-xl), 0 0 35px rgba(99, 102, 241, 0.6);
+    }
 }
 
 .fab-menu {
@@ -303,8 +329,13 @@ body {
 
 .fab-item:hover {
     background: var(--bg-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: var(--shadow-lg), 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.fab-item:active {
+    transform: translateY(-1px) scale(1.02);
+    transition: all var(--transition-fast);
 }
 
 .fab-item i {
@@ -513,9 +544,14 @@ body {
 }
 
 .action-card.modern:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-xl);
-    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: var(--shadow-xl), 0 0 30px rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.action-card.modern:active {
+    transform: translateY(-2px) scale(1.01);
+    transition: all var(--transition-fast);
 }
 
 .action-icon-wrapper {
@@ -532,7 +568,8 @@ body {
 
 .action-card.modern:hover .action-icon-wrapper {
     background: var(--primary);
-    transform: scale(1.1) rotate(-5deg);
+    transform: scale(1.15) rotate(-8deg);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
 }
 
 .action-icon {
@@ -545,6 +582,7 @@ body {
 
 .action-card.modern:hover .action-icon {
     color: white;
+    transform: scale(1.1) rotate(3deg);
 }
 
 .action-content {
@@ -652,12 +690,18 @@ body {
 }
 
 .attendance-btn.modern:hover:not(:disabled) {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-xl);
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .attendance-btn.modern:hover:not(:disabled) .btn-icon-wrapper {
-    transform: scale(1.1);
+    transform: scale(1.15) rotate(-3deg);
+}
+
+.attendance-btn.modern:active:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    transition: all var(--transition-fast);
 }
 
 .btn-ripple {
@@ -670,8 +714,15 @@ body {
 }
 
 @keyframes ripple {
-    to {
-        transform: scale(4);
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: scale(5);
         opacity: 0;
     }
 }
@@ -847,8 +898,13 @@ body {
 }
 
 .submit-btn.modern:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.submit-btn.modern:active {
+    transform: translateY(-1px) scale(1.01);
+    transition: all var(--transition-fast);
 }
 
 .submit-btn.modern .btn-icon {
@@ -930,7 +986,14 @@ body {
     background: var(--gradient-primary);
     border-color: transparent;
     color: white;
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.filter-btn:hover:not(.active) {
+    background: var(--bg-hover);
+    transform: scale(1.03);
+    border-color: rgba(99, 102, 241, 0.2);
 }
 
 .filter-indicator {
@@ -983,9 +1046,14 @@ body {
 
 .task-item.modern:hover {
     background: var(--bg-hover);
-    border-color: rgba(99, 102, 241, 0.3);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-xl);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-xl), 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.task-item.modern:active {
+    transform: translateY(-1px) scale(1.01);
+    transition: all var(--transition-fast);
 }
 
 .task-header {
@@ -1447,10 +1515,10 @@ body {
     }
 }
 
-/* Страницы */
+/* Страницы с улучшенными переходами */
 .page {
     display: none;
-    animation: pageEnter var(--transition-slow) var(--spring);
+    animation: pageEnter 0.6s var(--elastic);
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
@@ -1460,7 +1528,50 @@ body {
     display: block;
 }
 
+.page.animate-in {
+    animation: slideInRight 0.5s var(--smooth);
+}
+
+.page.animate-out {
+    animation: slideOutLeft 0.3s var(--smooth);
+}
+
 @keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+/* Расширенные анимации */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(99, 102, 241, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+}
+
+@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(30px) scale(0.95);
@@ -1471,27 +1582,41 @@ body {
     }
 }
 
-/* Анимации */
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-    }
-}
-
-@keyframes fadeInUp {
+@keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateX(50px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.6), 0 0 30px rgba(99, 102, 241, 0.4);
     }
 }
 
@@ -1563,10 +1688,57 @@ body {
 
 @media (max-width: 360px) {
     .greeting-text {
-        font-size: 24px;
+        font-size: 26px;
     }
     
     .stats-grid.modern {
         grid-template-columns: 1fr;
     }
+}
+
+/* Дополнительные анимации для элементов */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s var(--smooth);
+}
+
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.stagger-children > * {
+    animation-delay: calc(var(--stagger-delay, 0.1s) * var(--stagger-index, 0));
+}
+
+.floating-animation {
+    animation: floatingElement 3s ease-in-out infinite;
+}
+
+@keyframes floatingElement {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.rotate-on-hover {
+    transition: transform var(--transition-normal);
+}
+
+.rotate-on-hover:hover {
+    transform: rotate(360deg);
+}
+
+.shake-on-error {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
 }

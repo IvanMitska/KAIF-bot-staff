@@ -108,8 +108,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 100);
 });
 
-// Инициализация современного UI
+// Инициализация современного UI с расширенными анимациями
 function initializeModernUI() {
+    // Инициализация Lucide иконок
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    // Добавляем фоновую анимацию
+    if (!document.querySelector('.background-animation')) {
+        const bgDiv = document.createElement('div');
+        bgDiv.className = 'background-animation';
+        document.body.appendChild(bgDiv);
+    }
+    
     // Добавляем ripple эффект ко всем кнопкам
     addRippleEffect();
     
@@ -119,7 +131,71 @@ function initializeModernUI() {
     // Добавляем hover эффекты
     addHoverEffects();
     
-    console.log('Modern UI initialized');
+    // Инициализация scroll анимаций
+    initializeScrollAnimations();
+    
+    // Инициализация stagger анимаций
+    initializeStaggerAnimations();
+    
+    // Добавляем floating анимации к иконкам
+    initializeFloatingAnimations();
+    
+    console.log('Enhanced Modern UI initialized');
+}
+
+// Инициализация scroll анимаций
+function initializeScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                entry.target.style.animationDelay = `${Math.random() * 0.3}s`;
+            }
+        });
+    }, observerOptions);
+    
+    // Добавляем классы для анимации к карточкам
+    setTimeout(() => {
+        document.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern').forEach((el, index) => {
+            el.classList.add('animate-on-scroll');
+            el.style.setProperty('--stagger-index', index);
+            observer.observe(el);
+        });
+    }, 100);
+}
+
+// Инициализация stagger анимаций
+function initializeStaggerAnimations() {
+    const staggerContainers = document.querySelectorAll('.action-grid, .stats-grid.modern, .tasks-container');
+    
+    staggerContainers.forEach(container => {
+        container.classList.add('stagger-children');
+        const children = container.children;
+        for (let i = 0; i < children.length; i++) {
+            children[i].style.setProperty('--stagger-delay', '0.1s');
+            children[i].style.setProperty('--stagger-index', i);
+        }
+    });
+}
+
+// Floating анимации для иконок
+function initializeFloatingAnimations() {
+    // Добавляем floating анимацию к FAB кнопке
+    const fabMain = document.querySelector('.fab-main');
+    if (fabMain && !fabMain.classList.contains('floating-animation')) {
+        fabMain.classList.add('floating-animation');
+    }
+    
+    // Добавляем subtle floating к иконкам в навигации
+    document.querySelectorAll('.nav-icon-wrapper').forEach((icon, index) => {
+        icon.style.animationDelay = `${index * 0.5}s`;
+        icon.style.animation = 'floatingElement 4s ease-in-out infinite';
+    });
 }
 
 // Добавление ripple эффекта
@@ -132,13 +208,13 @@ function addRippleEffect() {
     });
 }
 
-// Создание ripple эффекта
+// Создание улучшенного ripple эффекта
 function createRipple(event, element) {
     const ripple = document.createElement('div');
     ripple.className = 'btn-ripple';
     
     const rect = element.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
+    const size = Math.max(rect.width, rect.height) * 1.5;
     const x = event.clientX - rect.left - size / 2;
     const y = event.clientY - rect.top - size / 2;
     
@@ -148,9 +224,14 @@ function createRipple(event, element) {
     
     element.appendChild(ripple);
     
+    // Добавляем легкую вибрацию если поддерживается
+    if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('light');
+    }
+    
     setTimeout(() => {
         ripple.remove();
-    }, 600);
+    }, 800);
 }
 
 // Инициализация анимаций карточек
@@ -178,7 +259,7 @@ function initializeCardAnimations() {
     });
 }
 
-// Добавление hover эффектов
+// Добавление улучшенных hover эффектов
 function addHoverEffects() {
     // Эффект следования за курсором для кнопок учета времени
     document.querySelectorAll('.attendance-btn.modern').forEach(btn => {
@@ -191,22 +272,40 @@ function addHoverEffects() {
         });
     });
     
-    // Параллакс эффект для карточек
+    // Улучшенный параллакс эффект для карточек
     document.querySelectorAll('.action-card.modern').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transition = 'transform 0.1s ease-out';
+        });
+        
         card.addEventListener('mousemove', (e) => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            const rotateX = (y - centerY) / 10;
-            const rotateY = (centerX - x) / 10;
+            const rotateX = (y - centerY) / 12;
+            const rotateY = (centerX - x) / 12;
             
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.02)`;
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.03)`;
         });
         
         card.addEventListener('mouseleave', () => {
+            card.style.transition = 'all var(--transition-normal)';
             card.style.transform = '';
+        });
+    });
+    
+    // Добавляем hover анимации к навигационным кнопкам
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            if (!btn.classList.contains('active')) {
+                btn.style.animation = 'bounceIn 0.4s ease-out';
+            }
+        });
+        
+        btn.addEventListener('animationend', () => {
+            btn.style.animation = '';
         });
     });
 }
@@ -245,16 +344,38 @@ function animateCounterUpdate(element, newValue) {
 
 // Навигация между страницами
 function showPage(pageId) {
-    // Скрываем все страницы
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    // Показываем выбранную страницу
+    const currentPage = document.querySelector('.page.active');
     const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.classList.add('active');
+    
+    if (!targetPage) return;
+    
+    // Анимация выхода для текущей страницы
+    if (currentPage && currentPage !== targetPage) {
+        currentPage.classList.add('animate-out');
+        setTimeout(() => {
+            currentPage.classList.remove('active', 'animate-out');
+        }, 300);
     }
+    
+    // Анимация входа для новой страницы
+    setTimeout(() => {
+        targetPage.classList.add('active', 'animate-in');
+        
+        // Добавляем stagger анимацию к дочерним элементам
+        const staggerElements = targetPage.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern');
+        staggerElements.forEach((el, index) => {
+            el.style.animationDelay = `${index * 0.1}s`;
+            el.style.animation = 'fadeInUp 0.6s ease-out forwards';
+        });
+        
+        setTimeout(() => {
+            targetPage.classList.remove('animate-in');
+            staggerElements.forEach(el => {
+                el.style.animation = '';
+                el.style.animationDelay = '';
+            });
+        }, 600);
+    }, currentPage ? 150 : 0);
     
     // Обновляем навигацию
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -706,18 +827,35 @@ function updateTaskCounts(tasks) {
     });
 }
 
-// Фильтрация задач
+// Фильтрация задач с анимациями
 function filterTasks(filter) {
     currentFilter = filter;
     
-    // Обновляем активную кнопку
+    // Обновляем активную кнопку с анимацией
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
+        if (btn === event.target) {
+            btn.style.animation = 'bounceIn 0.4s ease-out';
+        }
     });
     event.target.classList.add('active');
     
-    // Перезагружаем задачи
-    loadTasks();
+    // Анимация исчезновения текущих задач
+    const tasksContainer = document.querySelector('.tasks-container');
+    if (tasksContainer) {
+        tasksContainer.style.opacity = '0';
+        tasksContainer.style.transform = 'translateY(20px)';
+    }
+    
+    // Перезагружаем задачи с задержкой для плавности
+    setTimeout(() => {
+        loadTasks();
+        if (tasksContainer) {
+            tasksContainer.style.transition = 'all 0.4s ease-out';
+            tasksContainer.style.opacity = '1';
+            tasksContainer.style.transform = 'translateY(0)';
+        }
+    }, 200);
     
     if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
