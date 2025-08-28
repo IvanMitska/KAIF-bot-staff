@@ -115,12 +115,7 @@ function initializeModernUI() {
         lucide.createIcons();
     }
     
-    // Добавляем фоновую анимацию
-    if (!document.querySelector('.background-animation')) {
-        const bgDiv = document.createElement('div');
-        bgDiv.className = 'background-animation';
-        document.body.appendChild(bgDiv);
-    }
+    // Фоновая анимация удалена для предотвращения полосок по краям
     
     // Добавляем ripple эффект ко всем кнопкам
     addRippleEffect();
