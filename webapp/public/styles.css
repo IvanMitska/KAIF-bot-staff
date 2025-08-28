@@ -94,7 +94,7 @@ body {
     width: 100%;
     margin: 0 auto;
     padding: 20px;
-    padding-top: 70px;
+    padding-top: 20px;
     padding-bottom: 100px;
     box-sizing: border-box;
 }
@@ -102,28 +102,28 @@ body {
 /* Навигация */
 .navigation {
     position: fixed;
-    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
     background: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+    border-top: 1px solid rgba(255, 107, 53, 0.2);
     display: flex;
     justify-content: space-around;
     align-items: center;
     padding: 12px 0;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
     z-index: 1000;
-    box-shadow: 0 1px 20px rgba(255, 107, 53, 0.15);
-    position: relative;
+    box-shadow: 0 -1px 20px rgba(255, 107, 53, 0.15);
 }
 
 .nav-indicator {
     position: absolute;
-    bottom: 0;
+    top: 0;
     height: 3px;
     background: var(--gradient-primary);
-    border-radius: 3px 3px 0 0;
+    border-radius: 0 0 3px 3px;
     width: calc(100% / 5);
     left: 0;
 }
@@ -1561,7 +1561,7 @@ body {
     .navigation {
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
-        padding-top: max(12px, env(safe-area-inset-top));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
     
     .floating-actions {
