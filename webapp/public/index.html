@@ -80,10 +80,6 @@
                         </h1>
                         <p class="welcome-subtitle">Добро пожаловать в KAIF Staff</p>
                     </div>
-                    <div class="date-time-widget">
-                        <div class="current-time" id="currentTime"></div>
-                        <div class="current-date" id="currentDate"></div>
-                    </div>
                 </div>
             </div>
             
@@ -455,12 +451,17 @@
         
         <!-- Страница детального просмотра задачи -->
         <div id="taskDetail" class="page">
-            <button class="back-btn" onclick="showPage('tasks')">← К задачам</button>
+            <div class="page-header">
+                <button class="back-btn modern" onclick="showPage('tasks')">
+                    <i data-lucide="arrow-left"></i>
+                    <span>К задачам</span>
+                </button>
+            </div>
             
             <div class="task-detail-content">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 16px;">Загрузка задачи...</p>
+                <div class="loading modern">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Загрузка задачи...</p>
                 </div>
             </div>
         </div>

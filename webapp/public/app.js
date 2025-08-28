@@ -2070,81 +2070,118 @@ function displayTaskDetail(task) {
     const statusClass = task.status === 'Новая' ? 'new' : 
                       task.status === 'В работе' ? 'in-progress' : 'completed';
     
-    const priorityText = task.priority === 'high' ? '🔴 Высокий' : 
-                        task.priority === 'medium' ? '🟡 Средний' : '🟢 Низкий';
+    const priorityClass = task.priority === 'Высокий' ? 'priority-high' : 
+                         task.priority === 'Средний' ? 'priority-medium' : 'priority-low';
+    
+    const priorityText = task.priority === 'Высокий' ? 'Высокий' : 
+                        task.priority === 'Средний' ? 'Средний' : 'Низкий';
     
     const canComplete = task.status !== 'Выполнена' && currentTaskType === 'my';
     
     content.innerHTML = `
-        <div class="task-detail-card">
+        <div class="task-detail-card modern">
             <div class="task-detail-header">
-                <h1>${task.title}</h1>
-                <span class="task-status ${statusClass}">${task.status}</span>
+                <h1 class="task-detail-title">${task.title}</h1>
+                <span class="task-status-badge modern ${statusClass}">
+                    <div class="priority-indicator ${statusClass}"></div>
+                    ${task.status}
+                </span>
             </div>
             
             ${task.description ? `
                 <div class="task-detail-section">
-                    <h3>📝 Описание</h3>
+                    <h3>
+                        <i data-lucide="file-text" class="section-icon"></i>
+                        Описание
+                    </h3>
                     <p>${task.description}</p>
                 </div>
             ` : ''}
             
-            <div class="task-detail-section">
-                <h3>ℹ️ Информация</h3>
-                <div class="task-detail-info">
-                    <div class="info-row">
-                        <span class="info-label">Приоритет:</span>
-                        <span class="info-value">${priorityText}</span>
+            <div class="task-info-grid">
+                <div class="task-info-item">
+                    <div class="task-info-label">Приоритет</div>
+                    <div class="task-info-value">
+                        <div class="priority-indicator ${priorityClass}"></div>
+                        ${priorityText}
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Срок:</span>
-                        <span class="info-value">📅 ${formatDate(task.deadline)}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Создана:</span>
-                        <span class="info-value">${formatDate(task.createdDate)}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Постановщик:</span>
-                        <span class="info-value">👤 ${task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')}</span>
-                    </div>
-                    ${currentTaskType === 'created' ? `
-                        <div class="info-row">
-                            <span class="info-label">Исполнитель:</span>
-                            <span class="info-value">👤 ${task.assigneeName || 'Не назначен'}</span>
-                        </div>
-                    ` : ''}
                 </div>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">Срок выполнения</div>
+                    <div class="task-info-value">
+                        <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                        ${formatDate(task.deadline)}
+                    </div>
+                </div>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">Создана</div>
+                    <div class="task-info-value">
+                        <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                        ${formatDate(task.createdDate)}
+                    </div>
+                </div>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">Постановщик</div>
+                    <div class="task-info-value">
+                        <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+                        ${task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')}
+                    </div>
+                </div>
+                
+                ${currentTaskType === 'created' ? `
+                    <div class="task-info-item">
+                        <div class="task-info-label">Исполнитель</div>
+                        <div class="task-info-value">
+                            <i data-lucide="user-check" style="width: 14px; height: 14px;"></i>
+                            ${task.assigneeName || 'Не назначен'}
+                        </div>
+                    </div>
+                ` : ''}
             </div>
             
             ${canComplete ? `
-                <div class="task-detail-actions">
+                <div class="task-actions modern">
                     ${task.status === 'Новая' ? `
-                        <button class="action-btn start-btn" onclick="updateTaskStatus('${task.id}', 'В работе')">
-                            🚀 Взять в работу
+                        <button class="task-action-btn modern start" onclick="updateTaskStatus('${task.id}', 'В работе')">
+                            <i data-lucide="play" class="btn-icon"></i>
+                            Взять в работу
                         </button>
                     ` : ''}
-                    <button class="action-btn complete-btn" onclick="updateTaskStatus('${task.id}', 'Выполнена')">
-                        ✅ Выполнить задачу
+                    <button class="task-action-btn modern complete" onclick="updateTaskStatus('${task.id}', 'Выполнена')">
+                        <i data-lucide="check-circle" class="btn-icon"></i>
+                        Выполнить
                     </button>
                 </div>
             ` : ''}
             
             ${window.isManager && currentTaskType === 'created' ? `
-                <div class="task-detail-actions" style="margin-top: 12px;">
-                    <button class="action-btn edit-btn" onclick="editTask('${task.id}')">
-                        ✏️ Редактировать задачу
+                <div class="task-actions modern" style="margin-top: 12px;">
+                    <button class="task-action-btn modern edit" onclick="editTask('${task.id}')">
+                        <i data-lucide="edit-3" class="btn-icon"></i>
+                        Редактировать
                     </button>
                 </div>
             ` : ''}
             
             ${task.status === 'Выполнена' ? `
-                <div class="task-completed-badge">
-                    ✅ Задача выполнена
+                <div class="task-completed-notice">
+                    <h3>
+                        <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                        Задача выполнена
+                    </h3>
+                    <p>Отличная работа! Задача успешно завершена.</p>
                 </div>
             ` : ''}
         </div>
     `;
+    
+    // Переинициализируем Lucide иконки для новых элементов
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
 // Обновить статус задачи
