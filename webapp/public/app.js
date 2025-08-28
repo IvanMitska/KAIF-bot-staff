@@ -1949,7 +1949,22 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
         return;
     }
     
+    // Современное отображение модального окна
     modal.style.display = 'flex';
+    modal.classList.add('show');
+    
+    // Инициализируем Lucide иконки в модальном окне
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    // Устанавливаем дату по умолчанию на завтра
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateInput = document.getElementById('taskDeadline');
+    if (dateInput) {
+        dateInput.value = tomorrow.toISOString().split('T')[0];
+    }
     
     const select = document.getElementById('taskEmployee');
     
@@ -2029,8 +2044,15 @@ async function loadEmployeesForSelect(selectedId = null) {
 function closeTaskModal() {
     const modal = document.getElementById('taskModal');
     if (modal) {
-        modal.style.display = 'none';
-        document.getElementById('taskForm').reset();
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+        
+        const form = document.getElementById('taskForm');
+        if (form) {
+            form.reset();
+        }
     }
 }
 

@@ -730,46 +730,80 @@
     </div>
     
     <!-- Модальное окно создания задачи -->
-    <div id="taskModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000;">
-        <div style="background: var(--bg-card); border-radius: 20px; padding: 28px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h2 style="margin: 0;">Новая задача</h2>
-                <button onclick="closeTaskModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">✕</button>
+    <!-- Современное модальное окно создания задачи -->
+    <div id="taskModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-icon">
+                        <i data-lucide="plus-circle"></i>
+                    </div>
+                    <h2 class="modal-title">Новая задача</h2>
+                </div>
+                <button class="modal-close" onclick="closeTaskModal()">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
             
-            <form id="taskForm" onsubmit="submitTask(event)">
-                <div class="form-group">
-                    <label>Исполнитель</label>
-                    <select id="taskEmployee" name="employee" required style="background: var(--bg-secondary);">
+            <form id="taskForm" onsubmit="submitTask(event)" class="modern-form">
+                <div class="form-group modern">
+                    <label class="form-label">
+                        <i data-lucide="user" class="label-icon"></i>
+                        Исполнитель
+                    </label>
+                    <select id="taskEmployee" name="employee" required class="form-select modern">
                         <option value="">Выберите сотрудника</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label>Название задачи</label>
-                    <input type="text" name="title" required placeholder="Краткое описание задачи">
+                <div class="form-group modern">
+                    <label class="form-label">
+                        <i data-lucide="edit-3" class="label-icon"></i>
+                        Название задачи
+                    </label>
+                    <input type="text" name="title" required placeholder="Кратко опишите задачу" class="form-input modern">
                 </div>
                 
-                <div class="form-group">
-                    <label>Описание (опционально)</label>
-                    <textarea name="description" rows="3" placeholder="Подробное описание"></textarea>
+                <div class="form-group modern">
+                    <label class="form-label">
+                        <i data-lucide="file-text" class="label-icon"></i>
+                        Описание <span class="optional-label">(опционально)</span>
+                    </label>
+                    <textarea name="description" rows="4" placeholder="Подробное описание задачи, требования, ссылки..." class="form-textarea modern"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>Срок выполнения</label>
-                    <input type="date" id="taskDeadline" name="deadline" required>
+                <div class="form-row">
+                    <div class="form-group modern half-width">
+                        <label class="form-label">
+                            <i data-lucide="calendar" class="label-icon"></i>
+                            Срок выполнения
+                        </label>
+                        <input type="date" id="taskDeadline" name="deadline" required class="form-input modern">
+                    </div>
+                    
+                    <div class="form-group modern half-width">
+                        <label class="form-label">
+                            <i data-lucide="flag" class="label-icon"></i>
+                            Приоритет
+                        </label>
+                        <select name="priority" class="form-select modern">
+                            <option value="Низкий">🟢 Низкий</option>
+                            <option value="Средний" selected>🟡 Средний</option>
+                            <option value="Высокий">🔴 Высокий</option>
+                        </select>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Приоритет</label>
-                    <select name="priority" style="background: var(--bg-secondary);">
-                        <option value="Низкий">🟢 Низкий</option>
-                        <option value="Средний" selected>🟡 Средний</option>
-                        <option value="Высокий">🔴 Высокий</option>
-                    </select>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeTaskModal()" class="btn-secondary">
+                        <i data-lucide="x"></i>
+                        Отмена
+                    </button>
+                    <button type="submit" class="submit-btn modern">
+                        <i data-lucide="plus" class="btn-icon"></i>
+                        Создать задачу
+                    </button>
                 </div>
-                
-                <button type="submit" class="submit-btn">Создать задачу</button>
             </form>
         </div>
     </div>
