@@ -241,21 +241,21 @@ body {
 
 .fab-main.active {
     transform: rotate(45deg) scale(1.15);
-    box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.4);
+    box-shadow: var(--shadow-xl), 0 0 25px rgba(255, 107, 53, 0.4);
     animation: fabPulse 2s ease-in-out infinite;
 }
 
 .fab-main:hover {
     transform: scale(1.08) translateY(-2px);
-    box-shadow: var(--shadow-xl), 0 0 20px rgba(99, 102, 241, 0.3);
+    box-shadow: var(--shadow-xl), 0 0 20px rgba(255, 107, 53, 0.3);
 }
 
 @keyframes fabPulse {
     0%, 100% { 
-        box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.4);
+        box-shadow: var(--shadow-xl), 0 0 25px rgba(255, 107, 53, 0.4);
     }
     50% { 
-        box-shadow: var(--shadow-xl), 0 0 35px rgba(99, 102, 241, 0.6);
+        box-shadow: var(--shadow-xl), 0 0 35px rgba(255, 107, 53, 0.6);
     }
 }
 
@@ -297,7 +297,7 @@ body {
 .fab-item:hover {
     background: var(--bg-hover);
     transform: translateY(-4px) scale(1.05);
-    box-shadow: var(--shadow-lg), 0 0 15px rgba(99, 102, 241, 0.2);
+    box-shadow: var(--shadow-lg), 0 0 15px rgba(255, 107, 53, 0.2);
 }
 
 .fab-item:active {
@@ -334,11 +334,11 @@ body {
     font-weight: 800;
     margin-bottom: 8px;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #FF6B35 0%, #FFA726 50%, #FF8A5B 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.2));
     line-height: 1.2;
 }
 
@@ -512,8 +512,8 @@ body {
 
 .action-card.modern:hover {
     transform: translateY(-6px) scale(1.03);
-    box-shadow: var(--shadow-xl), 0 0 30px rgba(99, 102, 241, 0.2);
-    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: var(--shadow-xl), 0 0 30px rgba(255, 107, 53, 0.2);
+    border-color: rgba(255, 107, 53, 0.4);
 }
 
 .action-card.modern:active {
@@ -524,7 +524,7 @@ body {
 .action-icon-wrapper {
     width: 48px;
     height: 48px;
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(255, 107, 53, 0.2);
     border-radius: var(--border-radius-md);
     display: flex;
     align-items: center;
@@ -536,7 +536,7 @@ body {
 .action-card.modern:hover .action-icon-wrapper {
     background: var(--primary);
     transform: scale(1.15) rotate(-8deg);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
 }
 
 .action-icon {
@@ -658,7 +658,7 @@ body {
 
 .attendance-btn.modern:hover:not(:disabled) {
     transform: translateY(-6px) scale(1.04);
-    box-shadow: var(--shadow-xl), 0 0 25px rgba(99, 102, 241, 0.15);
+    box-shadow: var(--shadow-xl), 0 0 25px rgba(255, 107, 53, 0.15);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -840,7 +840,7 @@ body {
 .form-select.modern:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
     background: var(--bg-card);
 }
 
@@ -866,7 +866,7 @@ body {
 
 .submit-btn.modern:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 107, 53, 0.3);
 }
 
 .submit-btn.modern:active {
@@ -954,13 +954,13 @@ body {
     border-color: transparent;
     color: white;
     transform: scale(1.08);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
 }
 
 .filter-btn:hover:not(.active) {
     background: var(--bg-hover);
     transform: scale(1.03);
-    border-color: rgba(99, 102, 241, 0.2);
+    border-color: rgba(255, 107, 53, 0.2);
 }
 
 .filter-indicator {
@@ -1013,9 +1013,9 @@ body {
 
 .task-item.modern:hover {
     background: var(--bg-hover);
-    border-color: rgba(99, 102, 241, 0.4);
+    border-color: rgba(255, 107, 53, 0.4);
     transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-xl), 0 0 20px rgba(99, 102, 241, 0.1);
+    box-shadow: var(--shadow-xl), 0 0 20px rgba(255, 107, 53, 0.1);
 }
 
 .task-item.modern:active {
@@ -1409,7 +1409,7 @@ body {
 
 .task-action-btn.edit {
     background: linear-gradient(145deg, #2b2d42, #1a1b26);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(255, 107, 53, 0.3);
     color: var(--text-primary);
 }
 
@@ -1464,7 +1464,7 @@ body {
 .loading-spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid rgba(99, 102, 241, 0.2);
+    border: 4px solid rgba(255, 107, 53, 0.2);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -1528,13 +1528,13 @@ body {
 /* Расширенные анимации */
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+        box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.5);
     }
     70% {
-        box-shadow: 0 0 0 15px rgba(99, 102, 241, 0);
+        box-shadow: 0 0 0 15px rgba(255, 107, 53, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+        box-shadow: 0 0 0 0 rgba(255, 107, 53, 0);
     }
 }
 
@@ -1580,10 +1580,10 @@ body {
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 5px rgba(255, 107, 53, 0.3);
     }
     50% {
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.6), 0 0 30px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.6), 0 0 30px rgba(255, 107, 53, 0.4);
     }
 }
 
@@ -1739,7 +1739,7 @@ body {
     max-width: 480px;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-xl), 0 0 50px rgba(99, 102, 241, 0.2);
+    box-shadow: var(--shadow-xl), 0 0 50px rgba(255, 107, 53, 0.2);
     animation: modalSlideIn 0.4s var(--spring);
     position: relative;
 }
@@ -1750,7 +1750,7 @@ body {
     align-items: center;
     padding: 24px 24px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, transparent 100%);
 }
 
 .modal-title-section {
@@ -1767,7 +1767,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .modal-icon i {
@@ -1911,7 +1911,7 @@ body {
     outline: none;
     border-color: var(--primary);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
 .form-input.modern::placeholder,
