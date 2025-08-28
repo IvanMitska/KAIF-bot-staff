@@ -138,44 +138,16 @@ function initializeModernUI() {
     console.log('Enhanced Modern UI initialized');
 }
 
-// Инициализация scroll анимаций
+// Упрощенная инициализация scroll анимаций (отключена для избежания конфликтов)
 function initializeScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                entry.target.style.animationDelay = `${Math.random() * 0.3}s`;
-            }
-        });
-    }, observerOptions);
-    
-    // Добавляем классы для анимации к карточкам
-    setTimeout(() => {
-        document.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern').forEach((el, index) => {
-            el.classList.add('animate-on-scroll');
-            el.style.setProperty('--stagger-index', index);
-            observer.observe(el);
-        });
-    }, 100);
+    // Отключено для предотвращения двойных анимаций при переключении страниц
+    console.log('Scroll animations disabled to prevent conflicts');
 }
 
-// Инициализация stagger анимаций
+// Упрощенная инициализация stagger анимаций
 function initializeStaggerAnimations() {
-    const staggerContainers = document.querySelectorAll('.action-grid, .stats-grid.modern, .tasks-container');
-    
-    staggerContainers.forEach(container => {
-        container.classList.add('stagger-children');
-        const children = container.children;
-        for (let i = 0; i < children.length; i++) {
-            children[i].style.setProperty('--stagger-delay', '0.1s');
-            children[i].style.setProperty('--stagger-index', i);
-        }
-    });
+    // Упрощено для избежания конфликтов с page transitions
+    console.log('Stagger animations simplified');
 }
 
 // Floating анимации для иконок
@@ -344,33 +316,36 @@ function showPage(pageId) {
     
     if (!targetPage) return;
     
-    // Анимация выхода для текущей страницы
+    // Простая и плавная анимация переключения
     if (currentPage && currentPage !== targetPage) {
-        currentPage.classList.add('animate-out');
-        setTimeout(() => {
-            currentPage.classList.remove('active', 'animate-out');
-        }, 300);
-    }
-    
-    // Анимация входа для новой страницы
-    setTimeout(() => {
-        targetPage.classList.add('active', 'animate-in');
-        
-        // Добавляем stagger анимацию к дочерним элементам
-        const staggerElements = targetPage.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern');
-        staggerElements.forEach((el, index) => {
-            el.style.animationDelay = `${index * 0.1}s`;
-            el.style.animation = 'fadeInUp 0.6s ease-out forwards';
-        });
+        currentPage.style.opacity = '0';
+        currentPage.style.transform = 'translateY(20px)';
         
         setTimeout(() => {
-            targetPage.classList.remove('animate-in');
-            staggerElements.forEach(el => {
-                el.style.animation = '';
-                el.style.animationDelay = '';
+            currentPage.classList.remove('active');
+            currentPage.style.opacity = '';
+            currentPage.style.transform = '';
+            
+            // Показываем новую страницу
+            targetPage.classList.add('active');
+            targetPage.style.opacity = '0';
+            targetPage.style.transform = 'translateY(20px)';
+            
+            // Плавное появление новой страницы
+            requestAnimationFrame(() => {
+                targetPage.style.transition = 'all 0.3s ease-out';
+                targetPage.style.opacity = '1';
+                targetPage.style.transform = 'translateY(0)';
+                
+                setTimeout(() => {
+                    targetPage.style.transition = '';
+                }, 300);
             });
-        }, 600);
-    }, currentPage ? 150 : 0);
+        }, 200);
+    } else {
+        // Если это первая загрузка страницы
+        targetPage.classList.add('active');
+    }
     
     // Обновляем навигацию
     document.querySelectorAll('.nav-btn').forEach(btn => {
