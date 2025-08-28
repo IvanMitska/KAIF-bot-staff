@@ -127,7 +127,7 @@ body {
     width: 100%;
     margin: 0 auto;
     padding: 20px;
-    padding-top: 100px;
+    padding-top: 80px;
     padding-bottom: 100px;
     box-sizing: border-box;
 }
@@ -1643,7 +1643,7 @@ body {
 @media (max-width: 480px) {
     .container {
         padding: 16px;
-        padding-top: 90px;
+        padding-top: 70px;
         padding-bottom: 90px;
     }
     
