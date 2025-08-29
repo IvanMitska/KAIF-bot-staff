@@ -307,37 +307,148 @@ class RailwayOptimizedService {
     return await notionService.getAttendanceForPeriod(startDate, endDate, employeeId);
   }
 
-  // ========== TASK METHODS (пока прокси к Notion) ==========
+  // ========== TASK METHODS ==========
   async createTask(taskData) {
-    return await notionService.createTask(taskData);
+    await this.initialize();
+    
+    const tempId = `task-${Date.now()}`;
+    const taskWithId = { ...taskData, id: tempId, synced: false };
+    
+    if (this.cache) {
+      // Мгновенно сохраняем в кэш
+      await this.cache.cacheTask(taskWithId);
+      console.log(`✅ Task saved to PostgreSQL cache: ${tempId}`);
+    }
+    
+    // Создаем в Notion в фоне
+    try {
+      const notionTask = await notionService.createTask(taskData);
+      
+      if (this.cache && notionTask.id) {
+        await this.cache.cacheTask({
+          ...taskData,
+          id: notionTask.id,
+          synced: true
+        });
+      }
+      
+      return { id: notionTask.id, ...taskData };
+    } catch (error) {
+      console.error('Notion task creation failed, keeping in cache:', error);
+      return taskWithId;
+    }
   }
 
   async getTasksByAssignee(telegramId, status = null) {
+    await this.initialize();
+    
+    if (this.cache) {
+      const cached = await this.cache.getCachedTasksByAssignee(telegramId, status);
+      if (cached.length > 0) {
+        console.log(`✅ Loaded ${cached.length} tasks from PostgreSQL cache for ${telegramId}`);
+        return cached;
+      }
+      
+      // Если нет в кэше, загружаем из Notion и кэшируем
+      try {
+        console.log(`📥 Loading tasks from Notion for ${telegramId}...`);
+        const tasks = await notionService.getTasksByAssignee(telegramId, status);
+        
+        // Кэшируем все задачи
+        for (const task of tasks) {
+          await this.cache.cacheTask({
+            ...task,
+            synced: true
+          });
+        }
+        
+        if (tasks.length > 0) {
+          console.log(`✅ Cached ${tasks.length} tasks from Notion`);
+        }
+        
+        return tasks;
+      } catch (error) {
+        console.error('Failed to load tasks from Notion:', error);
+        return [];
+      }
+    }
+    
+    // Fallback на прямой Notion
     return await notionService.getTasksByAssignee(telegramId, status);
   }
 
   async getTasksByCreator(telegramId) {
+    await this.initialize();
+    
+    // Для созданных задач пока используем прямой Notion 
+    // (менее критично по скорости)
     return await notionService.getTasksByCreator(telegramId);
   }
 
   async updateTaskStatus(taskId, status) {
+    await this.initialize();
+    
+    if (this.cache) {
+      // Мгновенно обновляем в кэш
+      await this.cache.updateTaskStatus(taskId, status);
+      console.log(`✅ Task status updated in PostgreSQL cache: ${taskId} -> ${status}`);
+      
+      // Обновляем в Notion в фоне
+      try {
+        await notionService.updateTaskStatus(taskId, status);
+      } catch (error) {
+        console.error('Notion task status update failed, keeping in cache:', error);
+      }
+      
+      return { success: true };
+    }
+    
+    // Прямое обновление в Notion
     return await notionService.updateTaskStatus(taskId, status);
   }
 
   async completeTask(taskId, completionNote) {
+    await this.initialize();
+    
+    if (this.cache) {
+      // Мгновенно помечаем как выполненную в кэше
+      await this.cache.updateTaskStatus(taskId, 'Выполнена');
+      console.log(`✅ Task completed in PostgreSQL cache: ${taskId}`);
+      
+      // Обновляем в Notion в фоне
+      try {
+        await notionService.completeTask(taskId, completionNote);
+      } catch (error) {
+        console.error('Notion task completion failed, keeping in cache:', error);
+      }
+      
+      return { success: true };
+    }
+    
     return await notionService.completeTask(taskId, completionNote);
   }
 
   async updateTask(taskId, updates) {
+    // Пока прокси к Notion (редкая операция)
     return await notionService.updateTask(taskId, updates);
   }
 
   async getAllTasks() {
+    // Пока прокси к Notion (админская операция)
     return await notionService.getAllTasks();
   }
 
   async addPhotoToTask(taskId, photoUrl, caption = '') {
     return await notionService.addPhotoToTask(taskId, photoUrl, caption);
+  }
+
+  // Методы для отладки
+  async debugGetAllTasks() {
+    return await notionService.debugGetAllTasks();
+  }
+
+  async testTasksDatabase() {
+    return await notionService.testTasksDatabase();
   }
 
   // ========== STATS ==========
