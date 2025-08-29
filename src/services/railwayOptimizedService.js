@@ -1,0 +1,339 @@
+const notionService = require('./notionService');
+const { getInstance: getCacheInstance } = require('./cacheServicePG');
+
+class RailwayOptimizedService {
+  constructor() {
+    this.cache = null;
+    this.initialized = false;
+  }
+
+  async initialize() {
+    if (this.initialized) return;
+    
+    try {
+      console.log('🔗 Initializing Railway optimized service with PostgreSQL...');
+      this.cache = await getCacheInstance();
+      this.initialized = true;
+      console.log('✅ Railway optimized service with PostgreSQL ready');
+    } catch (error) {
+      console.error('❌ Failed to initialize PostgreSQL cache:', error.message);
+      console.log('⚠️ Falling back to direct Notion API calls');
+      // Fallback на прямой Notion если PostgreSQL не доступен
+    }
+  }
+
+  // ========== USER METHODS ==========
+  async createUser(userData) {
+    await this.initialize();
+    
+    if (this.cache) {
+      // Сначала кэшируем
+      await this.cache.cacheUser(userData);
+      console.log(`✅ User cached: ${userData.telegramId}`);
+    }
+    
+    // Затем создаем в Notion
+    const notionUser = await notionService.createUser(userData);
+    
+    // Обновляем кэш с Notion ID
+    if (this.cache && notionUser.id) {
+      await this.cache.cacheUser({
+        ...userData,
+        id: notionUser.id,
+        synced: true
+      });
+    }
+    
+    return notionUser;
+  }
+
+  async getUserByTelegramId(telegramId) {
+    await this.initialize();
+    
+    if (this.cache) {
+      // Проверяем кэш
+      const cached = await this.cache.getCachedUser(telegramId);
+      if (cached) {
+        console.log(`✅ User loaded from PostgreSQL cache: ${telegramId}`);
+        return cached;
+      }
+    }
+    
+    // Если нет в кэше, загружаем из Notion
+    console.log(`📥 Loading user from Notion: ${telegramId}`);
+    const user = await notionService.getUserByTelegramId(telegramId);
+    
+    // Кэшируем пользователя
+    if (this.cache && user) {
+      await this.cache.cacheUser({
+        ...user,
+        telegramId,
+        synced: true
+      });
+    }
+    
+    return user;
+  }
+
+  async getAllActiveUsers() {
+    await this.initialize();
+    
+    if (this.cache) {
+      const cached = await this.cache.getAllCachedUsers();
+      if (cached.length > 0) {
+        console.log(`✅ Loaded ${cached.length} users from PostgreSQL cache`);
+        return cached;
+      }
+    }
+    
+    // Загружаем из Notion
+    console.log(`📥 Loading users from Notion...`);
+    const users = await notionService.getAllActiveUsers();
+    
+    // Кэшируем всех пользователей
+    if (this.cache) {
+      for (const user of users) {
+        await this.cache.cacheUser({
+          ...user,
+          synced: true
+        });
+      }
+    }
+    
+    return users;
+  }
+
+  // ========== REPORT METHODS ==========
+  async createReport(reportData) {
+    await this.initialize();
+    
+    const tempId = `report-${Date.now()}`;
+    const reportWithId = { ...reportData, id: tempId, synced: false };
+    
+    if (this.cache) {
+      // Мгновенно сохраняем в кэш
+      await this.cache.cacheReport(reportWithId);
+      console.log(`✅ Report saved to PostgreSQL cache: ${tempId}`);
+    }
+    
+    // Создаем в Notion в фоне
+    try {
+      const notionReport = await notionService.createReport(reportData);
+      
+      if (this.cache && notionReport.id) {
+        // Обновляем кэш с реальным ID
+        await this.cache.cacheReport({
+          ...reportData,
+          id: notionReport.id,
+          synced: true
+        });
+        // Удаляем временную запись если нужно
+        await this.cache.markReportSynced(tempId);
+      }
+      
+      return { id: notionReport.id, ...reportData };
+    } catch (error) {
+      console.error('Notion report creation failed, keeping in cache:', error);
+      return reportWithId;
+    }
+  }
+
+  async getTodayReport(telegramId) {
+    await this.initialize();
+    
+    if (this.cache) {
+      const cached = await this.cache.getCachedTodayReport(telegramId);
+      if (cached) {
+        console.log(`✅ Today report loaded from PostgreSQL cache`);
+        return cached;
+      }
+    }
+    
+    // Загружаем из Notion
+    const report = await notionService.getTodayReport(telegramId);
+    
+    // Кэшируем отчет
+    if (this.cache && report) {
+      await this.cache.cacheReport({
+        ...report,
+        telegramId,
+        synced: true
+      });
+    }
+    
+    return report;
+  }
+
+  async getUserReports(telegramId, limit = 5) {
+    await this.initialize();
+    
+    if (this.cache) {
+      const cached = await this.cache.getCachedUserReports(telegramId, limit);
+      if (cached.length > 0) {
+        console.log(`✅ Loaded ${cached.length} reports from PostgreSQL cache`);
+        return cached;
+      }
+    }
+    
+    // Загружаем из Notion
+    console.log(`📥 Loading reports from Notion for ${telegramId}...`);
+    const reports = await notionService.getUserReports(telegramId, limit);
+    
+    // Кэшируем отчеты
+    if (this.cache) {
+      for (const report of reports) {
+        await this.cache.cacheReport({
+          ...report,
+          telegramId,
+          synced: true
+        });
+      }
+    }
+    
+    return reports;
+  }
+
+  // ========== ATTENDANCE METHODS ==========
+  async createAttendance(attendanceData) {
+    await this.initialize();
+    
+    const tempId = `attendance-${attendanceData.employeeId}-${attendanceData.date}`;
+    const attendanceWithId = { ...attendanceData, id: tempId, synced: false };
+    
+    if (this.cache) {
+      // Мгновенно сохраняем в кэш
+      await this.cache.cacheAttendance(attendanceWithId);
+      console.log(`✅ Attendance saved to PostgreSQL cache: ${tempId}`);
+    }
+    
+    // Создаем в Notion в фоне
+    try {
+      const notionAttendance = await notionService.createAttendance(attendanceData);
+      
+      if (this.cache && notionAttendance.id) {
+        await this.cache.cacheAttendance({
+          ...attendanceData,
+          id: notionAttendance.id,
+          synced: true
+        });
+      }
+      
+      return { id: notionAttendance.id, ...attendanceData };
+    } catch (error) {
+      console.error('Notion attendance creation failed, keeping in cache:', error);
+      return attendanceWithId;
+    }
+  }
+
+  async getTodayAttendance(employeeId) {
+    await this.initialize();
+    
+    if (this.cache) {
+      const cached = await this.cache.getCachedTodayAttendance(employeeId);
+      if (cached) {
+        console.log(`✅ Today attendance loaded from PostgreSQL cache`);
+        return cached;
+      }
+    }
+    
+    // Загружаем из Notion (пока оставляем как есть)
+    return await notionService.getTodayAttendance(employeeId);
+  }
+
+  async updateAttendanceCheckOut(attendanceId, checkOut, location = null) {
+    await this.initialize();
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (this.cache) {
+      // Мгновенно обновляем в кэш
+      const workHours = await this.cache.updateAttendanceCheckOut(
+        attendanceId, today, checkOut, location
+      );
+      console.log(`✅ CheckOut updated in PostgreSQL cache`);
+      
+      // Обновляем в Notion в фоне
+      try {
+        await notionService.updateAttendanceCheckOut(attendanceId, checkOut, location);
+      } catch (error) {
+        console.error('Notion checkout update failed, keeping in cache:', error);
+      }
+      
+      return workHours;
+    }
+    
+    // Прямое обновление в Notion
+    return await notionService.updateAttendanceCheckOut(attendanceId, checkOut, location);
+  }
+
+  // Для совместимости с существующим API
+  async getCurrentAttendanceStatus() {
+    return await notionService.getCurrentAttendanceStatus();
+  }
+
+  async getAttendanceForPeriod(startDate, endDate, employeeId = null) {
+    return await notionService.getAttendanceForPeriod(startDate, endDate, employeeId);
+  }
+
+  // ========== TASK METHODS (пока прокси к Notion) ==========
+  async createTask(taskData) {
+    return await notionService.createTask(taskData);
+  }
+
+  async getTasksByAssignee(telegramId, status = null) {
+    return await notionService.getTasksByAssignee(telegramId, status);
+  }
+
+  async getTasksByCreator(telegramId) {
+    return await notionService.getTasksByCreator(telegramId);
+  }
+
+  async updateTaskStatus(taskId, status) {
+    return await notionService.updateTaskStatus(taskId, status);
+  }
+
+  async completeTask(taskId, completionNote) {
+    return await notionService.completeTask(taskId, completionNote);
+  }
+
+  async updateTask(taskId, updates) {
+    return await notionService.updateTask(taskId, updates);
+  }
+
+  async getAllTasks() {
+    return await notionService.getAllTasks();
+  }
+
+  async addPhotoToTask(taskId, photoUrl, caption = '') {
+    return await notionService.addPhotoToTask(taskId, photoUrl, caption);
+  }
+
+  // ========== STATS ==========
+  async getStats() {
+    await this.initialize();
+    
+    if (this.cache) {
+      return await this.cache.getCacheStats();
+    }
+    
+    return {
+      users: 0,
+      reports: 0,
+      tasks: 0,
+      attendance: 0,
+      sizeBytes: 0,
+      sizeMB: '0.00'
+    };
+  }
+
+  // Метод для принудительной синхронизации
+  async forceSync() {
+    console.log('🔄 Force sync not implemented for Railway service');
+    return { message: 'Force sync not available' };
+  }
+}
+
+// Создаем singleton
+const railwayService = new RailwayOptimizedService();
+
+module.exports = railwayService;

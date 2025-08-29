@@ -79,7 +79,17 @@ app.use((req, res, next) => {
 app.use('/webapp/public', express.static(path.join(__dirname, 'webapp/public')));
 
 // API endpoints
-const notionService = require('./src/services/notionService');
+// Выбираем сервис в зависимости от доступности PostgreSQL
+const notionService = process.env.DATABASE_URL 
+  ? require('./src/services/railwayOptimizedService')
+  : require('./src/services/notionService');
+
+// Лог выбранного сервиса
+if (process.env.DATABASE_URL) {
+  console.log('🚀 Using Railway Optimized Service with PostgreSQL');
+} else {
+  console.log('⚠️  Using direct Notion Service (no PostgreSQL)');
+}
 const userService = require('./src/services/userService');
 const { getPhuketTime, formatPhuketTime, isLateForWork, getPhuketDateISO } = require('./src/utils/timezone');
 
@@ -859,8 +869,45 @@ app.get('/api/admin/attendance/current', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
     
-    const currentStatus = await notionService.getCurrentAttendanceStatus();
-    res.json(currentStatus);
+    // Получаем всех активных сотрудников
+    const allEmployees = await notionService.getAllActiveUsers();
+    
+    // Получаем записи о присутствии за сегодня
+    const todayAttendance = await notionService.getCurrentAttendanceStatus();
+    
+    // Создаем карту присутствия для быстрого поиска
+    const attendanceMap = new Map();
+    todayAttendance.forEach(record => {
+      if (record.employeeId) {
+        attendanceMap.set(record.employeeId, record);
+      }
+    });
+    
+    // Формируем полный список статусов для всех сотрудников
+    const fullStatus = allEmployees.map(employee => {
+      const attendanceRecord = attendanceMap.get(employee.telegramId);
+      
+      if (attendanceRecord) {
+        // Сотрудник есть в записях присутствия
+        return attendanceRecord;
+      } else {
+        // Сотрудник не отмечался - считаем отсутствующим
+        return {
+          id: null,
+          employeeName: employee.name,
+          employeeId: employee.telegramId,
+          date: new Date().toISOString().split('T')[0],
+          checkIn: null,
+          checkOut: null,
+          status: 'Отсутствует',
+          isPresent: false,
+          late: false,
+          workHours: null
+        };
+      }
+    });
+    
+    res.json(fullStatus);
   } catch (error) {
     console.error('Error getting attendance status:', error);
     res.status(500).json({ error: 'Server error' });
