@@ -626,11 +626,16 @@
                                 Активность за неделю
                             </h3>
                             <div class="chart-controls">
-                                <select class="chart-period-selector" id="chartPeriodSelector">
-                                    <option value="week">Неделя</option>
-                                    <option value="month">Месяц</option>
-                                    <option value="quarter">Квартал</option>
-                                </select>
+                                <div class="custom-select-wrapper chart-select">
+                                    <select class="custom-select chart-period-selector" id="chartPeriodSelector">
+                                        <option value="week">Неделя</option>
+                                        <option value="month">Месяц</option>
+                                        <option value="quarter">Квартал</option>
+                                    </select>
+                                    <div class="select-arrow">
+                                        <i data-lucide="chevron-down"></i>
+                                    </div>
+                                </div>
                                 <button class="chart-fullscreen-btn" onclick="toggleChartFullscreen()" title="Развернуть">
                                     <i data-lucide="maximize-2"></i>
                                 </button>
@@ -813,18 +818,28 @@
                     <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                         <div style="flex: 1;">
                             <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Период</label>
-                            <select id="periodFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
-                                <option value="today">Сегодня</option>
-                                <option value="week">Эта неделя</option>
-                                <option value="month">Этот месяц</option>
-                                <option value="custom">Выбрать даты</option>
-                            </select>
+                            <div class="custom-select-wrapper">
+                                <select id="periodFilter" onchange="updateAdminPanel()" class="custom-select modern">
+                                    <option value="today">Сегодня</option>
+                                    <option value="week">Эта неделя</option>
+                                    <option value="month">Этот месяц</option>
+                                    <option value="custom">Выбрать даты</option>
+                                </select>
+                                <div class="select-arrow">
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                            </div>
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Сотрудник</label>
-                            <select id="employeeFilter" onchange="updateAdminPanel()" style="width: 100%; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
-                                <option value="all">Все сотрудники</option>
-                            </select>
+                            <div class="custom-select-wrapper">
+                                <select id="employeeFilter" onchange="updateAdminPanel()" class="custom-select modern">
+                                    <option value="all">Все сотрудники</option>
+                                </select>
+                                <div class="select-arrow">
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -901,12 +916,17 @@
                                     <i data-lucide="calendar" class="label-icon"></i>
                                     Период
                                 </label>
-                                <select id="attendancePeriodFilter" onchange="updateAttendanceHistory()" class="filter-select modern">
-                                    <option value="today">Сегодня</option>
-                                    <option value="week" selected>Эта неделя</option>
-                                    <option value="month">Этот месяц</option>
-                                    <option value="custom">Выбрать даты</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <select id="attendancePeriodFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
+                                        <option value="today">Сегодня</option>
+                                        <option value="week" selected>Эта неделя</option>
+                                        <option value="month">Этот месяц</option>
+                                        <option value="custom">Выбрать даты</option>
+                                    </select>
+                                    <div class="select-arrow">
+                                        <i data-lucide="chevron-down"></i>
+                                    </div>
+                                </div>
                             </div>
                             
                             <div class="filter-group modern">
@@ -914,9 +934,14 @@
                                     <i data-lucide="user" class="label-icon"></i>
                                     Сотрудник
                                 </label>
-                                <select id="attendanceEmployeeFilter" onchange="updateAttendanceHistory()" class="filter-select modern">
-                                    <option value="all">Все сотрудники</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <select id="attendanceEmployeeFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
+                                        <option value="all">Все сотрудники</option>
+                                    </select>
+                                    <div class="select-arrow">
+                                        <i data-lucide="chevron-down"></i>
+                                    </div>
+                                </div>
                             </div>
                             
                             <div class="filter-group modern">
@@ -924,12 +949,17 @@
                                     <i data-lucide="clock" class="label-icon"></i>
                                     Статус
                                 </label>
-                                <select id="attendanceStatusFilter" onchange="updateAttendanceHistory()" class="filter-select modern">
-                                    <option value="all">Все статусы</option>
-                                    <option value="present">Присутствуют</option>
-                                    <option value="late">Опоздания</option>
-                                    <option value="absent">Отсутствуют</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <select id="attendanceStatusFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
+                                        <option value="all">Все статусы</option>
+                                        <option value="present">Присутствуют</option>
+                                        <option value="late">Опоздания</option>
+                                        <option value="absent">Отсутствуют</option>
+                                    </select>
+                                    <div class="select-arrow">
+                                        <i data-lucide="chevron-down"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -1124,9 +1154,14 @@
                         <i data-lucide="user" class="label-icon"></i>
                         Исполнитель
                     </label>
-                    <select id="taskEmployee" name="employee" required class="form-select modern">
-                        <option value="">Выберите сотрудника</option>
-                    </select>
+                    <div class="custom-select-wrapper">
+                        <select id="taskEmployee" name="employee" required class="custom-select modern">
+                            <option value="">Выберите сотрудника</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group modern">
@@ -1159,11 +1194,16 @@
                             <i data-lucide="flag" class="label-icon"></i>
                             Приоритет
                         </label>
-                        <select name="priority" class="form-select modern">
-                            <option value="Низкий">🟢 Низкий</option>
-                            <option value="Средний" selected>🟡 Средний</option>
-                            <option value="Высокий">🔴 Высокий</option>
-                        </select>
+                        <div class="custom-select-wrapper">
+                            <select name="priority" class="custom-select modern">
+                                <option value="Низкий">🟢 Низкий</option>
+                                <option value="Средний" selected>🟡 Средний</option>
+                                <option value="Высокий">🔴 Высокий</option>
+                            </select>
+                            <div class="select-arrow">
+                                <i data-lucide="chevron-down"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -1209,18 +1249,28 @@
                 
                 <div class="form-group">
                     <label>Приоритет</label>
-                    <select id="editTaskPriority" name="priority" style="background: var(--bg-secondary);">
-                        <option value="Низкий">🟢 Низкий</option>
-                        <option value="Средний">🟡 Средний</option>
-                        <option value="Высокий">🔴 Высокий</option>
-                    </select>
+                    <div class="custom-select-wrapper">
+                        <select id="editTaskPriority" name="priority" class="custom-select modern">
+                            <option value="Низкий">🟢 Низкий</option>
+                            <option value="Средний">🟡 Средний</option>
+                            <option value="Высокий">🔴 Высокий</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Исполнитель</label>
-                    <select id="editTaskEmployee" name="employee" required style="background: var(--bg-secondary);">
-                        <option value="">Выберите сотрудника</option>
-                    </select>
+                    <div class="custom-select-wrapper">
+                        <select id="editTaskEmployee" name="employee" required class="custom-select modern">
+                            <option value="">Выберите сотрудника</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                    </div>
                 </div>
                 
                 <button type="submit" class="submit-btn">Сохранить изменения</button>

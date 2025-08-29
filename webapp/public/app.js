@@ -3158,6 +3158,9 @@ function initializeEnhancedAdminPanelComplete() {
     
     // Add click animation to metric cards
     initializeMetricCardAnimations();
+    
+    // Initialize custom selects
+    initializeCustomSelects();
 }
 
 // Function to initialize metric card animations
@@ -3173,6 +3176,68 @@ function initializeMetricCardAnimations() {
         });
     });
 }
+
+// Function to initialize custom selects
+function initializeCustomSelects() {
+    // Find all custom select wrappers and initialize them
+    const selectWrappers = document.querySelectorAll('.custom-select-wrapper');
+    
+    selectWrappers.forEach(wrapper => {
+        const select = wrapper.querySelector('.custom-select');
+        const arrow = wrapper.querySelector('.select-arrow');
+        
+        if (select && arrow) {
+            // Add focus event for arrow animation
+            select.addEventListener('focus', () => {
+                arrow.style.transform = 'translateY(-50%) rotate(180deg)';
+            });
+            
+            select.addEventListener('blur', () => {
+                arrow.style.transform = 'translateY(-50%) rotate(0deg)';
+            });
+            
+            // Add change event for additional effects
+            select.addEventListener('change', () => {
+                // Add a subtle pulse effect on change
+                select.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    select.style.transform = '';
+                }, 150);
+            });
+            
+            // Add hover effects
+            wrapper.addEventListener('mouseenter', () => {
+                if (!select.matches(':focus')) {
+                    arrow.style.color = 'var(--primary)';
+                    arrow.style.transform = 'translateY(-50%) scale(1.1)';
+                }
+            });
+            
+            wrapper.addEventListener('mouseleave', () => {
+                if (!select.matches(':focus')) {
+                    arrow.style.color = '';
+                    arrow.style.transform = 'translateY(-50%)';
+                }
+            });
+        }
+    });
+    
+    // Re-initialize Lucide icons for new arrow icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+// Update existing DOM ready event to include custom selects
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize enhanced admin panel
+    if (document.getElementById('adminPanel')) {
+        initializeEnhancedAdminPanelComplete();
+    }
+    
+    // Initialize custom selects for all pages
+    initializeCustomSelects();
+});
 
 // Обновление статистики учета времени
 function updateAttendanceStats(attendanceData) {
