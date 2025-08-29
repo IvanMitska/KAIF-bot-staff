@@ -30,7 +30,7 @@ function showNotification(message, type = 'info') {
 // Глобальные переменные
 let currentUser = null;
 let currentFilter = 'all';
-let lastNewTasksCount = 0;
+let lastNewTasksCount = parseInt(localStorage.getItem('lastNewTasksCount') || '0');
 let currentTaskType = 'my'; // 'my' или 'created'
 let currentTasks = []; // Хранение текущих задач
 
@@ -534,7 +534,9 @@ async function loadTasksCount() {
             updateTaskBadge(newTasks);
             
             // Проверяем появились ли новые задачи
-            if (newTasks > lastNewTasksCount) {
+            // Показываем уведомление только если это НЕ первый запуск
+            const hasStoredCount = localStorage.getItem('lastNewTasksCount') !== null;
+            if (newTasks > lastNewTasksCount && hasStoredCount) {
                 // Вибрация и звук при новой задаче
                 if (tg.HapticFeedback) {
                     tg.HapticFeedback.notificationOccurred('success');
@@ -549,6 +551,7 @@ async function loadTasksCount() {
             }
             
             lastNewTasksCount = newTasks;
+            localStorage.setItem('lastNewTasksCount', newTasks.toString());
         }
     } catch (error) {
         console.error('Error loading tasks count:', error);
