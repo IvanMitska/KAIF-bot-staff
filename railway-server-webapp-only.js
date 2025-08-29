@@ -1062,12 +1062,23 @@ if (missingVars.length === 0) {
 }
 
 // Запуск сервера
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   const publicUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'your-railway-domain';
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Web App Only Mode активен`);
   console.log(`🌐 Web App URL: https://${publicUrl}/webapp/public`);
   console.log(`🔗 Railway Domain: ${publicUrl}`);
+  
+  // Инициализируем PostgreSQL кэш при запуске
+  if (process.env.DATABASE_URL) {
+    try {
+      console.log('🔄 Initializing PostgreSQL cache on startup...');
+      await notionService.initialize();
+      console.log('✅ PostgreSQL cache initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize PostgreSQL cache:', error);
+    }
+  }
 });
 
 // Геозона офиса и helpers

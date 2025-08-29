@@ -234,9 +234,31 @@ class RailwayOptimizedService {
         console.log(`✅ Today attendance loaded from PostgreSQL cache`);
         return cached;
       }
+      
+      // Если нет в кэше, загружаем из Notion и кэшируем
+      try {
+        console.log(`📥 Loading attendance from Notion for ${employeeId}...`);
+        const attendance = await notionService.getTodayAttendance(employeeId);
+        
+        if (attendance) {
+          // Кэшируем найденную запись
+          await this.cache.cacheAttendance({
+            ...attendance,
+            employeeId,
+            date: new Date().toISOString().split('T')[0],
+            synced: true
+          });
+          console.log(`✅ Attendance cached from Notion`);
+        }
+        
+        return attendance;
+      } catch (error) {
+        console.error('Failed to load attendance from Notion:', error);
+        return null;
+      }
     }
     
-    // Загружаем из Notion (пока оставляем как есть)
+    // Fallback на прямой Notion если нет кэша
     return await notionService.getTodayAttendance(employeeId);
   }
 
@@ -246,11 +268,21 @@ class RailwayOptimizedService {
     const today = new Date().toISOString().split('T')[0];
     
     if (this.cache) {
+      // Извлекаем employeeId из attendanceId, если это наш временный ID
+      let employeeId = attendanceId;
+      if (typeof attendanceId === 'string' && attendanceId.includes('attendance-')) {
+        // Формат: attendance-{employeeId}-{date}
+        const parts = attendanceId.split('-');
+        if (parts.length >= 3) {
+          employeeId = parts[1];
+        }
+      }
+      
       // Мгновенно обновляем в кэш
       const workHours = await this.cache.updateAttendanceCheckOut(
-        attendanceId, today, checkOut, location
+        employeeId, today, checkOut, location
       );
-      console.log(`✅ CheckOut updated in PostgreSQL cache`);
+      console.log(`✅ CheckOut updated in PostgreSQL cache for employee ${employeeId}`);
       
       // Обновляем в Notion в фоне
       try {
