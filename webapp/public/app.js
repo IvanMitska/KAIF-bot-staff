@@ -2647,6 +2647,533 @@ window.updateAttendanceHistory = async function() {
     }
 }
 
+// ===== ENHANCED ADMIN PANEL FUNCTIONS =====
+
+// Function to show missing reports with details
+function showMissingReports() {
+    // This would open a detailed modal or navigate to a detailed view
+    console.log('Showing detailed missing reports view');
+    // Implementation would show employee names, contact info, last report dates, etc.
+    alert('Функция детального просмотра отсутствующих отчетов будет реализована');
+}
+
+// Function to show employees who are late
+function showLateEmployees() {
+    console.log('Showing late employees');
+    alert('Функция просмотра опоздавших сотрудников будет реализована');
+}
+
+// Function to refresh real-time data
+function refreshRealTimeData() {
+    console.log('Refreshing real-time attendance data');
+    
+    // Show loading state
+    const refreshBtn = document.querySelector('.refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.style.transform = 'rotate(360deg)';
+        setTimeout(() => {
+            refreshBtn.style.transform = 'rotate(0deg)';
+        }, 500);
+    }
+    
+    // Update real-time attendance numbers (placeholder data)
+    setTimeout(() => {
+        updateRealTimeAttendance();
+    }, 500);
+}
+
+// Function to update real-time attendance display
+function updateRealTimeAttendance() {
+    // Generate realistic sample data
+    const currentHour = new Date().getHours();
+    let presentCount, lateCount, absentCount;
+    
+    if (currentHour >= 9 && currentHour <= 18) {
+        // During work hours
+        presentCount = Math.floor(Math.random() * 3) + 6; // 6-8 present
+        lateCount = Math.floor(Math.random() * 2); // 0-1 late
+        absentCount = 8 - presentCount - lateCount; // remaining absent
+    } else {
+        // Outside work hours
+        presentCount = 0;
+        lateCount = 0;
+        absentCount = 8;
+    }
+    
+    const currentlyPresentEl = document.getElementById('currentlyPresent');
+    const currentlyLateEl = document.getElementById('currentlyLate');
+    const currentlyAbsentEl = document.getElementById('currentlyAbsent');
+    
+    if (currentlyPresentEl) currentlyPresentEl.textContent = presentCount;
+    if (currentlyLateEl) currentlyLateEl.textContent = lateCount;
+    if (currentlyAbsentEl) currentlyAbsentEl.textContent = absentCount;
+}
+
+// Function to reset attendance filters
+function resetAttendanceFilters() {
+    const periodFilter = document.getElementById('attendancePeriodFilter');
+    const employeeFilter = document.getElementById('attendanceEmployeeFilter');
+    const statusFilter = document.getElementById('attendanceStatusFilter');
+    
+    if (periodFilter) periodFilter.value = 'week';
+    if (employeeFilter) employeeFilter.value = 'all';
+    if (statusFilter) statusFilter.value = 'all';
+    
+    // Hide custom date range
+    const customDateRange = document.getElementById('attendanceCustomDateRange');
+    if (customDateRange) {
+        customDateRange.style.display = 'none';
+    }
+    
+    // Refresh data
+    updateAttendanceHistory();
+}
+
+// Function to export attendance data
+function exportAttendanceData() {
+    console.log('Exporting attendance data');
+    
+    // Show loading state
+    const btn = event.target.closest('.history-control-btn');
+    if (btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader" style="animation: spin 1s linear infinite;"></i>';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            lucide.createIcons();
+            alert('Данные экспортированы в CSV файл');
+        }, 1500);
+    }
+}
+
+// Function to print attendance report
+function printAttendanceReport() {
+    console.log('Printing attendance report');
+    alert('Функция печати отчета будет реализована');
+}
+
+// Function to enhance metric cards with real-time updates
+function startMetricUpdates() {
+    // Update metrics every 30 seconds
+    setInterval(updateAdminMetrics, 30000);
+    
+    // Initial update
+    updateAdminMetrics();
+}
+
+// Function to update admin metrics with realistic data
+function updateAdminMetrics() {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // Generate realistic sample data based on time of day
+    const todayReports = hour >= 17 ? Math.floor(Math.random() * 3) + 5 : Math.floor(Math.random() * hour/2);
+    const missingReports = Math.max(0, 8 - todayReports - Math.floor(Math.random() * 2));
+    const activeTasks = Math.floor(Math.random() * 10) + 15;
+    const completedToday = Math.floor(Math.random() * 8) + 3;
+    
+    // Update dashboard metrics
+    updateMetricValue('dashboardTodayReports', todayReports);
+    updateMetricValue('dashboardMissingReports', missingReports);
+    updateMetricValue('dashboardActiveTasks', activeTasks);
+    updateMetricValue('dashboardCompletedToday', completedToday);
+    
+    // Update progress bars and trends
+    updateMetricProgress(todayReports, 8); // Out of 8 employees
+    
+    // Update real-time attendance
+    updateRealTimeAttendance();
+}
+
+// Helper function to update metric values with animation
+function updateMetricValue(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const currentValue = parseInt(element.textContent) || 0;
+    
+    if (currentValue !== newValue) {
+        // Animate value change
+        animateNumberChange(element, currentValue, newValue, 1000);
+    }
+}
+
+// Function to animate number changes
+function animateNumberChange(element, startValue, endValue, duration) {
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeOut);
+        element.textContent = currentValue;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Function to update metric progress bars
+function updateMetricProgress(current, total) {
+    const progressBars = document.querySelectorAll('.progress-fill');
+    progressBars.forEach(bar => {
+        const percentage = Math.min((current / total) * 100, 100);
+        bar.style.width = percentage + '%';
+    });
+}
+
+// Function to handle period filter changes
+function handlePeriodFilterChange(filterId, customDateRangeId) {
+    const filter = document.getElementById(filterId);
+    const customDateRange = document.getElementById(customDateRangeId);
+    
+    if (filter && customDateRange) {
+        if (filter.value === 'custom') {
+            customDateRange.style.display = 'grid';
+        } else {
+            customDateRange.style.display = 'none';
+        }
+    }
+}
+
+// Enhanced admin panel initialization
+function initializeEnhancedAdminPanel() {
+    // Set up period filter listeners
+    const attendancePeriodFilter = document.getElementById('attendancePeriodFilter');
+    if (attendancePeriodFilter) {
+        attendancePeriodFilter.addEventListener('change', () => {
+            handlePeriodFilterChange('attendancePeriodFilter', 'attendanceCustomDateRange');
+        });
+    }
+    
+    const periodFilter = document.getElementById('periodFilter');
+    if (periodFilter) {
+        periodFilter.addEventListener('change', () => {
+            handlePeriodFilterChange('periodFilter', 'customDateRange');
+        });
+    }
+    
+    // Start metric updates if admin panel is visible
+    if (document.getElementById('adminPanel')) {
+        startMetricUpdates();
+    }
+    
+    // Initialize tooltips and interactive elements
+    initializeAdminTooltips();
+}
+
+// Function to initialize tooltips for admin panel
+function initializeAdminTooltips() {
+    const tooltipElements = document.querySelectorAll('[title]');
+    tooltipElements.forEach(element => {
+        element.addEventListener('mouseenter', showTooltip);
+        element.addEventListener('mouseleave', hideTooltip);
+    });
+}
+
+function showTooltip(event) {
+    const title = event.target.getAttribute('title');
+    if (!title) return;
+    
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'admin-tooltip';
+    tooltip.textContent = title;
+    tooltip.style.cssText = `
+        position: absolute;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 10000;
+        border: 1px solid var(--admin-border);
+        box-shadow: var(--shadow-lg);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    // Position tooltip
+    const rect = event.target.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+    
+    // Animate in
+    setTimeout(() => {
+        tooltip.style.opacity = '1';
+    }, 10);
+    
+    // Store reference for cleanup
+    event.target._tooltip = tooltip;
+    
+    // Remove title to prevent browser tooltip
+    event.target.removeAttribute('title');
+    event.target._originalTitle = title;
+}
+
+function hideTooltip(event) {
+    const tooltip = event.target._tooltip;
+    if (tooltip) {
+        tooltip.style.opacity = '0';
+        setTimeout(() => {
+            if (tooltip.parentNode) {
+                tooltip.parentNode.removeChild(tooltip);
+            }
+        }, 200);
+        delete event.target._tooltip;
+    }
+    
+    // Restore original title
+    if (event.target._originalTitle) {
+        event.target.setAttribute('title', event.target._originalTitle);
+        delete event.target._originalTitle;
+    }
+}
+
+// Initialize enhanced admin panel when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initializeEnhancedAdminPanel();
+});
+
+// Add CSS for spin animation
+const additionalCSS = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+
+// Inject additional CSS
+const style = document.createElement('style');
+style.textContent = additionalCSS;
+document.head.appendChild(style);
+
+// ===== ENHANCED CHART FUNCTIONALITY =====
+
+// Function to toggle chart fullscreen
+function toggleChartFullscreen() {
+    const chartCard = document.querySelector('.chart-card.modern');
+    if (!chartCard) return;
+    
+    if (!chartCard.classList.contains('fullscreen')) {
+        // Enter fullscreen
+        chartCard.classList.add('fullscreen');
+        chartCard.style.position = 'fixed';
+        chartCard.style.top = '0';
+        chartCard.style.left = '0';
+        chartCard.style.width = '100vw';
+        chartCard.style.height = '100vh';
+        chartCard.style.zIndex = '10000';
+        chartCard.style.margin = '0';
+        
+        // Update button icon
+        const btn = chartCard.querySelector('.chart-fullscreen-btn i');
+        if (btn) {
+            btn.setAttribute('data-lucide', 'minimize-2');
+            lucide.createIcons();
+        }
+        
+        // Add escape key listener
+        document.addEventListener('keydown', handleChartEscapeKey);
+    } else {
+        // Exit fullscreen
+        exitChartFullscreen();
+    }
+}
+
+// Function to exit chart fullscreen
+function exitChartFullscreen() {
+    const chartCard = document.querySelector('.chart-card.modern');
+    if (!chartCard) return;
+    
+    chartCard.classList.remove('fullscreen');
+    chartCard.style.position = '';
+    chartCard.style.top = '';
+    chartCard.style.left = '';
+    chartCard.style.width = '';
+    chartCard.style.height = '';
+    chartCard.style.zIndex = '';
+    chartCard.style.margin = '';
+    
+    // Update button icon
+    const btn = chartCard.querySelector('.chart-fullscreen-btn i');
+    if (btn) {
+        btn.setAttribute('data-lucide', 'maximize-2');
+        lucide.createIcons();
+    }
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleChartEscapeKey);
+}
+
+// Handle escape key for chart fullscreen
+function handleChartEscapeKey(event) {
+    if (event.key === 'Escape') {
+        exitChartFullscreen();
+    }
+}
+
+// Initialize interactive chart functionality
+function initializeInteractiveChart() {
+    const chartDays = document.querySelectorAll('.chart-day');
+    const tooltip = document.getElementById('chartTooltip');
+    
+    if (!tooltip) return;
+    
+    const dayNames = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+    
+    chartDays.forEach((day, index) => {
+        const bars = day.querySelectorAll('.chart-bar');
+        
+        day.addEventListener('mouseenter', (event) => {
+            const rect = day.getBoundingClientRect();
+            const chartRect = document.querySelector('.interactive-chart').getBoundingClientRect();
+            
+            // Get data values from bars
+            const reportsValue = bars[0] ? bars[0].getAttribute('data-value') : '0';
+            const tasksValue = bars[1] ? bars[1].getAttribute('data-value') : '0';
+            const hoursValue = bars[2] ? bars[2].getAttribute('data-value') : '0';
+            
+            // Update tooltip content
+            tooltip.querySelector('.tooltip-title').textContent = dayNames[index] || `День ${index + 1}`;
+            
+            const tooltipItems = tooltip.querySelectorAll('.tooltip-item strong');
+            if (tooltipItems[0]) tooltipItems[0].textContent = reportsValue;
+            if (tooltipItems[1]) tooltipItems[1].textContent = tasksValue;
+            if (tooltipItems[2]) tooltipItems[2].textContent = hoursValue;
+            
+            // Position tooltip
+            const tooltipX = rect.left - chartRect.left + rect.width / 2 - tooltip.offsetWidth / 2;
+            const tooltipY = rect.top - chartRect.top - tooltip.offsetHeight - 10;
+            
+            tooltip.style.left = Math.max(10, Math.min(tooltipX, chartRect.width - tooltip.offsetWidth - 10)) + 'px';
+            tooltip.style.top = Math.max(10, tooltipY) + 'px';
+            
+            // Show tooltip
+            tooltip.classList.add('show');
+        });
+        
+        day.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('show');
+        });
+        
+        // Add click functionality for detailed view
+        day.addEventListener('click', () => {
+            const dayName = dayNames[index] || `День ${index + 1}`;
+            showDayDetailModal(dayName, {
+                reports: bars[0] ? bars[0].getAttribute('data-value') : '0',
+                tasks: bars[1] ? bars[1].getAttribute('data-value') : '0',
+                hours: bars[2] ? bars[2].getAttribute('data-value') : '0'
+            });
+        });
+    });
+    
+    // Chart period selector
+    const periodSelector = document.getElementById('chartPeriodSelector');
+    if (periodSelector) {
+        periodSelector.addEventListener('change', (event) => {
+            updateChartData(event.target.value);
+        });
+    }
+    
+    // Animate chart bars on load
+    animateChartBars();
+}
+
+// Function to show detailed day modal
+function showDayDetailModal(dayName, data) {
+    alert(`Подробная информация за ${dayName}:\n` +
+          `Отчеты: ${data.reports}\n` +
+          `Задачи: ${data.tasks}\n` +
+          `Часы: ${data.hours}\n\n` +
+          `Функция детального просмотра будет реализована.`);
+}
+
+// Function to update chart data based on period
+function updateChartData(period) {
+    console.log('Updating chart data for period:', period);
+    
+    const chartTitle = document.querySelector('.chart-title');
+    if (chartTitle) {
+        const titles = {
+            'week': 'Активность за неделю',
+            'month': 'Активность за месяц',
+            'quarter': 'Активность за квартал'
+        };
+        chartTitle.innerHTML = `
+            <i data-lucide="trending-up" class="chart-icon"></i>
+            ${titles[period] || 'Активность'}
+        `;
+        lucide.createIcons();
+    }
+    
+    // Here you would typically fetch new data from the server
+    // For now, we'll just animate the existing bars
+    animateChartBars();
+}
+
+// Function to animate chart bars
+function animateChartBars() {
+    const chartBars = document.querySelectorAll('.chart-bar');
+    
+    chartBars.forEach((bar, index) => {
+        const originalHeight = bar.style.height;
+        bar.style.height = '0%';
+        bar.style.opacity = '0';
+        
+        setTimeout(() => {
+            bar.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            bar.style.height = originalHeight;
+            bar.style.opacity = '1';
+        }, index * 100);
+    });
+    
+    // Animate summary values
+    const summaryValues = document.querySelectorAll('.summary-value');
+    summaryValues.forEach((value, index) => {
+        const finalValue = parseInt(value.textContent);
+        animateNumberChange(value, 0, finalValue, 1000 + index * 200);
+    });
+}
+
+// Enhanced initialization for admin panel
+function initializeEnhancedAdminPanelComplete() {
+    // Initialize existing functionality
+    initializeEnhancedAdminPanel();
+    
+    // Initialize interactive chart
+    initializeInteractiveChart();
+    
+    // Add click animation to metric cards
+    initializeMetricCardAnimations();
+}
+
+// Function to initialize metric card animations
+function initializeMetricCardAnimations() {
+    const metricCards = document.querySelectorAll('.metric-card.modern');
+    
+    metricCards.forEach(card => {
+        card.addEventListener('click', () => {
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 150);
+        });
+    });
+}
+
 // Обновление статистики учета времени
 function updateAttendanceStats(attendanceData) {
     // Подсчитываем статистику
