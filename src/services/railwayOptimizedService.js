@@ -194,9 +194,61 @@ class RailwayOptimizedService {
   }
 
   async getReportsForPeriod(startDate, endDate, employeeId = null) {
-    // Для периодических отчетов используем прямой Notion 
-    // (редкая операция, не критично для скорости)
-    return await notionService.getReportsForPeriod(startDate, endDate, employeeId);
+    await this.initialize();
+    
+    if (this.cache) {
+      // Для диапазона дат пытаемся найти кэшированные отчеты
+      try {
+        console.log(`🔍 Looking for cached reports ${startDate} to ${endDate}...`);
+        
+        // Строим SQL запрос для получения отчетов за период
+        let query = 'SELECT * FROM reports WHERE date >= $1 AND date <= $2';
+        let params = [startDate, endDate];
+        
+        if (employeeId) {
+          query += ' AND telegram_id = $3';
+          params.push(employeeId.toString());
+        }
+        
+        query += ' ORDER BY date DESC';
+        
+        const result = await this.cache.runQuery(query, params);
+        
+        if (result.rows && result.rows.length > 0) {
+          console.log(`✅ Found ${result.rows.length} cached reports for period`);
+          return result.rows.map(row => ({
+            id: row.id,
+            employeeName: row.employee_name,
+            telegramId: row.telegram_id,
+            date: row.date,
+            whatDone: row.what_done,
+            problems: row.problems,
+            goals: row.goals,
+            status: row.status,
+            timestamp: row.timestamp
+          }));
+        }
+      } catch (error) {
+        console.error('Cache query failed:', error);
+      }
+    }
+    
+    // Если нет в кэше, загружаем из Notion
+    console.log(`📥 Loading reports from Notion for period ${startDate}-${endDate}...`);
+    const reports = await notionService.getReportsForPeriod(startDate, endDate, employeeId);
+    
+    // Кэшируем найденные отчеты
+    if (this.cache && reports.length > 0) {
+      for (const report of reports) {
+        await this.cache.cacheReport({
+          ...report,
+          synced: true
+        });
+      }
+      console.log(`✅ Cached ${reports.length} reports from period query`);
+    }
+    
+    return reports;
   }
 
   // Метод уже реализован в базовом классе, но добавляем для ясности
@@ -313,7 +365,58 @@ class RailwayOptimizedService {
   }
 
   async getAttendanceForPeriod(startDate, endDate, employeeId = null) {
-    return await notionService.getAttendanceForPeriod(startDate, endDate, employeeId);
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        console.log(`🔍 Looking for cached attendance ${startDate} to ${endDate}...`);
+        
+        let query = 'SELECT * FROM attendance WHERE date >= $1 AND date <= $2';
+        let params = [startDate, endDate];
+        
+        if (employeeId) {
+          query += ' AND employee_id = $3';
+          params.push(employeeId.toString());
+        }
+        
+        query += ' ORDER BY date DESC';
+        
+        const result = await this.cache.runQuery(query, params);
+        
+        if (result.rows && result.rows.length > 0) {
+          console.log(`✅ Found ${result.rows.length} cached attendance records`);
+          return result.rows.map(row => ({
+            id: row.id,
+            employeeName: row.employee_name,
+            employeeId: row.employee_id,
+            date: row.date,
+            checkIn: row.check_in,
+            checkOut: row.check_out,
+            workHours: row.work_hours,
+            status: row.status,
+            isPresent: !row.check_out && !!row.check_in
+          }));
+        }
+      } catch (error) {
+        console.error('Attendance cache query failed:', error);
+      }
+    }
+    
+    // Загружаем из Notion
+    const attendance = await notionService.getAttendanceForPeriod(startDate, endDate, employeeId);
+    
+    // Кэшируем записи
+    if (this.cache && attendance.length > 0) {
+      for (const record of attendance) {
+        await this.cache.cacheAttendance({
+          ...record,
+          synced: true
+        });
+      }
+      console.log(`✅ Cached ${attendance.length} attendance records`);
+    }
+    
+    return attendance;
   }
 
   // ========== TASK METHODS ==========
@@ -443,8 +546,53 @@ class RailwayOptimizedService {
   }
 
   async getAllTasks() {
-    // Пока прокси к Notion (админская операция)
-    return await notionService.getAllTasks();
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        // Получаем все задачи из кэша
+        const query = 'SELECT * FROM tasks ORDER BY created_date DESC';
+        const result = await this.cache.runQuery(query);
+        
+        if (result.rows && result.rows.length > 0) {
+          console.log(`✅ Found ${result.rows.length} cached tasks`);
+          return result.rows.map(row => ({
+            id: row.id,
+            taskId: row.task_id,
+            title: row.title,
+            description: row.description,
+            assigneeId: row.assignee_id,
+            assigneeName: row.assignee_name,
+            creatorId: row.creator_id,
+            creatorName: row.creator_name,
+            status: row.status,
+            priority: row.priority,
+            createdDate: row.created_date,
+            deadline: row.deadline,
+            completedDate: row.completed_date
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load tasks from cache:', error);
+      }
+    }
+    
+    // Если нет в кэше, загружаем из Notion
+    console.log(`📥 Loading all tasks from Notion...`);
+    const tasks = await notionService.getAllTasks();
+    
+    // Кэшируем все задачи
+    if (this.cache && tasks.length > 0) {
+      for (const task of tasks) {
+        await this.cache.cacheTask({
+          ...task,
+          synced: true
+        });
+      }
+      console.log(`✅ Cached ${tasks.length} tasks`);
+    }
+    
+    return tasks;
   }
 
   async addPhotoToTask(taskId, photoUrl, caption = '') {
