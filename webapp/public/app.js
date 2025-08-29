@@ -218,7 +218,7 @@ function initializeCardAnimations() {
     }, observerOptions);
     
     // Наблюдаем за карточками
-    document.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern').forEach((card) => {
+    document.querySelectorAll('.action-card.modern, .stat-card.modern, .task-item.modern, .task-item-modern').forEach((card) => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px) scale(0.95)';
         card.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
@@ -763,18 +763,116 @@ function displayTasks(tasks) {
         const statusClass = task.status === 'Новая' ? 'new' : 
                           task.status === 'В работе' ? 'in-progress' : 'completed';
         
+        // Определяем цвета для статуса
+        const statusColors = {
+            'new': { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '#ef4444' },
+            'in-progress': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '#f59e0b' },
+            'completed': { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '#22c55e' }
+        };
+        
+        const statusColor = statusColors[statusClass];
+        
         return `
-            <div class="task-item" onclick="openTaskDetail('${task.id}')" style="cursor: pointer;">
-                <div class="task-header">
-                    <h3 class="task-title">${task.title}</h3>
-                    <span class="task-status ${statusClass}">${task.status}</span>
+            <div class="task-item-modern" onclick="openTaskDetail('${task.id}')" 
+                 style="
+                    cursor: pointer;
+                    background: var(--bg-card);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 16px;
+                    padding: 20px;
+                    margin-bottom: 16px;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    position: relative;
+                    overflow: hidden;
+                 "
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'"
+            >
+                <div style="
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 4px;
+                    background: ${statusColor.border};
+                "></div>
+                
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 12px;
+                ">
+                    <h3 style="
+                        margin: 0;
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                        line-height: 1.4;
+                        flex: 1;
+                        margin-right: 12px;
+                    ">${task.title}</h3>
+                    
+                    <span style="
+                        display: inline-flex;
+                        align-items: center;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        background: ${statusColor.bg};
+                        color: ${statusColor.color};
+                        border: 1px solid ${statusColor.border}40;
+                        white-space: nowrap;
+                    ">${task.status}</span>
                 </div>
-                ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
-                <div class="task-meta">
-                    <span>📅 ${formatDate(task.deadline)}</span>
-                    <span>👤 ${currentTaskType === 'my' ? 
-                        (task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')) : 
-                        (task.assigneeName || 'Не назначен')}</span>
+                
+                ${task.description ? `
+                    <p style="
+                        margin: 0 0 16px 0;
+                        font-size: 14px;
+                        color: var(--text-secondary);
+                        line-height: 1.5;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    ">${task.description}</p>
+                ` : ''}
+                
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 16px;
+                    margin-top: 16px;
+                    padding-top: 16px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.06);
+                ">
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 13px;
+                        color: var(--text-secondary);
+                    ">
+                        <span style="opacity: 0.8;">📅</span>
+                        <span>${formatDate(task.deadline)}</span>
+                    </div>
+                    
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 13px;
+                        color: var(--text-secondary);
+                    ">
+                        <span style="opacity: 0.8;">👤</span>
+                        <span>${currentTaskType === 'my' ? 
+                            (task.creatorName === currentUser?.name ? 'Я' : (task.creatorName || 'Система')) : 
+                            (task.assigneeName || 'Не назначен')}</span>
+                    </div>
                 </div>
             </div>
         `;
