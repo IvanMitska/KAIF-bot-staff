@@ -193,6 +193,15 @@ class RailwayOptimizedService {
     return reports;
   }
 
+  async getReportsForPeriod(startDate, endDate, employeeId = null) {
+    // Для периодических отчетов используем прямой Notion 
+    // (редкая операция, не критично для скорости)
+    return await notionService.getReportsForPeriod(startDate, endDate, employeeId);
+  }
+
+  // Метод уже реализован в базовом классе, но добавляем для ясности
+  // async getAllActiveUsers() - уже есть выше
+
   // ========== ATTENDANCE METHODS ==========
   async createAttendance(attendanceData) {
     await this.initialize();
