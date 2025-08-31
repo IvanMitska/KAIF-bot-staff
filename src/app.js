@@ -1,11 +1,15 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const bot = require('./bot/bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+// Статические файлы для веб-приложения
+app.use('/webapp/public', express.static(path.join(__dirname, '../webapp/public')));
 
 app.get('/', (req, res) => {
   res.json({ status: 'Bot is running', timestamp: new Date() });
