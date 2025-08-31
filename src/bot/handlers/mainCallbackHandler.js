@@ -198,6 +198,9 @@ async function mainCallbackHandler(bot, callbackQuery) {
       return;
     }
     
+    // Мгновенно отвечаем на callback перед обработкой задач
+    await bot.answerCallbackQuery(callbackQuery.id);
+    
     // Все остальные callback'и передаем в обработчик задач
     await handleTasksCallback(bot, callbackQuery);
     

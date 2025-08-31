@@ -17,7 +17,7 @@ async function handleCallbackQuery(bot, callbackQuery) {
   }
   
   try {
-    // Отправляем подтверждение получения callback
+    // Мгновенно отвечаем на callback для лучшего UX
     await bot.answerCallbackQuery(callbackQuery.id);
     
     // Обработка callback'ов для задач
@@ -116,10 +116,7 @@ async function handleCallbackQuery(bot, callbackQuery) {
     
   } catch (error) {
     console.error('Error handling callback:', error);
-    await bot.answerCallbackQuery(callbackQuery.id, {
-      text: '❌ Произошла ошибка',
-      show_alert: true
-    });
+    // Не вызываем answerCallbackQuery тут, так как уже вызвали выше
   }
 }
 
