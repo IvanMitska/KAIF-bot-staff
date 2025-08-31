@@ -4,7 +4,7 @@
   "description": "Telegram bot for collecting daily employee reports with Notion integration",
   "main": "src/app.js",
   "scripts": {
-    "start": "node railway-server-webapp-only.js",
+    "start": "node src/app.js",
     "start:optimized": "node start-optimized.js",
     "start:full": "node railway-server.js",
     "start:local": "node start.js",

@@ -251,8 +251,14 @@ class RailwayOptimizedService {
     return reports;
   }
 
-  // Метод уже реализован в базовом классе, но добавляем для ясности
-  // async getAllActiveUsers() - уже есть выше
+  // Добавляем недостающие методы для совместимости
+  async getUser(telegramId) {
+    return await this.getUserByTelegramId(telegramId);
+  }
+
+  async getUsers() {
+    return await this.getAllActiveUsers();
+  }
 
   // ========== ATTENDANCE METHODS ==========
   async createAttendance(attendanceData) {
