@@ -551,17 +551,40 @@ class RailwayOptimizedService {
     return await notionService.updateTask(taskId, updates);
   }
 
-  async getAllTasks() {
+
+  async addPhotoToTask(taskId, photoUrl, caption = '') {
+    return await notionService.addPhotoToTask(taskId, photoUrl, caption);
+  }
+
+  // Методы для отладки
+  async debugGetAllTasks() {
+    return await notionService.debugGetAllTasks();
+  }
+
+  async testTasksDatabase() {
+    return await notionService.testTasksDatabase();
+  }
+
+  // ========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ДЛЯ СОВМЕСТИМОСТИ ==========
+  async getAllTasks(statusFilter = null) {
     await this.initialize();
     
     if (this.cache) {
       try {
-        // Получаем все задачи из кэша
-        const query = 'SELECT * FROM tasks ORDER BY created_date DESC';
-        const result = await this.cache.runQuery(query);
+        let query = 'SELECT * FROM tasks';
+        let params = [];
+        
+        if (statusFilter) {
+          query += ' WHERE status = $1';
+          params.push(statusFilter);
+        }
+        
+        query += ' ORDER BY created_date DESC';
+        
+        const result = await this.cache.runQuery(query, params);
         
         if (result.rows && result.rows.length > 0) {
-          console.log(`✅ Found ${result.rows.length} cached tasks`);
+          console.log(`✅ Found ${result.rows.length} cached tasks with status: ${statusFilter || 'all'}`);
           return result.rows.map(row => ({
             id: row.id,
             taskId: row.task_id,
@@ -583,11 +606,11 @@ class RailwayOptimizedService {
       }
     }
     
-    // Если нет в кэше, загружаем из Notion
-    console.log(`📥 Loading all tasks from Notion...`);
-    const tasks = await notionService.getAllTasks();
+    // Fallback на Notion
+    console.log(`📥 Loading tasks from Notion with status: ${statusFilter || 'all'}...`);
+    const tasks = await notionService.getAllTasks(statusFilter);
     
-    // Кэшируем все задачи
+    // Кэшируем задачи
     if (this.cache && tasks.length > 0) {
       for (const task of tasks) {
         await this.cache.cacheTask({
@@ -599,19 +622,6 @@ class RailwayOptimizedService {
     }
     
     return tasks;
-  }
-
-  async addPhotoToTask(taskId, photoUrl, caption = '') {
-    return await notionService.addPhotoToTask(taskId, photoUrl, caption);
-  }
-
-  // Методы для отладки
-  async debugGetAllTasks() {
-    return await notionService.debugGetAllTasks();
-  }
-
-  async testTasksDatabase() {
-    return await notionService.testTasksDatabase();
   }
 
   // ========== STATS ==========
