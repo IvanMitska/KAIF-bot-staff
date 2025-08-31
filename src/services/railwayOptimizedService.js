@@ -11,13 +11,21 @@ class RailwayOptimizedService {
     if (this.initialized) return;
     
     try {
-      console.log('🔗 Initializing Railway optimized service with PostgreSQL...');
-      this.cache = await getCacheInstance();
+      // Временно отключаем PostgreSQL кэш - используем прямые Notion вызовы
+      console.log('⚠️ PostgreSQL cache disabled - using direct Notion API calls');
+      this.cache = null;
       this.initialized = true;
-      console.log('✅ Railway optimized service with PostgreSQL ready');
+      
+      // Если есть DATABASE_URL, пытаемся подключиться
+      if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway')) {
+        console.log('🔗 Initializing Railway optimized service with PostgreSQL...');
+        this.cache = await getCacheInstance();
+        console.log('✅ Railway optimized service with PostgreSQL ready');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize PostgreSQL cache:', error.message);
       console.log('⚠️ Falling back to direct Notion API calls');
+      this.cache = null;
       // Fallback на прямой Notion если PostgreSQL не доступен
     }
   }
