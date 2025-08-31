@@ -26,7 +26,7 @@ app.listen(PORT, () => {
   }
   
   // Отладка: тестируем подключение к базе данных задач
-  const { testTasksDatabase, debugGetAllTasks } = require('./services/optimizedNotionService');
+  const { testTasksDatabase, debugGetAllTasks } = require('./services/railwayOptimizedService');
   setTimeout(async () => {
     try {
       const dbOk = await testTasksDatabase();

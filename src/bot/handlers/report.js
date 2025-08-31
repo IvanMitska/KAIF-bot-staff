@@ -1,4 +1,4 @@
-const notionService = require('../../services/notionService');
+const notionService = require('../../services/railwayOptimizedService');
 const userService = require('../../services/userService');
 const keyboards = require('../keyboards/inline');
 const moment = require('moment-timezone');

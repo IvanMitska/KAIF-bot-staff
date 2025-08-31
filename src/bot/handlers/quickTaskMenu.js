@@ -1,4 +1,4 @@
-const { getUser, getUsers, createTask } = require('../../services/notionService');
+const { getUser, getUsers, createTask } = require('../../services/railwayOptimizedService');
 const moment = require('moment-timezone');
 
 // Создание inline клавиатуры для быстрых задач

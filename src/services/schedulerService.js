@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const moment = require('moment-timezone');
-const notionService = require('./notionService');
+const notionService = require('./railwayOptimizedService');
 const userService = require('./userService');
 const keyboards = require('../bot/keyboards/inline');
 

@@ -1,4 +1,4 @@
-const notionService = require('./notionService');
+const notionService = require('./railwayOptimizedService');
 
 const userService = {
   async createUser(userData) {

@@ -36,7 +36,7 @@ async function mainCallbackHandler(bot, callbackQuery) {
       case 'my_stats':
         await bot.answerCallbackQuery(callbackQuery.id);
         try {
-          const notionService = require('../../services/notionService');
+          const notionService = require('../../services/railwayOptimizedService');
           const userService = require('../../services/userService');
           
           const user = await userService.getUserByTelegramId(userId);
@@ -142,7 +142,7 @@ async function mainCallbackHandler(bot, callbackQuery) {
       case 'report_history':
         await bot.answerCallbackQuery(callbackQuery.id);
         try {
-          const notionService = require('../../services/notionService');
+          const notionService = require('../../services/railwayOptimizedService');
           const userService = require('../../services/userService');
           const moment = require('moment-timezone');
           

@@ -74,7 +74,7 @@ async function handleReplyKeyboard(bot, msg) {
       
     case '👥 Сотрудники':
       if (isManager) {
-        const { getAllActiveUsers } = require('../../services/notionService');
+        const { getAllActiveUsers } = require('../../services/railwayOptimizedService');
         try {
           const users = await getAllActiveUsers();
           let message = '👥 *Список сотрудников:*\n\n';
