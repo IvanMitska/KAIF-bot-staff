@@ -15,7 +15,17 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'webapp/public')));
+
+// Логирование запросов к статическим файлам для отладки
+app.use((req, res, next) => {
+  if (req.path.endsWith('.css') || req.path.endsWith('.js') || req.path.endsWith('.json')) {
+    console.log(`📁 Static file request: ${req.path}`);
+  }
+  next();
+});
+
+// Статические файлы для веб-приложения
+app.use(express.static(path.join(__dirname, 'webapp', 'public')));
 
 // CORS для Telegram Web App
 app.use((req, res, next) => {
@@ -206,7 +216,8 @@ app.get('/api/tasks/count', authMiddleware, async (req, res) => {
   }
 });
 
-// Health check
+
+// Health check endpoint для Railway
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK',
@@ -215,22 +226,22 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Главная страница
-app.get('/', (req, res) => {
+// Status endpoint
+app.get('/status', (req, res) => {
   res.json({ 
     status: 'Bot and WebApp are running',
     timestamp: new Date() 
   });
 });
 
-// Serve webapp
-app.get('/webapp', (req, res) => {
-  res.sendFile(path.join(__dirname, 'webapp/public/index.html'));
+// Главная страница - отдаем веб-приложение
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
 });
 
-// Все остальные маршруты возвращают webapp
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'webapp/public/index.html'));
+// Webapp route
+app.get('/webapp', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
 });
 
 // Запуск сервера
