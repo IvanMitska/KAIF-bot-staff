@@ -314,7 +314,10 @@ async function handleReportEdit(bot, chatId, userId, action, messageId) {
 
 async function submitReport(bot, chatId, userId, messageId) {
   const session = reportSessions.get(userId);
-  if (!session) return;
+  if (!session) {
+    console.error('No session found for user:', userId);
+    return;
+  }
 
   try {
     const bangkokTime = moment().tz('Asia/Bangkok');
@@ -330,7 +333,11 @@ async function submitReport(bot, chatId, userId, messageId) {
       status: 'Отправлен'
     };
 
-    await notionService.createReport(reportData);
+    console.log('📝 Submitting report for user:', userId);
+    console.log('Report data:', JSON.stringify(reportData, null, 2));
+
+    const result = await notionService.createReport(reportData);
+    console.log('✅ Report created successfully:', result.id);
     
     reportSessions.delete(userId);
 
@@ -345,8 +352,25 @@ async function submitReport(bot, chatId, userId, messageId) {
       }
     );
   } catch (error) {
-    console.error('Submit report error:', error);
-    bot.sendMessage(chatId, '❌ Произошла ошибка при отправке отчета. Попробуйте еще раз.');
+    console.error('❌ Submit report error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      response: error.response?.data
+    });
+    
+    let errorMessage = '❌ Произошла ошибка при отправке отчета.';
+    
+    if (error.message?.includes('notion') || error.message?.includes('Notion')) {
+      errorMessage += '\n\n⚠️ Проблема с подключением к Notion. Проверьте настройки API.';
+    } else if (error.message?.includes('database') || error.message?.includes('Database')) {
+      errorMessage += '\n\n⚠️ Проблема с базой данных. Обратитесь к администратору.';
+    } else {
+      errorMessage += '\n\nПопробуйте еще раз или обратитесь к администратору.';
+    }
+    
+    bot.sendMessage(chatId, errorMessage);
   }
 }
 

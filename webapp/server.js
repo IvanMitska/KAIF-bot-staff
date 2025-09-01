@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
-const notionService = require('../src/services/notionService');
+const notionService = require('../src/services/railwayOptimizedService');
 const userService = require('../src/services/userService');
 
 const app = express();
@@ -117,10 +117,13 @@ app.get('/api/reports/today-status', authMiddleware, async (req, res) => {
 // Создать отчет
 app.post('/api/reports', authMiddleware, async (req, res) => {
   try {
+    console.log('📝 Creating report for user:', req.telegramUser.id);
+    
     const user = await userService.getUserByTelegramId(req.telegramUser.id);
     
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.error('User not found:', req.telegramUser.id);
+      return res.status(404).json({ error: 'Пользователь не найден. Пожалуйста, зарегистрируйтесь через бота командой /start' });
     }
     
     const reportData = {
@@ -134,12 +137,29 @@ app.post('/api/reports', authMiddleware, async (req, res) => {
       status: 'Отправлен'
     };
     
+    console.log('Report data:', reportData);
+    
     await notionService.createReport(reportData);
+    console.log('✅ Report created successfully');
     
     res.json({ success: true });
   } catch (error) {
-    console.error('Create report error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Create report error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    
+    let errorMessage = 'Ошибка при создании отчета';
+    
+    if (error.message?.includes('NOTION') || error.code === 'ENOTFOUND') {
+      errorMessage = 'Ошибка подключения к Notion API';
+    } else if (error.message?.includes('required')) {
+      errorMessage = 'Не заполнены обязательные поля';
+    }
+    
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -344,7 +364,16 @@ app.get('*', (req, res) => {
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Web App server running on port ${PORT}`);
   console.log(`Open: http://localhost:${PORT}`);
+  
+  // Инициализируем подключение к базе данных
+  try {
+    await notionService.initialize();
+    console.log('✅ Database service initialized');
+  } catch (error) {
+    console.error('⚠️ Database initialization failed:', error.message);
+    console.log('Will use direct Notion API calls');
+  }
 });
