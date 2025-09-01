@@ -26,8 +26,11 @@ class RailwayOptimizedService {
       } else {
         // Нет DATABASE_URL - используем прямые Notion вызовы
         console.log('⚠️ DATABASE_URL not configured');
-        console.log('📝 Add DATABASE_URL from Railway to .env file to enable PostgreSQL caching');
-        console.log('⚠️ Using direct Notion API calls (slower)');
+        console.log('📝 To enable PostgreSQL caching on Railway:');
+        console.log('   1. Go to telegram-report-bot service in Railway');
+        console.log('   2. Click Variables tab');
+        console.log('   3. Add Variable Reference -> Select Postgres -> DATABASE_URL');
+        console.log('⚠️ Using direct Notion API calls (slower but working)');
         this.cache = null;
         this.initialized = true;
       }
