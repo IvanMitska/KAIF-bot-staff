@@ -30,12 +30,16 @@ app.listen(PORT, () => {
   }
   
   // Отладка: тестируем подключение к базе данных задач
-  const { testTasksDatabase, debugGetAllTasks } = require('./services/railwayOptimizedService');
+  const railwayService = require('./services/railwayOptimizedService');
   setTimeout(async () => {
     try {
-      const dbOk = await testTasksDatabase();
+      await railwayService.initialize();
+      const stats = await railwayService.getStats();
+      console.log('📊 Database initialized with stats:', stats);
+      
+      const dbOk = await railwayService.testTasksDatabase();
       if (dbOk) {
-        await debugGetAllTasks();
+        await railwayService.debugGetAllTasks();
       }
     } catch (error) {
       console.error('Debug error:', error);
