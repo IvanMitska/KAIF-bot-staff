@@ -24,8 +24,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Статические файлы для веб-приложения
+// Статические файлы для веб-приложения (основной путь и альтернативный)
 app.use(express.static(path.join(__dirname, 'webapp', 'public')));
+app.use('/webapp/public', express.static(path.join(__dirname, 'webapp', 'public')));
 
 // CORS для Telegram Web App
 app.use((req, res, next) => {
@@ -239,8 +240,22 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
 });
 
-// Webapp route
+// Различные варианты путей для веб-приложения
 app.get('/webapp', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
+});
+
+app.get('/webapp/public', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
+});
+
+
+// Catch all для любых других путей - возвращаем веб-приложение
+app.get('*', (req, res) => {
+  // Логируем неизвестные пути для отладки
+  if (!req.path.startsWith('/api/')) {
+    console.log(`📍 Route request: ${req.path}`);
+  }
   res.sendFile(path.join(__dirname, 'webapp', 'public', 'index.html'));
 });
 
