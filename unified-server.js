@@ -399,6 +399,125 @@ app.get('/api/attendance/stats', authMiddleware, async (req, res) => {
 });
 
 
+// Получить список сотрудников (только для менеджеров)
+app.get('/api/employees', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    const users = await railwayService.getAllActiveUsers();
+    res.json(users);
+  } catch (error) {
+    console.error('Employees error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить отчеты для админ-панели (только для менеджеров)
+app.get('/api/admin/reports', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    const { startDate, endDate } = req.query;
+    const reports = await railwayService.getReportsForPeriod(startDate, endDate);
+    
+    res.json({
+      reports: reports,
+      todayReports: reports.length,
+      total: reports.length
+    });
+  } catch (error) {
+    console.error('Admin reports error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить статистику для dashboard (только для менеджеров)
+app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    // Получаем данные для dashboard
+    const today = new Date().toISOString().split('T')[0];
+    const tasks = await railwayService.getAllTasks();
+    const reports = await railwayService.getReportsForPeriod(today, today);
+    
+    const activeTasks = tasks.filter(t => t.status !== 'Выполнена' && t.status !== 'Отменена').length;
+    const completedToday = tasks.filter(t => 
+      t.status === 'Выполнена' && 
+      t.updatedAt && 
+      t.updatedAt.startsWith(today)
+    ).length;
+    
+    res.json({
+      activeTasks,
+      completedToday,
+      weekActivity: [5, 8, 6, 9, 7, 10, 8], // Заглушка для графика
+      topEmployees: [], // Заглушка
+      tasksStatus: {
+        new: tasks.filter(t => t.status === 'Новая').length,
+        inProgress: tasks.filter(t => t.status === 'В работе').length,
+        completed: tasks.filter(t => t.status === 'Выполнена').length
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить учет времени для периода (только для менеджеров)
+app.get('/api/admin/attendance', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    const { startDate, endDate } = req.query;
+    const attendance = await railwayService.getAttendanceForPeriod(startDate, endDate);
+    
+    res.json(attendance);
+  } catch (error) {
+    console.error('Admin attendance error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Получить текущий статус посещаемости (только для менеджеров)
+app.get('/api/admin/attendance/current', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    const currentAttendance = await railwayService.getCurrentAttendanceStatus();
+    res.json(currentAttendance || []);
+  } catch (error) {
+    console.error('Current attendance error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Получить общую статистику (только для менеджеров)
 app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
