@@ -667,6 +667,179 @@ class RailwayOptimizedService {
     console.log('🔄 Force sync not implemented for Railway service');
     return { message: 'Force sync not available' };
   }
+
+  // ========== МЕТОДЫ ДЛЯ АДМИН-ПАНЕЛИ ==========
+  
+  async getAllActiveUsers() {
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        const users = await this.cache.getAllUsers();
+        return users.filter(u => u.isActive !== false);
+      } catch (error) {
+        console.error('Cache error, falling back to Notion:', error);
+      }
+    }
+    
+    // Fallback к Notion
+    return await notionService.getAllActiveUsers();
+  }
+
+  async getReportsForPeriod(startDate, endDate, employeeId = null) {
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        let query = 'SELECT * FROM reports WHERE date >= $1 AND date <= $2';
+        let params = [startDate, endDate];
+        
+        if (employeeId) {
+          query += ' AND telegram_id = $3';
+          params.push(employeeId);
+        }
+        
+        query += ' ORDER BY date DESC, timestamp DESC';
+        
+        const result = await this.cache.pool.query(query, params);
+        return result.rows.map(row => ({
+          id: row.id,
+          date: row.date,
+          employeeName: row.employee_name,
+          telegramId: row.telegram_id,
+          whatDone: row.what_done,
+          problems: row.problems,
+          goals: row.goals,
+          timestamp: row.timestamp,
+          status: row.status
+        }));
+      } catch (error) {
+        console.error('Cache error, falling back to Notion:', error);
+      }
+    }
+    
+    // Fallback к Notion
+    return await notionService.getReportsForPeriod(startDate, endDate, employeeId);
+  }
+
+  async getAttendanceForPeriod(startDate, endDate, employeeId = null) {
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        let query = 'SELECT * FROM attendance WHERE date >= $1 AND date <= $2';
+        let params = [startDate, endDate];
+        
+        if (employeeId) {
+          query += ' AND employee_id = $3';
+          params.push(employeeId);
+        }
+        
+        query += ' ORDER BY date DESC, check_in DESC';
+        
+        const result = await this.cache.pool.query(query, params);
+        return result.rows.map(row => ({
+          id: row.id,
+          employeeId: row.employee_id,
+          employeeName: row.employee_name,
+          date: row.date,
+          checkIn: row.check_in,
+          checkOut: row.check_out,
+          workHours: row.work_hours,
+          location: row.location,
+          status: row.status
+        }));
+      } catch (error) {
+        console.error('Cache error, falling back to Notion:', error);
+      }
+    }
+    
+    // Fallback к Notion
+    return await notionService.getAttendanceForPeriod(startDate, endDate, employeeId);
+  }
+
+  async getCurrentAttendanceStatus() {
+    await this.initialize();
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (this.cache) {
+      try {
+        const query = `
+          SELECT * FROM attendance 
+          WHERE date = $1 
+          ORDER BY check_in DESC
+        `;
+        
+        const result = await this.cache.pool.query(query, [today]);
+        return result.rows.map(row => ({
+          id: row.id,
+          employeeId: row.employee_id,
+          employeeName: row.employee_name,
+          checkIn: row.check_in,
+          checkOut: row.check_out,
+          workHours: row.work_hours,
+          isPresent: !row.check_out,
+          status: row.status
+        }));
+      } catch (error) {
+        console.error('Cache error, falling back to Notion:', error);
+      }
+    }
+    
+    // Fallback к Notion
+    return await notionService.getCurrentAttendanceStatus();
+  }
+
+  async updateAttendanceCheckOut(attendanceId, checkOut, location = null) {
+    await this.initialize();
+    
+    if (this.cache) {
+      try {
+        // Получаем запись
+        const getQuery = 'SELECT * FROM attendance WHERE id = $1';
+        const getResult = await this.cache.pool.query(getQuery, [attendanceId]);
+        
+        if (getResult.rows.length === 0) {
+          throw new Error('Attendance record not found');
+        }
+        
+        const attendance = getResult.rows[0];
+        const checkInTime = new Date(attendance.check_in);
+        const checkOutTime = new Date(checkOut);
+        
+        // Вычисляем рабочие часы
+        const workHours = ((checkOutTime - checkInTime) / (1000 * 60 * 60)).toFixed(2);
+        
+        // Обновляем запись
+        const updateQuery = `
+          UPDATE attendance 
+          SET check_out = $1, work_hours = $2, status = $3
+          WHERE id = $4
+          RETURNING *
+        `;
+        
+        await this.cache.pool.query(updateQuery, [
+          checkOut,
+          workHours,
+          'Завершен',
+          attendanceId
+        ]);
+        
+        // Обновляем в Notion в фоне
+        notionService.updateAttendanceCheckOut(attendanceId, checkOut, location).catch(error => {
+          console.error('Notion update failed:', error);
+        });
+        
+        return workHours;
+      } catch (error) {
+        console.error('Cache error, falling back to Notion:', error);
+      }
+    }
+    
+    // Fallback к Notion
+    return await notionService.updateAttendanceCheckOut(attendanceId, checkOut, location);
+  }
 }
 
 // Создаем singleton

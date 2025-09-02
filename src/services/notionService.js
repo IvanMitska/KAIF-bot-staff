@@ -1593,6 +1593,214 @@ CheckIn ISO: ${attendanceData.checkIn}` +
       console.error('Notion get current attendance status error:', error);
       throw error;
     }
+  },
+
+  // ========== МЕТОДЫ ДЛЯ АДМИН-ПАНЕЛИ ==========
+  
+  async getAllActiveUsers() {
+    try {
+      const response = await notion.databases.query({
+        database_id: USERS_DB_ID,
+        filter: {
+          or: [
+            {
+              property: 'Активен',
+              checkbox: {
+                equals: true
+              }
+            },
+            {
+              property: 'Активен',
+              checkbox: {
+                is_empty: true
+              }
+            }
+          ]
+        }
+      });
+
+      return response.results.map(page => ({
+        id: page.id,
+        telegramId: page.properties['Telegram ID']?.title[0]?.text.content || '',
+        name: page.properties['Имя']?.rich_text[0]?.text.content || '',
+        position: page.properties['Должность']?.rich_text[0]?.text.content || '',
+        isActive: page.properties['Активен']?.checkbox !== false
+      }));
+    } catch (error) {
+      console.error('Notion get all active users error:', error);
+      return [];
+    }
+  },
+
+  async getReportsForPeriod(startDate, endDate, employeeId = null) {
+    try {
+      let filter = {
+        and: [
+          {
+            property: 'Дата',
+            date: {
+              on_or_after: startDate
+            }
+          },
+          {
+            property: 'Дата',
+            date: {
+              on_or_before: endDate
+            }
+          }
+        ]
+      };
+
+      if (employeeId) {
+        filter.and.push({
+          property: 'Telegram ID',
+          rich_text: {
+            contains: employeeId.toString()
+          }
+        });
+      }
+
+      const response = await notion.databases.query({
+        database_id: REPORTS_DB_ID,
+        filter: filter,
+        sorts: [
+          {
+            property: 'Дата',
+            direction: 'descending'
+          }
+        ]
+      });
+
+      return response.results.map(page => ({
+        id: page.id,
+        date: page.properties['Дата']?.date?.start || '',
+        employeeName: page.properties['Имя сотрудника']?.title[0]?.text.content || '',
+        telegramId: page.properties['Telegram ID']?.rich_text[0]?.text.content || '',
+        whatDone: page.properties['Что сделано']?.rich_text[0]?.text.content || '',
+        problems: page.properties['Проблемы']?.rich_text[0]?.text.content || '',
+        goals: page.properties['Планы']?.rich_text[0]?.text.content || '',
+        timestamp: page.properties['Timestamp']?.rich_text[0]?.text.content || '',
+        status: page.properties['Статус']?.select?.name || 'Отправлен'
+      }));
+    } catch (error) {
+      console.error('Notion get reports for period error:', error);
+      return [];
+    }
+  },
+
+  async getAttendanceForPeriod(startDate, endDate, employeeId = null) {
+    try {
+      let filter = {
+        and: [
+          {
+            property: 'Дата',
+            date: {
+              on_or_after: startDate
+            }
+          },
+          {
+            property: 'Дата',
+            date: {
+              on_or_before: endDate
+            }
+          }
+        ]
+      };
+
+      if (employeeId) {
+        filter.and.push({
+          property: 'ID сотрудника',
+          rich_text: {
+            contains: employeeId.toString()
+          }
+        });
+      }
+
+      const response = await notion.databases.query({
+        database_id: ATTENDANCE_DB_ID,
+        filter: filter,
+        sorts: [
+          {
+            property: 'Дата',
+            direction: 'descending'
+          }
+        ]
+      });
+
+      return response.results.map(page => {
+        const checkIn = page.properties['Время прихода']?.date?.start;
+        const checkOut = page.properties['Время ухода']?.date?.start;
+        let workHours = null;
+
+        if (checkIn && checkOut) {
+          const checkInTime = new Date(checkIn);
+          const checkOutTime = new Date(checkOut);
+          workHours = ((checkOutTime - checkInTime) / (1000 * 60 * 60)).toFixed(2);
+        }
+
+        return {
+          id: page.id,
+          employeeId: page.properties['ID сотрудника']?.rich_text[0]?.text.content || '',
+          employeeName: page.properties['Имя сотрудника']?.title[0]?.text.content || '',
+          date: page.properties['Дата']?.date?.start || '',
+          checkIn: checkIn,
+          checkOut: checkOut,
+          workHours: workHours,
+          location: page.properties['Геопозиция']?.rich_text[0]?.text.content || null,
+          status: page.properties['Статус']?.select?.name || 'На работе'
+        };
+      });
+    } catch (error) {
+      console.error('Notion get attendance for period error:', error);
+      return [];
+    }
+  },
+
+  async updateAttendanceCheckOut(attendanceId, checkOut, location = null) {
+    try {
+      // Сначала получаем текущую запись
+      const page = await notion.pages.retrieve({ page_id: attendanceId });
+      
+      const checkIn = page.properties['Время прихода']?.date?.start;
+      if (!checkIn) {
+        throw new Error('Check-in time not found');
+      }
+
+      const checkInTime = new Date(checkIn);
+      const checkOutTime = new Date(checkOut);
+      const workHours = ((checkOutTime - checkInTime) / (1000 * 60 * 60)).toFixed(2);
+
+      // Обновляем запись
+      await notion.pages.update({
+        page_id: attendanceId,
+        properties: {
+          'Время ухода': {
+            date: {
+              start: checkOut
+            }
+          },
+          'Статус': {
+            select: {
+              name: 'Завершен'
+            }
+          },
+          ...(location && {
+            'Геопозиция': {
+              rich_text: [{
+                text: {
+                  content: location
+                }
+              }]
+            }
+          })
+        }
+      });
+
+      return workHours;
+    } catch (error) {
+      console.error('Notion update attendance check out error:', error);
+      throw error;
+    }
   }
 };
 
