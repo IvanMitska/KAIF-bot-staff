@@ -1528,14 +1528,16 @@ function loadActivityChart(weekData) {
     }
     
     // Простая визуализация графика с помощью HTML/CSS
-    let maxValue = Math.max(...weekData.map(d => d.count));
+    let maxValue = Math.max(...weekData.map(d => typeof d === 'number' ? d : (d.count || 0)));
     if (maxValue === 0) maxValue = 1;
     
     let html = '<div style="display: flex; align-items: flex-end; justify-content: space-between; height: 160px; margin-bottom: 16px;">';
     
     weekData.forEach(day => {
-        const height = (day.count / maxValue) * 140;
-        const dayName = new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' });
+        const count = typeof day === 'number' ? day : (day.count || 0);
+        const height = (count / maxValue) * 140;
+        const date = day.date || new Date();
+        const dayName = new Date(date).toLocaleDateString('ru-RU', { weekday: 'short' });
         
         html += `
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
@@ -1545,7 +1547,7 @@ function loadActivityChart(weekData) {
                          onmouseout="this.style.transform='scaleY(1)'">
                     </div>
                     <div style="position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--text-primary);">
-                        ${day.count}
+                        ${count}
                     </div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-secondary);">${dayName}</div>

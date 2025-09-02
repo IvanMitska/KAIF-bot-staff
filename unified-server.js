@@ -468,11 +468,47 @@ app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
       t.updatedAt.startsWith(today)
     ).length;
     
+    // Получаем топ сотрудников за последние 30 дней
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const allReports = await railwayService.getReportsForPeriod(
+      thirtyDaysAgo.toISOString().split('T')[0],
+      today
+    );
+    
+    // Подсчитываем отчеты по сотрудникам
+    const employeeReportCounts = {};
+    if (allReports && allReports.length > 0) {
+      allReports.forEach(report => {
+        const name = report.employeeName || 'Неизвестный';
+        employeeReportCounts[name] = (employeeReportCounts[name] || 0) + 1;
+      });
+    }
+    
+    // Сортируем и берем топ-5
+    const topEmployees = Object.entries(employeeReportCounts)
+      .map(([name, count]) => ({ name, reportsCount: count }))
+      .sort((a, b) => b.reportsCount - a.reportsCount)
+      .slice(0, 5);
+    
+    // Генерируем данные активности за неделю
+    const weekActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayReports = await railwayService.getReportsForPeriod(dateStr, dateStr);
+      weekActivity.push({
+        date: dateStr,
+        count: dayReports ? dayReports.length : 0
+      });
+    }
+    
     res.json({
       activeTasks,
       completedToday,
-      weekActivity: [5, 8, 6, 9, 7, 10, 8], // Заглушка для графика
-      topEmployees: [], // Заглушка
+      weekActivity,
+      topEmployees,
       tasksStatus: {
         new: tasks.filter(t => t.status === 'Новая').length,
         inProgress: tasks.filter(t => t.status === 'В работе').length,
