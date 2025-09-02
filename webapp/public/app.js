@@ -2865,56 +2865,28 @@ async function refreshRealTimeData() {
 // Function to update real-time attendance display
 async function updateRealTimeAttendance() {
     try {
-        // Получаем реальные данные о присутствии
-        const [employeesRes, attendanceRes] = await Promise.all([
-            fetch(`${API_URL}/api/employees`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            }),
-            fetch(`${API_URL}/api/admin/attendance/current`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            })
-        ]);
+        // Используем новый endpoint, доступный всем пользователям
+        const response = await fetch(`${API_URL}/api/attendance/summary`, {
+            headers: { 'X-Telegram-Init-Data': tg.initData }
+        });
 
         let presentCount = 0;
         let lateCount = 0;
         let absentCount = 0;
-        let totalEmployees = 0;
 
-        if (employeesRes.ok && attendanceRes.ok) {
-            const employees = await employeesRes.json();
-            const attendance = await attendanceRes.json();
+        if (response.ok) {
+            const data = await response.json();
             
-            totalEmployees = employees.length;
-            
-            // Подсчитываем статусы
-            const currentTime = new Date();
-            const workStartTime = new Date();
-            workStartTime.setHours(9, 0, 0, 0); // Начало рабочего дня
-            
-            attendance.forEach(record => {
-                if (record.checkIn && !record.checkOut) {
-                    // Сотрудник пришел и еще не ушел
-                    const checkInTime = new Date(record.checkIn);
-                    
-                    if (checkInTime > workStartTime) {
-                        // Опоздал
-                        lateCount++;
-                    } else {
-                        // Пришел вовремя
-                        presentCount++;
-                    }
-                }
-            });
-            
-            // Отсутствующие = все сотрудники - присутствующие - опоздавшие
-            absentCount = Math.max(0, totalEmployees - presentCount - lateCount);
+            presentCount = data.presentCount || 0;
+            lateCount = data.lateCount || 0;
+            absentCount = data.absentCount || 0;
             
             console.log('Текущее присутствие:', {
-                totalEmployees,
+                totalEmployees: data.totalEmployees,
                 presentCount,
                 lateCount,
                 absentCount,
-                attendanceRecords: attendance.length
+                attendanceRecords: data.attendanceRecords ? data.attendanceRecords.length : 0
             });
         } else {
             // Если нет доступа к API, используем значения по умолчанию

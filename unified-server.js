@@ -523,6 +523,70 @@ app.get('/api/admin/attendance/current', authMiddleware, async (req, res) => {
   }
 });
 
+// Получить общую статистику присутствия для виджета на главной странице (доступно всем)
+app.get('/api/attendance/summary', authMiddleware, async (req, res) => {
+  try {
+    console.log('📊 Getting attendance summary for home widget');
+    
+    // Получаем всех активных пользователей
+    const users = await railwayService.getAllActiveUsers();
+    const totalEmployees = users.length;
+    
+    // Получаем текущий статус присутствия
+    const currentAttendance = await railwayService.getCurrentAttendanceStatus();
+    
+    let presentCount = 0;
+    let lateCount = 0;
+    
+    const workStartTime = new Date();
+    workStartTime.setHours(9, 0, 0, 0); // Начало рабочего дня в 9:00
+    
+    // Подсчитываем статусы
+    if (currentAttendance && currentAttendance.length > 0) {
+      currentAttendance.forEach(record => {
+        if (record.checkIn && !record.checkOut) {
+          // Сотрудник на работе
+          const checkInTime = new Date(record.checkIn);
+          
+          if (checkInTime > workStartTime) {
+            lateCount++; // Опоздал
+          } else {
+            presentCount++; // Пришел вовремя
+          }
+        }
+      });
+    }
+    
+    // Вычисляем отсутствующих
+    const absentCount = Math.max(0, totalEmployees - presentCount - lateCount);
+    
+    console.log('📈 Attendance summary:', {
+      totalEmployees,
+      presentCount,
+      lateCount,
+      absentCount,
+      attendanceRecords: currentAttendance ? currentAttendance.length : 0
+    });
+    
+    res.json({
+      totalEmployees,
+      presentCount,
+      lateCount,
+      absentCount,
+      attendanceRecords: currentAttendance || []
+    });
+  } catch (error) {
+    console.error('Attendance summary error:', error);
+    res.status(500).json({ 
+      error: 'Server error',
+      totalEmployees: 0,
+      presentCount: 0,
+      lateCount: 0,
+      absentCount: 0
+    });
+  }
+});
+
 // Получить общую статистику (только для менеджеров)
 app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
