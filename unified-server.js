@@ -410,7 +410,8 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
     }
     
     const users = await railwayService.getAllActiveUsers();
-    res.json(users);
+    console.log(`👥 Found ${users.length} active employees`);
+    res.json(users || []);
   } catch (error) {
     console.error('Employees error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -428,12 +429,16 @@ app.get('/api/admin/reports', authMiddleware, async (req, res) => {
     }
     
     const { startDate, endDate } = req.query;
+    console.log('📊 Getting reports for period:', { startDate, endDate });
+    
     const reports = await railwayService.getReportsForPeriod(startDate, endDate);
     
+    console.log(`📈 Found ${reports.length} reports for period ${startDate} to ${endDate}`);
+    
     res.json({
-      reports: reports,
-      todayReports: reports.length,
-      total: reports.length
+      reports: reports || [],
+      todayReports: reports ? reports.length : 0,
+      total: reports ? reports.length : 0
     });
   } catch (error) {
     console.error('Admin reports error:', error);

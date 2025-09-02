@@ -1484,8 +1484,17 @@ async function loadDashboard() {
             const dashboardStats = await tasksRes.json();
             
             // Обновляем ключевые метрики
-            document.getElementById('dashboardTodayReports').textContent = todayData.todayReports;
-            document.getElementById('dashboardMissingReports').textContent = employees.length - todayData.todayReports;
+            const actualReportsCount = todayData.reports ? todayData.reports.length : 0;
+            const missingCount = Math.max(0, employees.length - actualReportsCount);
+            
+            console.log('Dashboard metrics:', {
+                employees: employees.length,
+                reports: actualReportsCount,
+                missing: missingCount
+            });
+            
+            document.getElementById('dashboardTodayReports').textContent = actualReportsCount;
+            document.getElementById('dashboardMissingReports').textContent = missingCount;
             document.getElementById('dashboardActiveTasks').textContent = dashboardStats.activeTasks;
             document.getElementById('dashboardCompletedToday').textContent = dashboardStats.completedToday;
             
@@ -1626,16 +1635,57 @@ function loadTasksStatus(tasksStatus) {
 function loadMissingReports(allEmployees, todayReports) {
     const container = document.getElementById('missingReportsList');
     
+    console.log('Missing reports check:', {
+        employees: allEmployees,
+        reports: todayReports,
+        employeeCount: allEmployees?.length,
+        reportCount: todayReports?.length
+    });
+    
+    // Проверяем наличие данных
+    if (!allEmployees || allEmployees.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: var(--text-secondary);">Нет данных о сотрудниках</p>
+            </div>
+        `;
+        return;
+    }
+    
     // Получаем ID сотрудников, которые отправили отчеты
-    const reportedIds = todayReports.map(r => parseInt(r.telegramId));
+    const reportedIds = todayReports ? todayReports.map(r => {
+        // Преобразуем в строку для сравнения
+        return String(r.telegramId);
+    }) : [];
     
     // Фильтруем тех, кто не отправил
-    const missingEmployees = allEmployees.filter(emp => !reportedIds.includes(emp.telegramId));
+    const missingEmployees = allEmployees.filter(emp => {
+        // Преобразуем в строку для сравнения
+        const empId = String(emp.telegramId);
+        return !reportedIds.includes(empId);
+    });
     
-    if (missingEmployees.length === 0) {
+    console.log('Missing employees:', missingEmployees.length, missingEmployees);
+    
+    // Проверяем разные сценарии
+    if (allEmployees.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: var(--text-secondary);">Нет активных сотрудников</p>
+            </div>
+        `;
+        return;
+    } else if (missingEmployees.length === 0 && todayReports && todayReports.length > 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 20px;">
                 <p style="color: var(--success); font-size: 16px;">✅ Все сотрудники отправили отчеты!</p>
+            </div>
+        `;
+        return;
+    } else if (missingEmployees.length === allEmployees.length) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: var(--warning); font-size: 16px;">⚠️ Никто еще не отправил отчеты</p>
             </div>
         `;
         return;
