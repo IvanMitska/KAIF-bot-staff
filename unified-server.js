@@ -108,7 +108,14 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
       return res.json(newUser);
     }
     
-    res.json(user);
+    // Добавляем информацию о менеджерском доступе
+    const MANAGER_IDS = [385436658, 1734337242]; // Борис, Иван
+    const isManager = MANAGER_IDS.includes(parseInt(req.telegramUser.id));
+    
+    res.json({
+      ...user,
+      isManager: isManager
+    });
   } catch (error) {
     console.error('Profile error:', error);
     res.status(500).json({ error: 'Ошибка загрузки профиля' });
@@ -200,6 +207,68 @@ app.get('/api/tasks/my', authMiddleware, async (req, res) => {
   }
 });
 
+// Создать задачу
+app.post('/api/tasks', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const currentUserId = parseInt(req.telegramUser.id);
+    
+    // Проверяем права
+    let targetUserId = currentUserId;
+    if (req.body.assigneeId && req.body.assigneeId !== '') {
+      targetUserId = parseInt(req.body.assigneeId);
+      
+      if (targetUserId !== currentUserId && !MANAGER_IDS.includes(currentUserId)) {
+        return res.status(403).json({ 
+          error: 'Вы можете создавать задачи только для себя' 
+        });
+      }
+    }
+    
+    // Получаем данные пользователей
+    const creator = await userService.getUserByTelegramId(currentUserId);
+    const assignee = await userService.getUserByTelegramId(targetUserId);
+    
+    if (!creator || !assignee) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    
+    const taskData = {
+      title: req.body.title,
+      description: req.body.description || '',
+      assigneeId: targetUserId,
+      assigneeName: assignee.name,
+      creatorId: currentUserId,
+      creatorName: creator.name,
+      priority: req.body.priority || 'Средний',
+      deadline: req.body.deadline,
+      status: 'Новая'
+    };
+    
+    console.log('📝 Creating task:', taskData);
+    const result = await railwayService.createTask(taskData);
+    
+    res.json({ success: true, task: result });
+  } catch (error) {
+    console.error('Create task error:', error);
+    res.status(500).json({ error: 'Ошибка при создании задачи' });
+  }
+});
+
+// Обновить статус задачи
+app.put('/api/tasks/:taskId/status', authMiddleware, async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+    
+    await railwayService.updateTaskStatus(taskId, status);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update task status error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Получить количество задач
 app.get('/api/tasks/count', authMiddleware, async (req, res) => {
   try {
@@ -217,6 +286,138 @@ app.get('/api/tasks/count', authMiddleware, async (req, res) => {
   }
 });
 
+// ========== ATTENDANCE ENDPOINTS ==========
+
+// Получить статус attendance за сегодня
+app.get('/api/attendance/today', authMiddleware, async (req, res) => {
+  try {
+    const attendance = await railwayService.getTodayAttendance(req.telegramUser.id);
+    res.json(attendance || { isPresent: false });
+  } catch (error) {
+    console.error('Today attendance error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Отметить приход
+app.post('/api/attendance/check-in', authMiddleware, async (req, res) => {
+  try {
+    const user = await userService.getUserByTelegramId(req.telegramUser.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    
+    const attendanceData = {
+      employeeId: req.telegramUser.id,
+      employeeName: user.name,
+      date: new Date().toISOString().split('T')[0],
+      checkIn: new Date().toISOString(),
+      location: req.body.location || null,
+      status: 'На работе'
+    };
+    
+    console.log('📍 Check-in for user:', user.name);
+    const result = await railwayService.createAttendance(attendanceData);
+    
+    res.json({ 
+      success: true, 
+      attendance: result,
+      message: 'Вы отметились на работе'
+    });
+  } catch (error) {
+    console.error('Check-in error:', error);
+    res.status(500).json({ error: 'Ошибка при отметке прихода' });
+  }
+});
+
+// Отметить уход
+app.post('/api/attendance/check-out', authMiddleware, async (req, res) => {
+  try {
+    const attendance = await railwayService.getTodayAttendance(req.telegramUser.id);
+    
+    if (!attendance) {
+      return res.status(400).json({ error: 'Сначала нужно отметить приход' });
+    }
+    
+    const checkOut = new Date().toISOString();
+    const workHours = await railwayService.updateAttendanceCheckOut(
+      attendance.id,
+      checkOut,
+      req.body.location || null
+    );
+    
+    console.log('🚪 Check-out for user:', req.telegramUser.id, 'Work hours:', workHours);
+    
+    res.json({ 
+      success: true,
+      workHours: workHours,
+      message: `Вы отработали ${workHours || 0} часов`
+    });
+  } catch (error) {
+    console.error('Check-out error:', error);
+    res.status(500).json({ error: 'Ошибка при отметке ухода' });
+  }
+});
+
+// Получить статистику attendance
+app.get('/api/attendance/stats', authMiddleware, async (req, res) => {
+  try {
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    const attendance = await railwayService.getAttendanceForPeriod(
+      startDate, 
+      endDate, 
+      req.telegramUser.id
+    );
+    
+    const totalDays = attendance.length;
+    const totalHours = attendance.reduce((sum, a) => sum + (a.workHours || 0), 0);
+    const avgHours = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
+    
+    res.json({
+      totalDays,
+      totalHours: totalHours.toFixed(1),
+      avgHours,
+      records: attendance
+    });
+  } catch (error) {
+    console.error('Attendance stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// Получить общую статистику (только для менеджеров)
+app.get('/api/stats', authMiddleware, async (req, res) => {
+  try {
+    const MANAGER_IDS = [385436658, 1734337242];
+    const userId = parseInt(req.telegramUser.id);
+    
+    if (!MANAGER_IDS.includes(userId)) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+    
+    // Получаем статистику
+    const users = await railwayService.getAllActiveUsers();
+    const today = new Date().toISOString().split('T')[0];
+    const reports = await railwayService.getReportsForPeriod(today, today);
+    const currentAttendance = await railwayService.getCurrentAttendanceStatus();
+    
+    res.json({
+      totalUsers: users.length,
+      todayReports: reports.length,
+      presentEmployees: currentAttendance?.filter(a => a.isPresent).length || 0,
+      users: users,
+      todayReportsList: reports,
+      attendance: currentAttendance
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Health check endpoint для Railway
 app.get('/health', (req, res) => {
