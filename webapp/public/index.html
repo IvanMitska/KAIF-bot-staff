@@ -383,6 +383,17 @@
                             <i data-lucide="hash" class="id-icon"></i>
                             <span id="profileId">...</span>
                         </div>
+                        <!-- Временные кнопки для отладки -->
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button onclick="console.log('Current user:', currentUser); alert('ID: ' + currentUser?.telegramId + '\\nisManager: ' + currentUser?.isManager + '\\nName: ' + currentUser?.name + '\\n\\nCheck console for full details')" 
+                                    style="padding: 8px 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
+                                🔍 Debug Info
+                            </button>
+                            <button onclick="reloadProfile()" 
+                                    style="padding: 8px 12px; background: #34C759; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
+                                🔄 Reload Profile
+                            </button>
+                        </div>
                     </div>
                 </div>
                 

@@ -39,9 +39,6 @@
     "node-telegram-bot-api": "^0.64.0",
     "pg": "^8.16.3"
   },
-  "optionalDependencies": {
-    "sqlite3": "^5.1.7"
-  },
   "devDependencies": {
     "concurrently": "^9.2.0",
     "localtunnel": "^2.0.2",

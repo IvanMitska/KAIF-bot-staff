@@ -441,6 +441,13 @@ async function loadProfile() {
         if (response.ok) {
             currentUser = await response.json();
             
+            console.log('📱 Profile loaded:', {
+                name: currentUser?.name,
+                telegramId: currentUser?.telegramId,
+                isManager: currentUser?.isManager,
+                fullUser: currentUser
+            });
+            
             if (currentUser && !currentUser.needsRegistration) {
                 document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
                 
@@ -1396,12 +1403,31 @@ window.checkOut = async function() {
 }
 
 // Отладка задач
+// Функция принудительного обновления профиля
+window.reloadProfile = async function() {
+    showNotification('Обновление профиля...', 'info');
+    await loadProfile();
+    showNotification('Профиль обновлен', 'success');
+}
+
 // Функции админ-панели
-window.showAdminPanel = function() {
-    const MANAGER_IDS = [385436658, 1734337242];
+window.showAdminPanel = async function() {
+    console.log('Admin panel access check:', {
+        currentUser: currentUser,
+        isManager: currentUser?.isManager,
+        telegramId: currentUser?.telegramId
+    });
     
-    if (!MANAGER_IDS.includes(currentUser?.telegramId)) {
+    // Если нет данных о правах, перезагружаем профиль
+    if (currentUser && currentUser.isManager === undefined) {
+        console.log('⚠️ isManager not set, reloading profile...');
+        await loadProfile();
+    }
+    
+    // Используем проверку isManager с сервера
+    if (!currentUser?.isManager) {
         showNotification('У вас нет доступа к админ-панели', 'error');
+        console.error('❌ Access denied. Current user:', currentUser);
         return;
     }
     

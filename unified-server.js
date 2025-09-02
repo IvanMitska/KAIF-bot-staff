@@ -110,11 +110,21 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
     
     // Добавляем информацию о менеджерском доступе
     const MANAGER_IDS = [385436658, 1734337242]; // Борис, Иван
-    const isManager = MANAGER_IDS.includes(parseInt(req.telegramUser.id));
+    const userIdNum = parseInt(req.telegramUser.id);
+    const isManager = MANAGER_IDS.includes(userIdNum);
+    
+    console.log('🔐 Manager access check:', {
+      telegramUserId: req.telegramUser.id,
+      userIdNum: userIdNum,
+      MANAGER_IDS: MANAGER_IDS,
+      isManager: isManager,
+      userName: user.name
+    });
     
     res.json({
       ...user,
-      isManager: isManager
+      isManager: isManager,
+      telegramId: req.telegramUser.id // Явно добавляем ID из токена
     });
   } catch (error) {
     console.error('Profile error:', error);
