@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Инициализируем современный UI
     initializeModernUI();
     
+    // Загружаем данные о присутствии на главной странице
+    setTimeout(async () => {
+        await updateRealTimeAttendance();
+    }, 1000);
+    
     // Загружаем профиль
     await loadProfile();
     
@@ -2841,7 +2846,7 @@ function showLateEmployees() {
 }
 
 // Function to refresh real-time data
-function refreshRealTimeData() {
+async function refreshRealTimeData() {
     console.log('Refreshing real-time attendance data');
     
     // Show loading state
@@ -2853,37 +2858,98 @@ function refreshRealTimeData() {
         }, 500);
     }
     
-    // Update real-time attendance numbers (placeholder data)
-    setTimeout(() => {
-        updateRealTimeAttendance();
-    }, 500);
+    // Update real-time attendance with actual data
+    await updateRealTimeAttendance();
 }
 
 // Function to update real-time attendance display
-function updateRealTimeAttendance() {
-    // Generate realistic sample data
-    const currentHour = new Date().getHours();
-    let presentCount, lateCount, absentCount;
-    
-    if (currentHour >= 9 && currentHour <= 18) {
-        // During work hours
-        presentCount = Math.floor(Math.random() * 3) + 6; // 6-8 present
-        lateCount = Math.floor(Math.random() * 2); // 0-1 late
-        absentCount = 8 - presentCount - lateCount; // remaining absent
-    } else {
-        // Outside work hours
-        presentCount = 0;
-        lateCount = 0;
-        absentCount = 8;
+async function updateRealTimeAttendance() {
+    try {
+        // Получаем реальные данные о присутствии
+        const [employeesRes, attendanceRes] = await Promise.all([
+            fetch(`${API_URL}/api/employees`, {
+                headers: { 'X-Telegram-Init-Data': tg.initData }
+            }),
+            fetch(`${API_URL}/api/admin/attendance/current`, {
+                headers: { 'X-Telegram-Init-Data': tg.initData }
+            })
+        ]);
+
+        let presentCount = 0;
+        let lateCount = 0;
+        let absentCount = 0;
+        let totalEmployees = 0;
+
+        if (employeesRes.ok && attendanceRes.ok) {
+            const employees = await employeesRes.json();
+            const attendance = await attendanceRes.json();
+            
+            totalEmployees = employees.length;
+            
+            // Подсчитываем статусы
+            const currentTime = new Date();
+            const workStartTime = new Date();
+            workStartTime.setHours(9, 0, 0, 0); // Начало рабочего дня
+            
+            attendance.forEach(record => {
+                if (record.checkIn && !record.checkOut) {
+                    // Сотрудник пришел и еще не ушел
+                    const checkInTime = new Date(record.checkIn);
+                    
+                    if (checkInTime > workStartTime) {
+                        // Опоздал
+                        lateCount++;
+                    } else {
+                        // Пришел вовремя
+                        presentCount++;
+                    }
+                }
+            });
+            
+            // Отсутствующие = все сотрудники - присутствующие - опоздавшие
+            absentCount = Math.max(0, totalEmployees - presentCount - lateCount);
+            
+            console.log('Текущее присутствие:', {
+                totalEmployees,
+                presentCount,
+                lateCount,
+                absentCount,
+                attendanceRecords: attendance.length
+            });
+        } else {
+            // Если нет доступа к API, используем значения по умолчанию
+            console.log('Нет доступа к данным о присутствии');
+            presentCount = 0;
+            lateCount = 0;
+            absentCount = 0;
+        }
+        
+        // Обновляем элементы на странице
+        const currentlyPresentEl = document.getElementById('currentlyPresent');
+        const currentlyLateEl = document.getElementById('currentlyLate');
+        const currentlyAbsentEl = document.getElementById('currentlyAbsent');
+        
+        if (currentlyPresentEl) {
+            animateNumberChange(currentlyPresentEl, parseInt(currentlyPresentEl.textContent) || 0, presentCount, 500);
+        }
+        if (currentlyLateEl) {
+            animateNumberChange(currentlyLateEl, parseInt(currentlyLateEl.textContent) || 0, lateCount, 500);
+        }
+        if (currentlyAbsentEl) {
+            animateNumberChange(currentlyAbsentEl, parseInt(currentlyAbsentEl.textContent) || 0, absentCount, 500);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки данных о присутствии:', error);
+        
+        // При ошибке очищаем значения
+        const currentlyPresentEl = document.getElementById('currentlyPresent');
+        const currentlyLateEl = document.getElementById('currentlyLate');
+        const currentlyAbsentEl = document.getElementById('currentlyAbsent');
+        
+        if (currentlyPresentEl) currentlyPresentEl.textContent = '0';
+        if (currentlyLateEl) currentlyLateEl.textContent = '0';
+        if (currentlyAbsentEl) currentlyAbsentEl.textContent = '0';
     }
-    
-    const currentlyPresentEl = document.getElementById('currentlyPresent');
-    const currentlyLateEl = document.getElementById('currentlyLate');
-    const currentlyAbsentEl = document.getElementById('currentlyAbsent');
-    
-    if (currentlyPresentEl) currentlyPresentEl.textContent = presentCount;
-    if (currentlyLateEl) currentlyLateEl.textContent = lateCount;
-    if (currentlyAbsentEl) currentlyAbsentEl.textContent = absentCount;
 }
 
 // Function to reset attendance filters
