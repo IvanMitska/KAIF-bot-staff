@@ -217,10 +217,13 @@ class CustomDatePicker {
             <div class="calendar-header">
                 <span class="calendar-month-year"></span>
                 <div class="calendar-nav">
-                    <button class="calendar-nav-btn prev">
+                    <button class="calendar-nav-btn prev" type="button">
                         <i data-lucide="chevron-left"></i>
                     </button>
-                    <button class="calendar-nav-btn next">
+                    <button class="calendar-nav-btn today-btn" type="button" title="Сегодня">
+                        <i data-lucide="calendar-check"></i>
+                    </button>
+                    <button class="calendar-nav-btn next" type="button">
                         <i data-lucide="chevron-right"></i>
                     </button>
                 </div>
@@ -235,7 +238,9 @@ class CustomDatePicker {
                 <div class="calendar-weekday">Вс</div>
             </div>
             <div class="calendar-days"></div>
-            <button class="dropdown-mobile-close">Выбрать</button>
+            <div class="calendar-footer">
+                <button class="dropdown-mobile-close">Выбрать дату</button>
+            </div>
         `;
         
         container.appendChild(trigger);
@@ -256,14 +261,24 @@ class CustomDatePicker {
         this.trigger.addEventListener('click', () => this.toggle());
         
         // Навигация по месяцам
-        this.calendar.querySelector('.prev').addEventListener('click', () => {
+        this.calendar.querySelector('.prev').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
             this.updateCalendar();
         });
         
-        this.calendar.querySelector('.next').addEventListener('click', () => {
+        this.calendar.querySelector('.next').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
             this.updateCalendar();
+        });
+        
+        // Кнопка "Сегодня"
+        this.calendar.querySelector('.today-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const today = new Date();
+            this.currentMonth = new Date(today);
+            this.selectDate(today);
         });
         
         // Закрытие на мобильных
