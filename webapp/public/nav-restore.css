@@ -1,4 +1,4 @@
-/* ===== ВОССТАНОВЛЕНИЕ ОРИГИНАЛЬНОГО ДИЗАЙНА НАВИГАЦИИ ===== */
+/* ===== ИСПРАВЛЕНИЕ НАВИГАЦИОННОЙ ПАНЕЛИ ===== */
 
 .navigation {
     position: fixed !important;
@@ -6,60 +6,52 @@
     left: 0 !important;
     right: 0 !important;
     background: linear-gradient(135deg, 
-                rgba(139, 92, 246, 0.95) 0%,
-                rgba(236, 72, 153, 0.95) 100%) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-top: none !important;
+                rgba(30, 20, 50, 0.95) 0%,
+                rgba(50, 20, 40, 0.95) 100%) !important;
+    backdrop-filter: blur(30px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
     display: flex !important;
     justify-content: space-around !important;
     align-items: center !important;
-    padding: 12px 0 !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px) !important;
+    padding: 8px 0 !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 8px) !important;
     z-index: 1000 !important;
     box-shadow: 
-        0 -10px 30px rgba(139, 92, 246, 0.3),
-        0 -5px 20px rgba(236, 72, 153, 0.2) !important;
+        0 -10px 40px rgba(139, 92, 246, 0.2),
+        0 -5px 25px rgba(236, 72, 153, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Индикатор активной вкладки */
-.nav-indicator {
-    position: absolute !important;
-    bottom: 8px !important;
-    height: 48px !important;
-    width: 60px !important;
-    background: rgba(255, 255, 255, 0.2) !important;
-    border-radius: 16px !important;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-    box-shadow: 
-        0 4px 15px rgba(255, 255, 255, 0.2),
-        inset 0 0 10px rgba(255, 255, 255, 0.1) !important;
-}
-
+/* Кнопки навигации */
 .nav-btn {
     position: relative !important;
     flex: 1 !important;
-    padding: 8px 4px !important;
+    max-width: 72px !important;
+    padding: 6px 4px !important;
     background: transparent !important;
     border: none !important;
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
     cursor: pointer !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 4px !important;
+    gap: 2px !important;
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
-    z-index: 1 !important;
+    border-radius: 12px !important;
 }
 
 .nav-btn.active {
     color: #fff !important;
-    transform: translateY(-2px) !important;
+    background: linear-gradient(135deg, 
+                rgba(139, 92, 246, 0.25) 0%,
+                rgba(236, 72, 153, 0.25) 100%) !important;
 }
 
-.nav-btn:not(.active):hover {
-    color: rgba(255, 255, 255, 0.8) !important;
+.nav-btn:not(.active):active {
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: scale(0.95) !important;
 }
 
 /* Иконки навигации */
@@ -68,93 +60,96 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 24px !important;
+    height: 24px !important;
 }
 
-.nav-icon-wrapper svg {
-    width: 22px !important;
-    height: 22px !important;
+.nav-icon-wrapper svg,
+.nav-icon-wrapper i {
+    width: 20px !important;
+    height: 20px !important;
     stroke-width: 2 !important;
 }
 
-.nav-btn.active .nav-icon-wrapper svg {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+/* Активная иконка */
+.nav-btn.active .nav-icon-wrapper svg,
+.nav-btn.active .nav-icon-wrapper i {
+    filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.4)) !important;
 }
 
 /* Метки навигации */
 .nav-label {
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     margin-top: 2px !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.2px !important;
+    opacity: 0.9 !important;
 }
 
 /* Бейдж уведомлений */
 .nav-badge {
     position: absolute !important;
-    top: -4px !important;
-    right: -4px !important;
-    min-width: 18px !important;
-    height: 18px !important;
-    padding: 0 5px !important;
+    top: -2px !important;
+    right: -2px !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    padding: 0 4px !important;
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
     color: white !important;
-    font-size: 10px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
-    border-radius: 9px !important;
+    border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 
-        0 2px 8px rgba(239, 68, 68, 0.5),
-        0 0 12px rgba(239, 68, 68, 0.3) !important;
-    animation: badgePulse 2s infinite !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4) !important;
 }
 
-@keyframes badgePulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
+/* Скрываем индикатор если он есть */
+.nav-indicator {
+    display: none !important;
 }
 
-/* Адаптивность */
-@media (max-width: 480px) {
-    .navigation {
-        padding: 10px 0 !important;
-        padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px) !important;
+/* Адаптивность для маленьких экранов */
+@media (max-width: 360px) {
+    .nav-btn {
+        padding: 4px 2px !important;
     }
     
     .nav-label {
-        font-size: 10px !important;
+        font-size: 9px !important;
     }
     
-    .nav-icon-wrapper svg {
-        width: 20px !important;
-        height: 20px !important;
+    .nav-icon-wrapper svg,
+    .nav-icon-wrapper i {
+        width: 18px !important;
+        height: 18px !important;
     }
 }
 
-/* Анимация переключения */
-.nav-btn {
-    -webkit-tap-highlight-color: transparent !important;
-}
-
-.nav-btn:active {
-    transform: scale(0.95) !important;
-}
-
-.nav-btn.active:active {
-    transform: translateY(-2px) scale(0.95) !important;
-}
-
-/* Убираем изменения фона для мобильных */
+/* Убираем лишние отступы */
 @supports (padding: env(safe-area-inset-left)) {
     .navigation {
-        padding-left: env(safe-area-inset-left) !important;
-        padding-right: env(safe-area-inset-right) !important;
+        padding-left: env(safe-area-inset-left, 0) !important;
+        padding-right: env(safe-area-inset-right, 0) !important;
     }
+}
+
+/* Hover эффект для десктопа */
+@media (hover: hover) {
+    .nav-btn:not(.active):hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+}
+
+/* Убираем подсветку при тапе */
+.nav-btn {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+}
+
+/* Плавная анимация переключения */
+.nav-btn * {
+    transition: inherit !important;
 }
