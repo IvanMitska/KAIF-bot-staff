@@ -2132,3 +2132,453 @@ input[type="date"]:focus {
     width: 12px;
     height: 12px;
 }
+
+/* ===== КАСТОМНЫЕ DROPDOWN И DATE PICKER ===== */
+
+/* Кастомный dropdown контейнер */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown-trigger {
+    width: 100%;
+    padding: 14px 40px 14px 16px;
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.custom-dropdown-trigger:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: var(--glass-white-strong);
+}
+
+.custom-dropdown-trigger.active {
+    border-color: var(--primary);
+    background: var(--glass-white-strong);
+    box-shadow: 
+        0 0 0 4px rgba(139, 92, 246, 0.1),
+        var(--shadow-glow-purple);
+}
+
+.custom-dropdown-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+    transition: transform var(--transition-normal);
+}
+
+.custom-dropdown-trigger.active .custom-dropdown-icon {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+/* Dropdown меню */
+.custom-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: var(--glass-white-strong);
+    backdrop-filter: blur(var(--blur-xl));
+    -webkit-backdrop-filter: blur(var(--blur-xl));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    box-shadow: 
+        var(--shadow-xl),
+        0 0 40px rgba(139, 92, 246, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-normal);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.custom-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-dropdown-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.custom-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.custom-dropdown-option:hover {
+    background: rgba(139, 92, 246, 0.1);
+    padding-left: 20px;
+}
+
+.custom-dropdown-option.selected {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--primary);
+}
+
+.custom-dropdown-option .check-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.custom-dropdown-option.selected .check-icon {
+    opacity: 1;
+}
+
+/* Приоритет dropdown опции */
+.priority-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.priority-indicator.low {
+    background: #10B981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.priority-indicator.medium {
+    background: #F59E0B;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.priority-indicator.high {
+    background: #EF4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Кастомный Date Picker */
+.custom-datepicker {
+    position: relative;
+    width: 100%;
+}
+
+.custom-datepicker-trigger {
+    width: 100%;
+    padding: 14px 40px 14px 16px;
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.custom-datepicker-trigger:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: var(--glass-white-strong);
+}
+
+.custom-datepicker-trigger.active {
+    border-color: var(--primary);
+    background: var(--glass-white-strong);
+    box-shadow: 
+        0 0 0 4px rgba(139, 92, 246, 0.1),
+        var(--shadow-glow-purple);
+}
+
+.calendar-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
+/* Календарь */
+.custom-calendar {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: var(--glass-white-strong);
+    backdrop-filter: blur(var(--blur-xl));
+    -webkit-backdrop-filter: blur(var(--blur-xl));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    box-shadow: 
+        var(--shadow-xl),
+        0 0 40px rgba(139, 92, 246, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    transition: all var(--transition-normal);
+    z-index: 1000;
+    padding: 16px;
+    min-width: 280px;
+}
+
+.custom-calendar.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.calendar-month-year {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--primary);
+    transform: scale(1.1);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 4px;
+    text-transform: uppercase;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.calendar-day:hover {
+    background: rgba(139, 92, 246, 0.1);
+    transform: scale(1.1);
+}
+
+.calendar-day.other-month {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+.calendar-day.today {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.calendar-day.today::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
+.calendar-day.selected {
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: 600;
+    box-shadow: 
+        var(--shadow-md),
+        0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.calendar-day:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.calendar-day:disabled:hover {
+    background: transparent;
+    transform: none;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 480px) {
+    .custom-dropdown-menu,
+    .custom-calendar {
+        position: fixed;
+        top: auto !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transform: translateY(100%);
+        max-height: 70vh;
+        animation: none;
+    }
+    
+    .custom-dropdown-menu.show,
+    .custom-calendar.show {
+        transform: translateY(0);
+        animation: slideUp 0.3s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    
+    /* Оверлей для мобильных */
+    .custom-dropdown.active::before,
+    .custom-datepicker.active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+    }
+    
+    .custom-calendar {
+        padding: 24px;
+        padding-bottom: env(safe-area-inset-bottom, 24px);
+    }
+    
+    .calendar-days {
+        gap: 8px;
+    }
+    
+    .calendar-day {
+        font-size: 14px;
+    }
+}
+
+/* Анимация появления опций */
+@keyframes dropdownOptionFade {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.custom-dropdown-menu.show .custom-dropdown-option {
+    animation: dropdownOptionFade 0.3s ease-out forwards;
+    animation-delay: calc(var(--index) * 0.03s);
+}
+
+/* Скроллбар для dropdown */
+.custom-dropdown-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 2px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+/* Закрывающая кнопка для мобильных */
+.dropdown-mobile-close {
+    display: none;
+    width: 100%;
+    padding: 16px;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 12px;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+@media (max-width: 480px) {
+    .dropdown-mobile-close {
+        display: block;
+    }
+    
+    .dropdown-mobile-close:hover {
+        transform: scale(1.02);
+        box-shadow: var(--shadow-lg);
+    }
+}
