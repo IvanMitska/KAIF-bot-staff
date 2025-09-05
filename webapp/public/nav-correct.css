@@ -1,42 +1,24 @@
-/* ===== НАВИГАЦИОННАЯ ПАНЕЛЬ В СТИЛЕ LIQUID GLASS ===== */
+/* ===== НАВИГАЦИОННАЯ ПАНЕЛЬ КАК НА СКРИНШОТЕ ===== */
 
 .navigation {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    background: linear-gradient(135deg,
-                rgba(139, 92, 246, 0.15) 0%,
-                rgba(236, 72, 153, 0.15) 100%) !important;
-    backdrop-filter: blur(30px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    border-bottom: none !important;
+    background: rgba(20, 15, 30, 0.9) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-left: none !important;
     border-right: none !important;
+    border-bottom: none !important;
     display: flex !important;
     justify-content: space-around !important;
     align-items: center !important;
-    padding: 12px 0 !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px) !important;
+    padding: 10px 0 !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px) !important;
     z-index: 1000 !important;
-    box-shadow: 
-        0 -4px 30px rgba(139, 92, 246, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Фоновое свечение */
-.navigation::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: linear-gradient(135deg,
-                rgba(139, 92, 246, 0.1) 0%,
-                rgba(236, 72, 153, 0.1) 100%) !important;
-    z-index: -1 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Кнопки навигации */
@@ -47,26 +29,26 @@
     padding: 8px 4px !important;
     background: transparent !important;
     border: none !important;
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
     cursor: pointer !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 4px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
-    border-radius: 12px !important;
+    gap: 3px !important;
+    transition: all 0.2s ease !important;
+    border-radius: 0 !important;
 }
 
 /* Активная кнопка */
 .nav-btn.active {
-    color: rgba(255, 255, 255, 1) !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* Эффект при нажатии */
 .nav-btn:active {
     transform: scale(0.95) !important;
+    opacity: 0.7 !important;
 }
 
 /* Иконки навигации */
@@ -86,29 +68,12 @@
     stroke-width: 2 !important;
 }
 
-/* Активная иконка с градиентом */
-.nav-btn.active .nav-icon-wrapper {
-    position: relative !important;
-}
-
-.nav-btn.active .nav-icon-wrapper::after {
-    content: '' !important;
-    position: absolute !important;
-    inset: -4px !important;
-    background: linear-gradient(135deg,
-                rgba(139, 92, 246, 0.3) 0%,
-                rgba(236, 72, 153, 0.3) 100%) !important;
-    border-radius: 8px !important;
-    filter: blur(8px) !important;
-    z-index: -1 !important;
-}
-
 /* Метки навигации */
 .nav-label {
     font-size: 10px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     margin-top: 2px !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.2px !important;
     opacity: 1 !important;
     color: inherit !important;
 }
@@ -121,25 +86,14 @@
     min-width: 16px !important;
     height: 16px !important;
     padding: 0 4px !important;
-    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+    background: rgba(168, 85, 247, 0.9) !important;
     color: white !important;
     font-size: 9px !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
-    animation: pulse 2s infinite !important;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
 }
 
 /* Убираем индикатор */
@@ -150,8 +104,7 @@
 /* Hover эффект для десктопа */
 @media (hover: hover) {
     .nav-btn:not(.active):hover {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: rgba(255, 255, 255, 0.8) !important;
+        color: rgba(255, 255, 255, 0.6) !important;
     }
 }
 
