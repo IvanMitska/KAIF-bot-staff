@@ -1,0 +1,160 @@
+/* ===== ВОССТАНОВЛЕНИЕ ОРИГИНАЛЬНОГО ДИЗАЙНА НАВИГАЦИИ ===== */
+
+.navigation {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: linear-gradient(135deg, 
+                rgba(139, 92, 246, 0.95) 0%,
+                rgba(236, 72, 153, 0.95) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: none !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 12px 0 !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px) !important;
+    z-index: 1000 !important;
+    box-shadow: 
+        0 -10px 30px rgba(139, 92, 246, 0.3),
+        0 -5px 20px rgba(236, 72, 153, 0.2) !important;
+}
+
+/* Индикатор активной вкладки */
+.nav-indicator {
+    position: absolute !important;
+    bottom: 8px !important;
+    height: 48px !important;
+    width: 60px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    box-shadow: 
+        0 4px 15px rgba(255, 255, 255, 0.2),
+        inset 0 0 10px rgba(255, 255, 255, 0.1) !important;
+}
+
+.nav-btn {
+    position: relative !important;
+    flex: 1 !important;
+    padding: 8px 4px !important;
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+    z-index: 1 !important;
+}
+
+.nav-btn.active {
+    color: #fff !important;
+    transform: translateY(-2px) !important;
+}
+
+.nav-btn:not(.active):hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Иконки навигации */
+.nav-icon-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+}
+
+.nav-icon-wrapper svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2 !important;
+}
+
+.nav-btn.active .nav-icon-wrapper svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+}
+
+/* Метки навигации */
+.nav-label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin-top: 2px !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* Бейдж уведомлений */
+.nav-badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -4px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: white !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border-radius: 9px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 
+        0 2px 8px rgba(239, 68, 68, 0.5),
+        0 0 12px rgba(239, 68, 68, 0.3) !important;
+    animation: badgePulse 2s infinite !important;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .navigation {
+        padding: 10px 0 !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px) !important;
+    }
+    
+    .nav-label {
+        font-size: 10px !important;
+    }
+    
+    .nav-icon-wrapper svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+}
+
+/* Анимация переключения */
+.nav-btn {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+.nav-btn:active {
+    transform: scale(0.95) !important;
+}
+
+.nav-btn.active:active {
+    transform: translateY(-2px) scale(0.95) !important;
+}
+
+/* Убираем изменения фона для мобильных */
+@supports (padding: env(safe-area-inset-left)) {
+    .navigation {
+        padding-left: env(safe-area-inset-left) !important;
+        padding-right: env(safe-area-inset-right) !important;
+    }
+}
