@@ -92,7 +92,7 @@
                     </h2>
                 </div>
                 <div class="attendance-buttons">
-                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in">
+                    <button id="checkInBtn" onclick="checkIn()" class="attendance-btn check-in modern">
                         <div class="btn-icon-wrapper">
                             <i data-lucide="log-in" class="btn-icon"></i>
                         </div>
@@ -102,7 +102,7 @@
                         </div>
                         <div class="btn-ripple"></div>
                     </button>
-                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out">
+                    <button id="checkOutBtn" onclick="checkOut()" class="attendance-btn check-out modern">
                         <div class="btn-icon-wrapper">
                             <i data-lucide="log-out" class="btn-icon"></i>
                         </div>
@@ -124,7 +124,7 @@
                     </h2>
                 </div>
                 <div class="action-grid">
-                    <div class="action-card" onclick="showPage('report')">
+                    <div class="action-card modern" onclick="showPage('report')">
                         <div class="action-icon-wrapper">
                             <i data-lucide="file-text" class="action-icon"></i>
                         </div>
@@ -137,7 +137,7 @@
                         </div>
                     </div>
                     
-                    <div class="action-card" onclick="showPage('tasks')">
+                    <div class="action-card modern" onclick="showPage('tasks')">
                         <div class="action-icon-wrapper">
                             <i data-lucide="check-square" class="action-icon"></i>
                         </div>
@@ -184,7 +184,7 @@
         <!-- Страница отчетов -->
         <div id="report" class="page">
             <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">
+                <button class="back-btn modern" onclick="showPage('home')">
                     <i data-lucide="arrow-left"></i>
                     <span>Назад</span>
                 </button>
@@ -200,23 +200,23 @@
             
             <form id="reportForm" class="modern-form">
                 <div class="form-card">
-                    <div class="form-group">
+                    <div class="form-group modern">
                         <label class="form-label">
                             <i data-lucide="edit-3" class="label-icon"></i>
                             Что сделали сегодня?
                         </label>
-                        <textarea name="whatDone" required placeholder="Опишите выполненную работу..." class="form-textarea"></textarea>
+                        <textarea name="whatDone" required placeholder="Опишите выполненную работу..." class="form-textarea modern"></textarea>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group modern">
                         <label class="form-label">
                             <i data-lucide="alert-triangle" class="label-icon"></i>
                             Какие были проблемы?
                         </label>
-                        <textarea name="problems" placeholder="Опишите проблемы или напишите 'нет'..." class="form-textarea"></textarea>
+                        <textarea name="problems" placeholder="Опишите проблемы или напишите 'нет'..." class="form-textarea modern"></textarea>
                     </div>
                     
-                    <button type="submit" class="submit-btn">
+                    <button type="submit" class="submit-btn modern">
                         <span class="btn-text">Отправить отчет</span>
                         <i data-lucide="send" class="btn-icon"></i>
                         <div class="btn-ripple"></div>
@@ -228,7 +228,7 @@
         <!-- Страница задач -->
         <div id="tasks" class="page">
             <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">
+                <button class="back-btn modern" onclick="showPage('home')">
                     <i data-lucide="arrow-left"></i>
                     <span>Назад</span>
                 </button>
@@ -246,7 +246,7 @@
             </div>
             
             <!-- Переключатель типа задач -->
-            <div class="task-type-switcher">
+            <div class="task-type-switcher modern">
                 <button id="myTasksBtn" class="task-type-btn active" onclick="switchTaskType('my')">
                     <i data-lucide="inbox" class="btn-icon"></i>
                     <span>Мои задачи</span>
@@ -258,7 +258,7 @@
             </div>
             
             <!-- Фильтры задач -->
-            <div class="task-filters">
+            <div class="task-filters modern">
                 <button class="filter-btn active" onclick="filterTasks('all')">
                     <span class="filter-text">Все</span>
                     <span class="count">0</span>
@@ -282,7 +282,7 @@
             
             <!-- Список задач -->
             <div id="tasksList" class="tasks-container">
-                <div class="loading">
+                <div class="loading modern">
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Загрузка задач...</p>
                 </div>
@@ -292,7 +292,7 @@
         <!-- Страница статистики -->
         <div id="stats" class="page">
             <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">
+                <button class="back-btn modern" onclick="showPage('home')">
                     <i data-lucide="arrow-left"></i>
                     <span>Назад</span>
                 </button>
@@ -306,8 +306,8 @@
             </div>
             
             <div class="stats-overview">
-                <div class="stats-grid">
-                    <div class="stat-card">
+                <div class="stats-grid modern">
+                    <div class="stat-card modern">
                         <div class="stat-header">
                             <i data-lucide="calendar" class="stat-icon"></i>
                             <div class="stat-trend positive">
@@ -318,7 +318,7 @@
                         <div class="stat-label">Всего отчетов</div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card modern">
                         <div class="stat-header">
                             <i data-lucide="check-circle" class="stat-icon"></i>
                             <div class="stat-trend positive">
@@ -329,7 +329,7 @@
                         <div class="stat-label">Выполнено задач</div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card modern">
                         <div class="stat-header">
                             <i data-lucide="flame" class="stat-icon"></i>
                             <div class="stat-trend neutral">
@@ -340,7 +340,7 @@
                         <div class="stat-label">Дней подряд</div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card modern">
                         <div class="stat-header">
                             <i data-lucide="activity" class="stat-icon"></i>
                             <div class="stat-trend positive">
@@ -357,7 +357,7 @@
         <!-- Страница профиля -->
         <div id="profile" class="page">
             <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">
+                <button class="back-btn modern" onclick="showPage('home')">
                     <i data-lucide="arrow-left"></i>
                     <span>Назад</span>
                 </button>
@@ -372,7 +372,7 @@
             
             <div class="profile-content">
                 <!-- Карточка профиля -->
-                <div class="profile-card">
+                <div class="profile-card modern">
                     <div class="profile-avatar">
                         <i data-lucide="user" class="avatar-icon"></i>
                     </div>
@@ -399,7 +399,7 @@
                 
                 <!-- Действия профиля -->
                 <div class="profile-actions">
-                    <div class="action-card" onclick="showHelp()">
+                    <div class="action-card modern" onclick="showHelp()">
                         <div class="action-icon-wrapper">
                             <i data-lucide="help-circle" class="action-icon"></i>
                         </div>
@@ -413,7 +413,7 @@
                     </div>
                     
                     <div id="managerSection" class="manager-section" style="display: none;">
-                        <div class="action-card" onclick="showEmployees()">
+                        <div class="action-card modern" onclick="showEmployees()">
                             <div class="action-icon-wrapper">
                                 <i data-lucide="users" class="action-icon"></i>
                             </div>
@@ -426,7 +426,7 @@
                             </div>
                         </div>
                         
-                        <div class="action-card" onclick="showAdminPanel()">
+                        <div class="action-card modern" onclick="showAdminPanel()">
                             <div class="action-icon-wrapper">
                                 <i data-lucide="settings" class="action-icon"></i>
                             </div>
@@ -463,14 +463,14 @@
         <!-- Страница детального просмотра задачи -->
         <div id="taskDetail" class="page">
             <div class="page-header">
-                <button class="back-btn" onclick="showPage('tasks')">
+                <button class="back-btn modern" onclick="showPage('tasks')">
                     <i data-lucide="arrow-left"></i>
                     <span>К задачам</span>
                 </button>
             </div>
             
             <div class="task-detail-content">
-                <div class="loading">
+                <div class="loading modern">
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Загрузка задачи...</p>
                 </div>
@@ -480,7 +480,7 @@
         <!-- Админ-панель (для менеджеров) -->
         <div id="adminPanel" class="page">
             <div class="page-header admin-header">
-                <button class="back-btn" onclick="showPage('profile')">
+                <button class="back-btn modern" onclick="showPage('profile')">
                     <i data-lucide="arrow-left"></i>
                     <span>Назад</span>
                 </button>
@@ -503,7 +503,7 @@
             <!-- Enhanced Navigation Tabs -->
             <div class="admin-tabs-container">
                 <div class="admin-tabs-wrapper">
-                    <button id="dashboardTab" class="admin-tab active" onclick="switchAdminTab('dashboard')" data-tab="dashboard">
+                    <button id="dashboardTab" class="admin-tab modern active" onclick="switchAdminTab('dashboard')" data-tab="dashboard">
                         <div class="tab-icon-wrapper">
                             <i data-lucide="pie-chart" class="tab-icon"></i>
                         </div>
@@ -512,7 +512,7 @@
                             <span class="tab-sublabel">Обзор</span>
                         </div>
                     </button>
-                    <button id="reportsTab" class="admin-tab" onclick="switchAdminTab('reports')" data-tab="reports">
+                    <button id="reportsTab" class="admin-tab modern" onclick="switchAdminTab('reports')" data-tab="reports">
                         <div class="tab-icon-wrapper">
                             <i data-lucide="file-bar-chart" class="tab-icon"></i>
                         </div>
@@ -521,7 +521,7 @@
                             <span class="tab-sublabel">Анализ</span>
                         </div>
                     </button>
-                    <button id="attendanceTab" class="admin-tab" onclick="switchAdminTab('attendance')" data-tab="attendance">
+                    <button id="attendanceTab" class="admin-tab modern" onclick="switchAdminTab('attendance')" data-tab="attendance">
                         <div class="tab-icon-wrapper">
                             <i data-lucide="clock" class="tab-icon"></i>
                         </div>
@@ -537,7 +537,7 @@
             <div id="dashboardContent" class="admin-tab-content" style="display: block;">
                 <!-- Enhanced Key Metrics with Real-time Updates -->
                 <div class="admin-metrics-grid">
-                    <div class="metric-card primary">
+                    <div class="metric-card modern primary">
                         <div class="metric-header">
                             <div class="metric-icon-wrapper">
                                 <i data-lucide="calendar-check" class="metric-icon"></i>
@@ -559,7 +559,7 @@
                         </div>
                     </div>
                     
-                    <div class="metric-card warning">
+                    <div class="metric-card modern warning">
                         <div class="metric-header">
                             <div class="metric-icon-wrapper">
                                 <i data-lucide="alert-triangle" class="metric-icon"></i>
@@ -581,7 +581,7 @@
                         </div>
                     </div>
                     
-                    <div class="metric-card success">
+                    <div class="metric-card modern success">
                         <div class="metric-header">
                             <div class="metric-icon-wrapper">
                                 <i data-lucide="clipboard-list" class="metric-icon"></i>
@@ -603,7 +603,7 @@
                         </div>
                     </div>
                     
-                    <div class="metric-card info">
+                    <div class="metric-card modern info">
                         <div class="metric-header">
                             <div class="metric-icon-wrapper">
                                 <i data-lucide="check-circle" class="metric-icon"></i>
@@ -630,7 +630,7 @@
                 
                 <!-- Enhanced Activity Chart -->
                 <div class="activity-chart-container">
-                    <div class="chart-card">
+                    <div class="chart-card modern">
                         <div class="chart-header">
                             <h3 class="chart-title">
                                 <i data-lucide="trending-up" class="chart-icon"></i>
@@ -830,7 +830,7 @@
                         <div style="flex: 1;">
                             <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Период</label>
                             <div class="custom-select-wrapper">
-                                <select id="periodFilter" onchange="updateAdminPanel()" class="custom-select">
+                                <select id="periodFilter" onchange="updateAdminPanel()" class="custom-select modern">
                                     <option value="today">Сегодня</option>
                                     <option value="week">Эта неделя</option>
                                     <option value="month">Этот месяц</option>
@@ -844,7 +844,7 @@
                         <div style="flex: 1;">
                             <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Сотрудник</label>
                             <div class="custom-select-wrapper">
-                                <select id="employeeFilter" onchange="updateAdminPanel()" class="custom-select">
+                                <select id="employeeFilter" onchange="updateAdminPanel()" class="custom-select modern">
                                     <option value="all">Все сотрудники</option>
                                 </select>
                                 <div class="select-arrow">
@@ -909,7 +909,7 @@
             <div id="attendanceContent" class="admin-tab-content" style="display: none;">
                 <!-- Enhanced Filters with Modern Design -->
                 <div class="attendance-filters-container">
-                    <div class="filters-card">
+                    <div class="filters-card modern">
                         <div class="filters-header">
                             <h3 class="filters-title">
                                 <i data-lucide="filter" class="filters-icon"></i>
@@ -922,13 +922,13 @@
                         </div>
                         
                         <div class="filters-grid">
-                            <div class="filter-group">
+                            <div class="filter-group modern">
                                 <label class="filter-label">
                                     <i data-lucide="calendar" class="label-icon"></i>
                                     Период
                                 </label>
                                 <div class="custom-select-wrapper">
-                                    <select id="attendancePeriodFilter" onchange="updateAttendanceHistory()" class="custom-select">
+                                    <select id="attendancePeriodFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
                                         <option value="today">Сегодня</option>
                                         <option value="week" selected>Эта неделя</option>
                                         <option value="month">Этот месяц</option>
@@ -940,13 +940,13 @@
                                 </div>
                             </div>
                             
-                            <div class="filter-group">
+                            <div class="filter-group modern">
                                 <label class="filter-label">
                                     <i data-lucide="user" class="label-icon"></i>
                                     Сотрудник
                                 </label>
                                 <div class="custom-select-wrapper">
-                                    <select id="attendanceEmployeeFilter" onchange="updateAttendanceHistory()" class="custom-select">
+                                    <select id="attendanceEmployeeFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
                                         <option value="all">Все сотрудники</option>
                                     </select>
                                     <div class="select-arrow">
@@ -955,13 +955,13 @@
                                 </div>
                             </div>
                             
-                            <div class="filter-group">
+                            <div class="filter-group modern">
                                 <label class="filter-label">
                                     <i data-lucide="clock" class="label-icon"></i>
                                     Статус
                                 </label>
                                 <div class="custom-select-wrapper">
-                                    <select id="attendanceStatusFilter" onchange="updateAttendanceHistory()" class="custom-select">
+                                    <select id="attendanceStatusFilter" onchange="updateAttendanceHistory()" class="custom-select modern">
                                         <option value="all">Все статусы</option>
                                         <option value="present">Присутствуют</option>
                                         <option value="late">Опоздания</option>
@@ -980,14 +980,14 @@
                                     <i data-lucide="calendar" class="label-icon"></i>
                                     С
                                 </label>
-                                <input type="date" id="attendanceStartDate" onchange="updateAttendanceHistory()" class="date-input">
+                                <input type="date" id="attendanceStartDate" onchange="updateAttendanceHistory()" class="date-input modern">
                             </div>
                             <div class="date-input-group">
                                 <label class="filter-label">
                                     <i data-lucide="calendar" class="label-icon"></i>
                                     По
                                 </label>
-                                <input type="date" id="attendanceEndDate" onchange="updateAttendanceHistory()" class="date-input">
+                                <input type="date" id="attendanceEndDate" onchange="updateAttendanceHistory()" class="date-input modern">
                             </div>
                         </div>
                     </div>
@@ -996,7 +996,7 @@
                 <!-- Enhanced Time Tracking Statistics -->
                 <div class="time-stats-container">
                     <div class="time-stats-grid">
-                        <div class="time-stat-card primary">
+                        <div class="time-stat-card modern primary">
                             <div class="stat-header">
                                 <div class="stat-icon-wrapper">
                                     <i data-lucide="calendar-days" class="stat-icon"></i>
@@ -1012,7 +1012,7 @@
                             </div>
                         </div>
                         
-                        <div class="time-stat-card success">
+                        <div class="time-stat-card modern success">
                             <div class="stat-header">
                                 <div class="stat-icon-wrapper">
                                     <i data-lucide="clock" class="stat-icon"></i>
@@ -1037,7 +1037,7 @@
                             </div>
                         </div>
                         
-                        <div class="time-stat-card warning">
+                        <div class="time-stat-card modern warning">
                             <div class="stat-header">
                                 <div class="stat-icon-wrapper">
                                     <i data-lucide="alert-circle" class="stat-icon"></i>
@@ -1058,7 +1058,7 @@
                             </div>
                         </div>
                         
-                        <div class="time-stat-card info">
+                        <div class="time-stat-card modern info">
                             <div class="stat-header">
                                 <div class="stat-icon-wrapper">
                                     <i data-lucide="bar-chart-3" class="stat-icon"></i>
@@ -1078,7 +1078,7 @@
                 
                 <!-- Real-time Attendance Status -->
                 <div class="realtime-attendance-container">
-                    <div class="realtime-card">
+                    <div class="realtime-card modern">
                         <div class="realtime-header">
                             <h3 class="realtime-title">
                                 <i data-lucide="activity" class="realtime-icon"></i>
@@ -1115,7 +1115,7 @@
                 
                 <!-- Enhanced Time Tracking History -->
                 <div class="attendance-history-container">
-                    <div class="history-card">
+                    <div class="history-card modern">
                         <div class="history-header">
                             <h3 class="history-title">
                                 <i data-lucide="clock-4" class="history-icon"></i>
@@ -1132,7 +1132,7 @@
                         </div>
                         
                         <div class="history-timeline" id="attendanceHistoryList">
-                            <div class="loading">
+                            <div class="loading modern">
                                 <div class="loading-spinner"></div>
                                 <p class="loading-text">Загрузка истории...</p>
                             </div>
@@ -1160,13 +1160,13 @@
             </div>
             
             <form id="taskForm" onsubmit="submitTask(event)" class="modern-form">
-                <div class="form-group">
+                <div class="form-group modern">
                     <label class="form-label">
                         <i data-lucide="user" class="label-icon"></i>
                         Исполнитель
                     </label>
                     <div class="custom-select-wrapper">
-                        <select id="taskEmployee" name="employee" required class="custom-select">
+                        <select id="taskEmployee" name="employee" required class="custom-select modern">
                             <option value="">Выберите сотрудника</option>
                         </select>
                         <div class="select-arrow">
@@ -1175,38 +1175,38 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group modern">
                     <label class="form-label">
                         <i data-lucide="edit-3" class="label-icon"></i>
                         Название задачи
                     </label>
-                    <input type="text" name="title" required placeholder="Кратко опишите задачу" class="form-input">
+                    <input type="text" name="title" required placeholder="Кратко опишите задачу" class="form-input modern">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group modern">
                     <label class="form-label">
                         <i data-lucide="file-text" class="label-icon"></i>
                         Описание <span class="optional-label">(опционально)</span>
                     </label>
-                    <textarea name="description" rows="4" placeholder="Подробное описание задачи, требования, ссылки..." class="form-textarea"></textarea>
+                    <textarea name="description" rows="4" placeholder="Подробное описание задачи, требования, ссылки..." class="form-textarea modern"></textarea>
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group half-width">
+                    <div class="form-group modern half-width">
                         <label class="form-label">
                             <i data-lucide="calendar" class="label-icon"></i>
                             Срок выполнения
                         </label>
-                        <input type="date" id="taskDeadline" name="deadline" required class="form-input">
+                        <input type="date" id="taskDeadline" name="deadline" required class="form-input modern">
                     </div>
                     
-                    <div class="form-group half-width">
+                    <div class="form-group modern half-width">
                         <label class="form-label">
                             <i data-lucide="flag" class="label-icon"></i>
                             Приоритет
                         </label>
                         <div class="custom-select-wrapper">
-                            <select name="priority" class="custom-select">
+                            <select name="priority" class="custom-select modern">
                                 <option value="Низкий">🟢 Низкий</option>
                                 <option value="Средний" selected>🟡 Средний</option>
                                 <option value="Высокий">🔴 Высокий</option>
@@ -1223,7 +1223,7 @@
                         <i data-lucide="x"></i>
                         Отмена
                     </button>
-                    <button type="submit" class="submit-btn">
+                    <button type="submit" class="submit-btn modern">
                         <i data-lucide="plus" class="btn-icon"></i>
                         Создать задачу
                     </button>
@@ -1261,7 +1261,7 @@
                 <div class="form-group">
                     <label>Приоритет</label>
                     <div class="custom-select-wrapper">
-                        <select id="editTaskPriority" name="priority" class="custom-select">
+                        <select id="editTaskPriority" name="priority" class="custom-select modern">
                             <option value="Низкий">🟢 Низкий</option>
                             <option value="Средний">🟡 Средний</option>
                             <option value="Высокий">🔴 Высокий</option>
@@ -1275,7 +1275,7 @@
                 <div class="form-group">
                     <label>Исполнитель</label>
                     <div class="custom-select-wrapper">
-                        <select id="editTaskEmployee" name="employee" required class="custom-select">
+                        <select id="editTaskEmployee" name="employee" required class="custom-select modern">
                             <option value="">Выберите сотрудника</option>
                         </select>
                         <div class="select-arrow">
