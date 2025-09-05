@@ -1749,3 +1749,386 @@ body::before {
         font-size: 13px;
     }
 }
+
+/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ЗАДАЧИ ===== */
+
+/* Современная форма в модальном окне */
+.modern-form {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group.half-width {
+    flex: 1;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+/* Кастомный селект для исполнителя */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    width: 100%;
+    padding: 14px 40px 14px 16px;
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.custom-select:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: var(--glass-white-strong);
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--glass-white-strong);
+    box-shadow: 
+        0 0 0 4px rgba(139, 92, 246, 0.1),
+        var(--shadow-glow-purple);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+}
+
+.custom-select:focus ~ .select-arrow {
+    color: var(--primary);
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Стилизация опций */
+.custom-select option {
+    background: #2D0050;
+    color: var(--text-primary);
+    padding: 12px;
+}
+
+.custom-select option:hover {
+    background: var(--primary);
+}
+
+/* Календарь (date input) */
+input[type="date"] {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+input[type="date"]:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: var(--glass-white-strong);
+}
+
+input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--glass-white-strong);
+    box-shadow: 
+        0 0 0 4px rgba(139, 92, 246, 0.1),
+        var(--shadow-glow-purple);
+}
+
+/* Стилизация приоритета */
+.priority-select {
+    position: relative;
+}
+
+.priority-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.priority-dot.high {
+    background: #EF4444;
+}
+
+.priority-dot.medium {
+    background: #F59E0B;
+}
+
+.priority-dot.low {
+    background: #10B981;
+}
+
+/* Текстовые поля */
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    transition: all var(--transition-normal);
+    resize: vertical;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.form-input:hover,
+.form-textarea:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: var(--glass-white-strong);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--glass-white-strong);
+    box-shadow: 
+        0 0 0 4px rgba(139, 92, 246, 0.1),
+        var(--shadow-glow-purple);
+}
+
+/* Опциональная метка */
+.optional-label {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 11px;
+    text-transform: none;
+    margin-left: 4px;
+}
+
+/* Кнопки в модальном окне */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-glass);
+}
+
+.modal-actions .btn-secondary {
+    flex: 1;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.modal-actions .submit-btn {
+    flex: 2;
+    padding: 14px 20px;
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 
+        var(--shadow-md),
+        0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.modal-actions .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 30px rgba(139, 92, 246, 0.5);
+}
+
+/* Иконки в форме */
+.label-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+    opacity: 0.8;
+}
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Улучшенная анимация модального окна */
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-container {
+    animation: modalSlideUp 0.4s var(--spring);
+}
+
+/* Адаптивность модального окна */
+@media (max-width: 480px) {
+    .modal-container {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: var(--radius-xl);
+    }
+    
+    .modern-form {
+        padding: 20px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-group.half-width {
+        width: 100%;
+    }
+    
+    .modal-header {
+        padding: 20px 20px 16px;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+    }
+    
+    .form-input,
+    .form-textarea,
+    .custom-select,
+    input[type="date"] {
+        font-size: 16px; /* Предотвращает зум на iOS */
+    }
+}
+
+/* Стиль для заблокированных полей */
+.form-input:disabled,
+.form-textarea:disabled,
+.custom-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--glass-white);
+}
+
+/* Индикатор загрузки в селекте */
+.select-loading {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--glass-white);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Пустое состояние селекта */
+.custom-select:invalid {
+    color: var(--text-muted);
+}
+
+.custom-select option[value=""] {
+    color: var(--text-muted);
+}
+
+/* Фокус на всей форме */
+.form-group:focus-within .form-label {
+    color: var(--primary);
+}
+
+/* Валидация */
+.form-input.error,
+.form-textarea.error,
+.custom-select.error {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.form-error {
+    font-size: 12px;
+    color: #EF4444;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-error-icon {
+    width: 12px;
+    height: 12px;
+}
