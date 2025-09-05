@@ -1,0 +1,51 @@
+/* ===== ИСПРАВЛЕНИЕ СКРОЛЛА ПРИ ПЕРЕХОДАХ ===== */
+
+/* Сброс скролла для страниц */
+.page {
+    scroll-behavior: auto !important;
+}
+
+.page.active {
+    scroll-behavior: auto !important;
+}
+
+/* Фиксация позиции при открытии модальных окон */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+}
+
+/* Плавная прокрутка только для якорей */
+html {
+    scroll-behavior: auto !important;
+}
+
+/* Контейнеры страниц */
+.container {
+    overflow-x: hidden !important;
+}
+
+/* Модальные окна всегда сверху */
+.modal {
+    overflow-y: auto !important;
+}
+
+.modal-content {
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+/* Предотвращение прыжков при загрузке */
+.page:not(.active) {
+    position: absolute !important;
+    top: 0 !important;
+    left: -9999px !important;
+    visibility: hidden !important;
+}
+
+.page.active {
+    position: relative !important;
+    left: 0 !important;
+    visibility: visible !important;
+}

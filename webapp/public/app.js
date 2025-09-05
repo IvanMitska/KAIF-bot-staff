@@ -326,6 +326,7 @@ function showPage(pageId) {
     
     // Если пытаемся переключиться на ту же страницу
     if (currentPage === targetPage) {
+        window.scrollTo(0, 0);
         return;
     }
     
@@ -350,6 +351,10 @@ function showPage(pageId) {
     targetPage.style.opacity = '';
     targetPage.style.transform = '';
     targetPage.style.transition = '';
+    
+    // Прокручиваем страницу к началу
+    window.scrollTo(0, 0);
+    targetPage.scrollTop = 0;
     
     // Обновляем навигацию
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1417,6 +1422,9 @@ window.reloadProfile = async function() {
 
 // Функции админ-панели
 window.showAdminPanel = async function() {
+    // Прокручиваем к началу
+    window.scrollTo(0, 0);
+    
     console.log('Admin panel access check:', {
         currentUser: currentUser,
         isManager: currentUser?.isManager,
@@ -2061,6 +2069,7 @@ function displayAdminReports(reports) {
 
 // Показ сотрудников (для менеджеров)
 async function showEmployees() {
+    window.scrollTo(0, 0);
     showPage('employees');
     loadEmployees();
 }
@@ -2131,6 +2140,9 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
         createTaskModal();
         return;
     }
+    
+    // Прокручиваем к началу перед открытием модального окна
+    window.scrollTo(0, 0);
     
     // Современное отображение модального окна
     modal.style.display = 'flex';
