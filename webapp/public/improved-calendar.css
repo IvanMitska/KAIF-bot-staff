@@ -1,0 +1,409 @@
+/* ===== УЛУЧШЕННЫЙ КАЛЕНДАРЬ ===== */
+
+.improved-datepicker {
+    position: relative;
+    width: 100%;
+}
+
+/* Поле отображения даты */
+.datepicker-display {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    text-align: left;
+}
+
+.datepicker-display:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(168, 85, 247, 0.5);
+}
+
+.datepicker-display.active {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.6);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+.datepicker-display .icon-left {
+    width: 20px;
+    height: 20px;
+    color: rgba(168, 85, 247, 0.9);
+}
+
+.datepicker-display .icon-right {
+    width: 20px;
+    height: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: auto;
+}
+
+.datepicker-display .date-text {
+    flex: 1;
+}
+
+.datepicker-display .date-text.has-value {
+    color: #fff;
+}
+
+/* Календарь */
+.datepicker-calendar {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.datepicker-calendar.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.calendar-container {
+    background: linear-gradient(135deg, 
+                rgba(20, 12, 35, 0.98) 0%,
+                rgba(35, 12, 30, 0.98) 100%);
+    backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 
+        0 20px 60px rgba(139, 92, 246, 0.4),
+        0 0 80px rgba(236, 72, 153, 0.3),
+        inset 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+/* Заголовок календаря */
+.calendar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: rgba(168, 85, 247, 0.25);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.nav-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.month-year-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.month-name {
+    font-size: 18px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #e9d5ff 0%, #fbcfe8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.year {
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Сетка календаря */
+.calendar-grid {
+    margin-bottom: 16px;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.weekday {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    padding: 8px 0;
+}
+
+.weekday.weekend {
+    color: rgba(236, 72, 153, 0.8);
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.day-btn {
+    aspect-ratio: 1;
+    min-height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.day-btn:hover:not(.other-month) {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    transform: scale(1.1);
+    z-index: 1;
+}
+
+.day-btn.other-month {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.3);
+    cursor: default;
+}
+
+.day-btn.today {
+    background: linear-gradient(135deg, 
+                rgba(168, 85, 247, 0.25) 0%,
+                rgba(236, 72, 153, 0.25) 100%);
+    border: 2px solid rgba(168, 85, 247, 0.6);
+    color: #fff;
+    font-weight: 700;
+}
+
+.day-btn.today::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    width: 4px;
+    height: 4px;
+    background: #a855f7;
+    border-radius: 50%;
+}
+
+.day-btn.selected {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+    transform: scale(1.05);
+    box-shadow: 
+        0 4px 20px rgba(139, 92, 246, 0.5),
+        0 0 30px rgba(236, 72, 153, 0.3);
+}
+
+.day-btn.weekend:not(.other-month) {
+    color: rgba(251, 191, 36, 0.9);
+}
+
+/* Футер календаря */
+.calendar-footer {
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quick-btn {
+    flex: 1;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.quick-btn:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #fff;
+}
+
+.quick-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.today-btn {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-clear,
+.btn-apply {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-clear {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-clear:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.btn-apply {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+}
+
+.btn-apply:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.4);
+}
+
+/* Мобильная версия */
+@media (max-width: 480px) {
+    .datepicker-calendar.show {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(0);
+        animation: slideUpMobile 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    
+    .calendar-container {
+        border-radius: 24px 24px 0 0;
+        padding: 24px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .calendar-header {
+        position: sticky;
+        top: -24px;
+        background: linear-gradient(135deg, 
+                    rgba(20, 12, 35, 0.98) 0%,
+                    rgba(35, 12, 30, 0.98) 100%);
+        padding: 16px 0;
+        margin: -16px -24px 20px;
+        padding-left: 24px;
+        padding-right: 24px;
+        z-index: 10;
+    }
+    
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .month-name,
+    .year {
+        font-size: 20px;
+    }
+    
+    .day-btn {
+        min-height: 44px;
+        font-size: 15px;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .quick-btn {
+        padding: 14px;
+        font-size: 14px;
+    }
+    
+    .btn-clear,
+    .btn-apply {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+@keyframes slideUpMobile {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* Темная тема для нативного календаря (fallback) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+input[type="date"] {
+    color-scheme: dark;
+}
