@@ -1,0 +1,282 @@
+/* ===== ИСПРАВЛЕНИЕ СТРАНИЦЫ ПРОФИЛЯ ===== */
+
+/* Основной контейнер профиля */
+#profile {
+    padding-bottom: 100px !important;
+}
+
+.profile-content {
+    padding: 20px !important;
+    max-width: 600px !important;
+    margin: 0 auto !important;
+}
+
+/* Карточка профиля */
+.profile-card {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.1) 0%,
+                rgba(236, 72, 153, 0.1) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    box-shadow: 
+        0 10px 30px rgba(139, 92, 246, 0.15),
+        0 5px 15px rgba(236, 72, 153, 0.1) !important;
+}
+
+/* Аватар профиля */
+.profile-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+.profile-avatar .avatar-icon {
+    width: 40px !important;
+    height: 40px !important;
+    color: white !important;
+}
+
+/* Информация профиля */
+.profile-info {
+    flex: 1 !important;
+}
+
+.profile-name {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin: 0 0 4px 0 !important;
+}
+
+.profile-position {
+    font-size: 15px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    margin: 0 0 12px 0 !important;
+}
+
+.profile-id {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 12px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.profile-id .id-icon {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Секция действий */
+.profile-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+}
+
+/* Карточки действий */
+.action-card {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.08) 0%,
+                rgba(236, 72, 153, 0.08) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px !important;
+    padding: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.action-card:hover {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.15) 0%,
+                rgba(236, 72, 153, 0.15) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 10px 30px rgba(139, 92, 246, 0.2),
+        0 5px 15px rgba(236, 72, 153, 0.15) !important;
+}
+
+.action-card:active {
+    transform: scale(0.98) !important;
+}
+
+/* Иконка действия */
+.action-icon-wrapper {
+    width: 48px !important;
+    height: 48px !important;
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.2) 0%,
+                rgba(236, 72, 153, 0.2) 100%) !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.action-icon {
+    width: 24px !important;
+    height: 24px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Контент действия */
+.action-content {
+    flex: 1 !important;
+}
+
+.action-content h3 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    margin: 0 0 4px 0 !important;
+}
+
+.action-content p {
+    font-size: 14px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    margin: 0 !important;
+}
+
+/* Стрелка */
+.action-arrow {
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.action-arrow svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+/* Секция для менеджеров */
+.manager-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 24px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Карточка помощи с отступом */
+.help-card {
+    position: relative !important;
+}
+
+/* Специальные стили для админ-панели (первая в списке) */
+.manager-section .action-card:first-child .action-icon-wrapper {
+    background: linear-gradient(135deg,
+                rgba(236, 72, 153, 0.2) 0%,
+                rgba(139, 92, 246, 0.2) 100%) !important;
+}
+
+/* Кнопки отладки */
+.profile-info button {
+    padding: 10px 16px !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.profile-info button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.profile-info button:active {
+    transform: scale(0.98) !important;
+}
+
+/* Анимация появления */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-card {
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+}
+
+.action-card {
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) backwards !important;
+}
+
+.action-card:nth-child(1) {
+    animation-delay: 0.1s !important;
+}
+
+.action-card:nth-child(2) {
+    animation-delay: 0.15s !important;
+}
+
+.action-card:nth-child(3) {
+    animation-delay: 0.2s !important;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .profile-content {
+        padding: 16px !important;
+    }
+    
+    .profile-card {
+        padding: 20px !important;
+    }
+    
+    .profile-avatar {
+        width: 70px !important;
+        height: 70px !important;
+    }
+    
+    .profile-name {
+        font-size: 20px !important;
+    }
+    
+    .action-card {
+        padding: 16px !important;
+    }
+    
+    .action-icon-wrapper {
+        width: 44px !important;
+        height: 44px !important;
+    }
+}

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="improved-calendar.css">
     <link rel="stylesheet" href="nav-ios-liquid.css">
     <link rel="stylesheet" href="nav-fix-flicker.css">
+    <link rel="stylesheet" href="profile-fix.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -402,20 +403,20 @@
                 
                 <!-- Действия профиля -->
                 <div class="profile-actions">
-                    <div class="action-card" onclick="showHelp()">
-                        <div class="action-icon-wrapper">
-                            <i data-lucide="help-circle" class="action-icon"></i>
-                        </div>
-                        <div class="action-content">
-                            <h3>Помощь</h3>
-                            <p>Инструкции и поддержка</p>
-                        </div>
-                        <div class="action-arrow">
-                            <i data-lucide="chevron-right"></i>
-                        </div>
-                    </div>
-                    
                     <div id="managerSection" class="manager-section" style="display: none;">
+                        <div class="action-card admin-card" onclick="showAdminPanel()">
+                            <div class="action-icon-wrapper">
+                                <i data-lucide="settings" class="action-icon"></i>
+                            </div>
+                            <div class="action-content">
+                                <h3>Админ-панель</h3>
+                                <p>Отчеты и статистика</p>
+                            </div>
+                            <div class="action-arrow">
+                                <i data-lucide="chevron-right"></i>
+                            </div>
+                        </div>
+                        
                         <div class="action-card" onclick="showEmployees()">
                             <div class="action-icon-wrapper">
                                 <i data-lucide="users" class="action-icon"></i>
@@ -428,18 +429,18 @@
                                 <i data-lucide="chevron-right"></i>
                             </div>
                         </div>
-                        
-                        <div class="action-card" onclick="showAdminPanel()">
-                            <div class="action-icon-wrapper">
-                                <i data-lucide="settings" class="action-icon"></i>
-                            </div>
-                            <div class="action-content">
-                                <h3>Админ-панель</h3>
-                                <p>Отчеты и статистика</p>
-                            </div>
-                            <div class="action-arrow">
-                                <i data-lucide="chevron-right"></i>
-                            </div>
+                    </div>
+                    
+                    <div class="action-card help-card" onclick="showHelp()">
+                        <div class="action-icon-wrapper">
+                            <i data-lucide="help-circle" class="action-icon"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Помощь</h3>
+                            <p>Инструкции и поддержка</p>
+                        </div>
+                        <div class="action-arrow">
+                            <i data-lucide="chevron-right"></i>
                         </div>
                     </div>
                 </div>
