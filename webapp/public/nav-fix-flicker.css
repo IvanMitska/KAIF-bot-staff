@@ -1,0 +1,49 @@
+/* ===== ИСПРАВЛЕНИЕ МЕРЦАНИЯ НАВИГАЦИИ ===== */
+
+/* Предотвращение мерцания при переходах */
+.navigation {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+}
+
+/* Убираем анимации при переключении страниц */
+.page {
+    transition: none !important;
+}
+
+.page.active {
+    transition: none !important;
+}
+
+/* Фиксируем фон навигации */
+.navigation {
+    background-color: rgb(60, 40, 80) !important;
+    background-image: none !important;
+}
+
+/* Затем добавляем полупрозрачность */
+.navigation::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(60, 40, 80, 0.95) !important;
+    backdrop-filter: blur(20px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+    z-index: -1 !important;
+}
+
+/* Оптимизация производительности */
+.navigation,
+.navigation * {
+    will-change: auto !important;
+}
+
+/* Предзагрузка стилей навигации */
+.navigation {
+    contain: layout style paint !important;
+}

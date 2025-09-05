@@ -7,7 +7,7 @@
     right: 0 !important;
     width: 100% !important;
     transform: none !important;
-    background: rgba(60, 40, 80, 0.75) !important;
+    background: rgba(60, 40, 80, 0.95) !important;
     backdrop-filter: blur(20px) saturate(150%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
     border: none !important;
@@ -22,6 +22,8 @@
     box-shadow: 
         0 -2px 20px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    transition: none !important;
+    will-change: auto !important;
 }
 
 /* Легкий градиент поверх */
@@ -54,7 +56,7 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 2px !important;
-    transition: all 0.2s ease !important;
+    transition: color 0.2s ease, transform 0.2s ease !important;
     border-radius: 0 !important;
     z-index: 1 !important;
 }
