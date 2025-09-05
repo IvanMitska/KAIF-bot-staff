@@ -1,0 +1,460 @@
+/* ===== РЕДИЗАЙН DASHBOARD В СТИЛЕ LIQUID GLASS ===== */
+
+/* Контейнер Dashboard */
+#dashboardSection {
+    padding: 0 16px 24px !important;
+}
+
+/* Приветственная секция */
+.dashboard-welcome {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.15) 0%,
+                rgba(236, 72, 153, 0.15) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+    text-align: center !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.dashboard-welcome::before {
+    content: '✨' !important;
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    font-size: 24px !important;
+    animation: float 3s ease-in-out infinite !important;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.welcome-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-bottom: 8px !important;
+}
+
+.welcome-subtitle {
+    font-size: 14px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Секция активности */
+.activity-section {
+    margin-bottom: 32px !important;
+}
+
+.section-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 16px !important;
+    padding: 0 4px !important;
+}
+
+.section-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+}
+
+.section-title svg {
+    width: 20px !important;
+    height: 20px !important;
+    color: #a855f7 !important;
+}
+
+/* Селектор периода */
+.period-selector {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 14px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.period-selector:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: scale(1.02) !important;
+}
+
+.period-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.period-icon {
+    width: 16px !important;
+    height: 16px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* График активности */
+.activity-chart-container {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.08) 0%,
+                rgba(236, 72, 153, 0.08) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    margin-bottom: 24px !important;
+}
+
+.chart-legend {
+    display: flex !important;
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.legend-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.legend-dot {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+}
+
+.legend-dot.reports {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%) !important;
+}
+
+.legend-dot.tasks {
+    background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+}
+
+.legend-dot.hours {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+}
+
+.legend-label {
+    font-size: 13px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* График - бары */
+.chart-container {
+    position: relative !important;
+    height: 200px !important;
+    margin-bottom: 12px !important;
+}
+
+.chart-grid {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 30px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+.grid-line {
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    position: relative !important;
+}
+
+.grid-value {
+    position: absolute !important;
+    left: -30px !important;
+    top: -7px !important;
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.chart-bars-wrapper {
+    position: absolute !important;
+    bottom: 30px !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-around !important;
+    padding: 0 10px !important;
+}
+
+.bar-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex: 1 !important;
+    max-width: 50px !important;
+}
+
+.bar {
+    width: 100% !important;
+    background: linear-gradient(180deg,
+                rgba(139, 92, 246, 0.8) 0%,
+                rgba(236, 72, 153, 0.6) 100%) !important;
+    border-radius: 4px 4px 0 0 !important;
+    position: relative !important;
+    transition: all 0.3s !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+}
+
+.bar:hover {
+    background: linear-gradient(180deg,
+                rgba(139, 92, 246, 1) 0%,
+                rgba(236, 72, 153, 0.8) 100%) !important;
+    transform: translateY(-2px) !important;
+}
+
+.bar-value {
+    position: absolute !important;
+    top: -20px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s !important;
+}
+
+.bar:hover .bar-value {
+    opacity: 1 !important;
+}
+
+.bar-label {
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-top: 8px !important;
+}
+
+/* Карточки статистики - сетка 2x2 */
+.stats-grid-main {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+}
+
+.stat-card-main {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.1) 0%,
+                rgba(236, 72, 153, 0.1) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+.stat-card-main:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 
+        0 15px 40px rgba(139, 92, 246, 0.25),
+        0 10px 25px rgba(236, 72, 153, 0.2) !important;
+}
+
+.stat-card-main::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    right: -50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: radial-gradient(circle,
+                rgba(255, 255, 255, 0.1) 0%,
+                transparent 70%) !important;
+}
+
+.stat-card-icon {
+    width: 44px !important;
+    height: 44px !important;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+}
+
+.stat-card-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    color: white !important;
+}
+
+.stat-card-value {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    line-height: 1 !important;
+    margin-bottom: 8px !important;
+}
+
+.stat-card-label {
+    font-size: 13px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+.stat-card-trend {
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.trend-up {
+    color: #10b981 !important;
+}
+
+.trend-down {
+    color: #ef4444 !important;
+}
+
+.trend-icon {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Секция быстрых действий */
+.quick-actions-section {
+    margin-top: 32px !important;
+}
+
+.quick-actions-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+}
+
+.quick-action-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 16px !important;
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.08) 0%,
+                rgba(236, 72, 153, 0.08) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.quick-action-btn:hover {
+    background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.15) 0%,
+                rgba(236, 72, 153, 0.15) 100%) !important;
+    transform: scale(1.05) !important;
+    color: #fff !important;
+}
+
+.quick-action-icon {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Индикаторы статуса */
+.status-badges {
+    display: flex !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.status-badge {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.badge-icon {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.badge-trophy {
+    color: #fbbf24 !important;
+}
+
+.badge-status {
+    color: #10b981 !important;
+}
+
+/* Анимации загрузки */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0.05) 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.05) 100%) !important;
+    background-size: 200% 100% !important;
+    animation: shimmer 1.5s infinite !important;
+    border-radius: 12px !important;
+}
+
+/* Адаптивность */
+@media (max-width: 360px) {
+    .stats-grid-main {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card-value {
+        font-size: 28px !important;
+    }
+    
+    .chart-container {
+        height: 160px !important;
+    }
+}
