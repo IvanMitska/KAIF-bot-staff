@@ -16,9 +16,17 @@ class CacheServicePG {
     const isLocalhost = process.env.DATABASE_URL?.includes('localhost') || 
                        process.env.DATABASE_URL?.includes('127.0.0.1');
     
-    let sslConfig = false;
+    // Railway internal connections НИКОГДА не используют SSL
+    let sslConfig = null;
     
-    if (!isLocalhost && !isRailwayInternal && !isRailwayProxy) {
+    // Если это Railway internal URL - SSL должен быть выключен
+    if (isRailwayInternal) {
+      sslConfig = false; // Явно выключаем SSL для internal
+      console.log('🚂 Railway internal connection detected - SSL disabled');
+    } else if (isLocalhost || isRailwayProxy) {
+      sslConfig = false; // Также выключаем для localhost и proxy
+    } else {
+      // Для внешних подключений используем SSL
       sslConfig = { rejectUnauthorized: false };
     }
     
@@ -42,12 +50,27 @@ class CacheServicePG {
 
   async initialize() {
     try {
+      // Тестируем подключение
+      const testQuery = await this.pool.query('SELECT NOW()');
+      console.log('✅ PostgreSQL connection test passed:', testQuery.rows[0].now);
+      
+      // Создаем таблицы
       await this.createTables();
       console.log('✅ PostgreSQL cache connected on Railway');
+      
+      // Проверяем количество записей
+      try {
+        const countQuery = await this.pool.query('SELECT COUNT(*) FROM tasks');
+        console.log('📊 Tasks in database:', countQuery.rows[0].count);
+      } catch (e) {
+        console.log('📋 Tables created, no tasks yet');
+      }
+      
       return true;
     } catch (error) {
-      console.error('PostgreSQL init error:', error);
-      return false;
+      console.error('❌ PostgreSQL init error:', error.message);
+      console.error('Connection string:', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':***@') || 'NOT SET');
+      throw error; // Пробрасываем ошибку дальше
     }
   }
 

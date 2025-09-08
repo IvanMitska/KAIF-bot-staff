@@ -494,53 +494,65 @@ class RailwayOptimizedService {
     
     console.log(`🔍 Getting tasks for assignee: ${telegramId}, status: ${status || 'all'}`);
     
-    if (this.cache) {
+    // Если кэш недоступен, сразу используем Notion
+    if (!this.cache) {
+      console.log('⚠️ Cache not available, using direct Notion API');
       try {
-        const cached = await this.cache.getCachedTasksByAssignee(telegramId, status);
-        console.log(`📊 Found ${cached.length} tasks in PostgreSQL cache for ${telegramId}`);
-        
-        if (cached.length > 0) {
-          console.log(`✅ Returning ${cached.length} cached tasks`);
-          return cached;
-        }
-        
-        // Если нет в кэше, загружаем из Notion и кэшируем
-        console.log(`📥 No cached tasks found, loading from Notion for ${telegramId}...`);
         const tasks = await notionService.getTasksByAssignee(telegramId, status);
         console.log(`📝 Notion returned ${tasks.length} tasks`);
-        
-        // Кэшируем все задачи
-        for (const task of tasks) {
-          await this.cache.cacheTask({
-            ...task,
-            assigneeId: telegramId,
-            synced: true
-          });
-        }
-        
-        if (tasks.length > 0) {
-          console.log(`✅ Cached ${tasks.length} tasks from Notion`);
-        }
-        
-        return tasks;
-      } catch (error) {
-        console.error('❌ Error in getTasksByAssignee:', error.message);
-        console.error('Stack:', error.stack);
-        
-        // Пытаемся загрузить напрямую из Notion при ошибке кэша
-        try {
-          console.log('⚠️ Attempting direct Notion load...');
-          return await notionService.getTasksByAssignee(telegramId, status);
-        } catch (notionError) {
-          console.error('❌ Notion load also failed:', notionError.message);
-          return [];
-        }
+        return tasks || [];
+      } catch (notionError) {
+        console.error('❌ Notion API error:', notionError.message);
+        return [];
       }
     }
     
-    // Fallback на прямой Notion
-    console.log('⚠️ No cache available, using direct Notion');
-    return await notionService.getTasksByAssignee(telegramId, status);
+    // Пробуем использовать кэш
+    try {
+      const cached = await this.cache.getCachedTasksByAssignee(telegramId, status);
+      console.log(`📊 Found ${cached.length} tasks in PostgreSQL cache for ${telegramId}`);
+      
+      if (cached.length > 0) {
+        console.log(`✅ Returning ${cached.length} cached tasks`);
+        return cached;
+      }
+      
+      // Если нет в кэше, загружаем из Notion и кэшируем
+      console.log(`📥 No cached tasks found, loading from Notion for ${telegramId}...`);
+      const tasks = await notionService.getTasksByAssignee(telegramId, status);
+      console.log(`📝 Notion returned ${tasks.length} tasks`);
+      
+      // Пробуем кэшировать (но не падаем если не получится)
+      if (tasks.length > 0) {
+        try {
+          for (const task of tasks) {
+            await this.cache.cacheTask({
+              ...task,
+              assigneeId: telegramId,
+              synced: true
+            });
+          }
+          console.log(`✅ Cached ${tasks.length} tasks from Notion`);
+        } catch (cacheError) {
+          console.warn('⚠️ Could not cache tasks:', cacheError.message);
+        }
+      }
+      
+      return tasks || [];
+    } catch (error) {
+      console.error('❌ Cache error:', error.message);
+      
+      // При ошибке кэша всегда пытаемся загрузить из Notion
+      console.log('⚠️ Falling back to direct Notion API...');
+      try {
+        const tasks = await notionService.getTasksByAssignee(telegramId, status);
+        console.log(`📝 Notion fallback returned ${tasks?.length || 0} tasks`);
+        return tasks || [];
+      } catch (notionError) {
+        console.error('❌ Notion fallback also failed:', notionError.message);
+        return [];
+      }
+    }
   }
 
   async getTasksByCreator(telegramId) {
