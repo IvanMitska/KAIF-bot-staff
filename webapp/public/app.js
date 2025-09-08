@@ -7,8 +7,17 @@ tg.expand();
 console.log('Telegram WebApp initialized:', {
     initData: tg.initData ? 'Present' : 'Missing',
     initDataLength: tg.initData?.length || 0,
-    user: tg.initDataUnsafe?.user
+    user: tg.initDataUnsafe?.user,
+    platform: tg.platform,
+    version: tg.version
 });
+
+// Показываем отладочную информацию на странице (временно)
+if (!tg.initData) {
+    console.warn('⚠️ NO TELEGRAM INIT DATA DETECTED!');
+    console.log('Window location:', window.location.href);
+    console.log('Telegram WebApp object:', tg);
+}
 
 // Установка темы
 document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#0F0F14');
@@ -725,11 +734,41 @@ async function loadTasks() {
     `;
     
     try {
-        console.log('Loading tasks...');
+        console.log('=== LOADING TASKS ===');
         console.log('Task type:', currentTaskType);
         console.log('Init data available:', !!tg.initData);
+        console.log('Init data length:', tg.initData?.length || 0);
+        console.log('User from Telegram:', tg.initDataUnsafe?.user);
+        
+        // Если нет Telegram данных, пробуем загрузить в тестовом режиме
+        if (!tg.initData) {
+            console.warn('⚠️ No Telegram init data, trying fallback...');
+            
+            // В режиме разработки пытаемся загрузить без авторизации
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🔧 Development mode detected, trying to load without auth...');
+                // Продолжаем выполнение без initData
+            } else {
+                tasksList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                        <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                        <h3 style="margin-bottom: 8px;">Не удалось загрузить задачи</h3>
+                        <p>Приложение должно быть открыто через Telegram бота</p>
+                        <p style="margin-top: 16px; font-size: 14px;">
+                            Перейдите в бота <a href="https://t.me/Report_KAIF_bot" target="_blank">@Report_KAIF_bot</a> 
+                            и используйте кнопку "Открыть приложение"
+                        </p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+        }
         
         const endpoint = currentTaskType === 'my' ? '/api/tasks/my' : '/api/tasks/created';
+        
+        console.log('Fetching from:', `${API_URL}${endpoint}`);
+        console.log('Headers:', { 'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing' });
         
         const response = await fetch(`${API_URL}${endpoint}`, {
             headers: {
@@ -738,21 +777,43 @@ async function loadTasks() {
         });
         
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
         
         if (response.ok) {
             const tasks = await response.json();
-            console.log('Tasks loaded:', tasks.length);
+            console.log('✅ Tasks loaded successfully:', tasks.length);
+            console.log('First task:', tasks[0]);
             currentTasks = tasks; // Сохраняем задачи глобально
             displayTasks(tasks);
             updateTaskCounts(tasks);
         } else {
-            const error = await response.text();
-            console.error('Error response:', error);
-            tasksList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Ошибка: ${response.status}</p>`;
+            const errorText = await response.text();
+            console.error('❌ Error response:', response.status, errorText);
+            console.error('Full response:', response);
+            
+            if (response.status === 401) {
+                tasksList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                        <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                        <h3 style="margin-bottom: 8px;">Требуется авторизация</h3>
+                        <p>Откройте приложение через Telegram бота</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            } else {
+                tasksList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Ошибка: ${response.status}</p>`;
+            }
         }
     } catch (error) {
         console.error('Error loading tasks:', error);
-        tasksList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Ошибка загрузки задач</p>';
+        tasksList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                <i data-lucide="wifi-off" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                <h3 style="margin-bottom: 8px;">Ошибка подключения</h3>
+                <p>Не удалось загрузить задачи. Проверьте интернет-соединение.</p>
+            </div>
+        `;
+        lucide.createIcons();
     }
 }
 

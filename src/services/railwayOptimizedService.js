@@ -480,22 +480,28 @@ class RailwayOptimizedService {
   async getTasksByAssignee(telegramId, status = null) {
     await this.initialize();
     
+    console.log(`🔍 Getting tasks for assignee: ${telegramId}, status: ${status || 'all'}`);
+    
     if (this.cache) {
-      const cached = await this.cache.getCachedTasksByAssignee(telegramId, status);
-      if (cached.length > 0) {
-        console.log(`✅ Loaded ${cached.length} tasks from PostgreSQL cache for ${telegramId}`);
-        return cached;
-      }
-      
-      // Если нет в кэше, загружаем из Notion и кэшируем
       try {
-        console.log(`📥 Loading tasks from Notion for ${telegramId}...`);
+        const cached = await this.cache.getCachedTasksByAssignee(telegramId, status);
+        console.log(`📊 Found ${cached.length} tasks in PostgreSQL cache for ${telegramId}`);
+        
+        if (cached.length > 0) {
+          console.log(`✅ Returning ${cached.length} cached tasks`);
+          return cached;
+        }
+        
+        // Если нет в кэше, загружаем из Notion и кэшируем
+        console.log(`📥 No cached tasks found, loading from Notion for ${telegramId}...`);
         const tasks = await notionService.getTasksByAssignee(telegramId, status);
+        console.log(`📝 Notion returned ${tasks.length} tasks`);
         
         // Кэшируем все задачи
         for (const task of tasks) {
           await this.cache.cacheTask({
             ...task,
+            assigneeId: telegramId,
             synced: true
           });
         }
@@ -506,12 +512,22 @@ class RailwayOptimizedService {
         
         return tasks;
       } catch (error) {
-        console.error('Failed to load tasks from Notion:', error);
-        return [];
+        console.error('❌ Error in getTasksByAssignee:', error.message);
+        console.error('Stack:', error.stack);
+        
+        // Пытаемся загрузить напрямую из Notion при ошибке кэша
+        try {
+          console.log('⚠️ Attempting direct Notion load...');
+          return await notionService.getTasksByAssignee(telegramId, status);
+        } catch (notionError) {
+          console.error('❌ Notion load also failed:', notionError.message);
+          return [];
+        }
       }
     }
     
     // Fallback на прямой Notion
+    console.log('⚠️ No cache available, using direct Notion');
     return await notionService.getTasksByAssignee(telegramId, status);
   }
 
@@ -578,10 +594,69 @@ class RailwayOptimizedService {
 
   // Методы для отладки
   async debugGetAllTasks() {
+    await this.initialize();
+    
+    console.log('🔍 Debug: Getting all tasks...');
+    
+    if (this.cache) {
+      try {
+        // Получаем все задачи из кэша
+        const query = 'SELECT * FROM tasks ORDER BY created_date DESC LIMIT 10';
+        const result = await this.cache.pool.query(query);
+        
+        console.log(`📊 Total tasks in cache: ${result.rows.length}`);
+        
+        if (result.rows.length > 0) {
+          console.log('📝 Sample tasks from cache:');
+          result.rows.slice(0, 3).forEach(task => {
+            console.log(`  - ${task.title} (${task.status}) - Assignee: ${task.assignee_id}`);
+          });
+          
+          return result.rows.map(task => ({
+            id: task.id,
+            title: task.title,
+            status: task.status,
+            assigneeId: task.assignee_id,
+            assigneeName: task.assignee_name,
+            creatorId: task.creator_id
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Cache debug failed:', error.message);
+      }
+    }
+    
+    // Fallback to Notion
     return await notionService.debugGetAllTasks();
   }
 
   async testTasksDatabase() {
+    await this.initialize();
+    
+    console.log('🧪 Testing tasks database...');
+    
+    if (this.cache) {
+      try {
+        // Test database connection
+        const testQuery = await this.cache.pool.query('SELECT COUNT(*) as count FROM tasks');
+        console.log(`✅ Database connected. Total tasks: ${testQuery.rows[0].count}`);
+        
+        // Get unique assignees
+        const assigneesQuery = await this.cache.pool.query(
+          'SELECT DISTINCT assignee_id, assignee_name FROM tasks WHERE assignee_id IS NOT NULL'
+        );
+        console.log(`👥 Unique assignees: ${assigneesQuery.rows.length}`);
+        assigneesQuery.rows.slice(0, 3).forEach(a => {
+          console.log(`  - ${a.assignee_name} (${a.assignee_id})`);
+        });
+        
+        return true;
+      } catch (error) {
+        console.error('❌ Database test failed:', error.message);
+        return false;
+      }
+    }
+    
     return await notionService.testTasksDatabase();
   }
 

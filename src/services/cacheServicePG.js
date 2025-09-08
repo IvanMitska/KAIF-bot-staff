@@ -3,11 +3,15 @@ const { Pool } = require('pg');
 class CacheServicePG {
   constructor() {
     // Railway автоматически предоставляет DATABASE_URL
+    const sslConfig = process.env.DATABASE_URL?.includes('localhost') || 
+                      process.env.DATABASE_URL?.includes('127.0.0.1') || 
+                      process.env.DATABASE_URL?.includes('ballast.proxy.rlwy.net')
+                      ? false 
+                      : { rejectUnauthorized: false };
+    
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      ssl: sslConfig
     });
     console.log('Connecting to PostgreSQL cache...');
   }

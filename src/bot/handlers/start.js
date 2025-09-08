@@ -52,17 +52,34 @@ module.exports = (bot) => {
         // Отправляем приветствие с кнопкой Web App
         let webAppUrl = process.env.WEBAPP_URL;
         
-        // Автоматическое определение URL для Railway
-        if (!webAppUrl && process.env.RAILWAY_STATIC_URL) {
-          webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
-        } else if (!webAppUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
-          webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
-        } else if (!webAppUrl && process.env.RAILWAY_GIT_COMMIT_SHA) {
-          // Railway v2
-          webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
-        } else if (!webAppUrl) {
-          webAppUrl = 'http://localhost:3001';
+        // Проверяем, установлен ли WEBAPP_URL
+        if (!webAppUrl) {
+          console.warn('⚠️ WEBAPP_URL not set in environment!');
+          
+          // Автоматическое определение URL для Railway
+          if (process.env.RAILWAY_STATIC_URL) {
+            webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
+            console.log('Using RAILWAY_STATIC_URL:', webAppUrl);
+          } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+            webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+            console.log('Using RAILWAY_PUBLIC_DOMAIN:', webAppUrl);
+          } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
+            // Railway v2
+            webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
+            console.log('Using RAILWAY_DEPLOYMENT_NAME:', webAppUrl);
+          } else {
+            // Для локальной разработки используем правильный путь
+            webAppUrl = 'http://localhost:3000/webapp/public';
+            console.log('Using localhost fallback:', webAppUrl);
+          }
         }
+        
+        console.log('✅ Final WebApp URL:', webAppUrl);
+        console.log('Environment variables check:', {
+          WEBAPP_URL: process.env.WEBAPP_URL || 'NOT SET',
+          NODE_ENV: process.env.NODE_ENV || 'NOT SET',
+          RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT || 'NOT SET'
+        });
         
         await bot.sendMessage(chatId, 
           `С возвращением, ${existingUser.name}! 👋\n\n` +
