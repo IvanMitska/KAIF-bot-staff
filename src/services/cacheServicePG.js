@@ -207,6 +207,22 @@ class CacheServicePG {
     }));
   }
 
+  // Метод getAllUsers для совместимости с railwayOptimizedService
+  async getAllUsers() {
+    const query = `SELECT * FROM users ORDER BY name`;
+    const result = await this.pool.query(query);
+    
+    return result.rows.map(user => ({
+      id: user.notion_id,
+      telegramId: user.telegram_id,
+      name: user.name,
+      username: user.username,
+      position: user.position,
+      isActive: user.is_active,
+      registrationDate: user.registration_date
+    }));
+  }
+
   // ========== REPORTS ==========
   async cacheReport(reportData) {
     const reportId = reportData.id || `report-${Date.now()}`;

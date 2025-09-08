@@ -809,10 +809,14 @@ async function loadTasks() {
         console.log('Fetching from:', `${API_URL}${endpoint}`);
         console.log('Headers:', { 'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing' });
         
+        // Создаем заголовки в зависимости от наличия initData
+        const headers = {};
+        if (tg.initData) {
+            headers['X-Telegram-Init-Data'] = tg.initData;
+        }
+        
         const response = await fetch(`${API_URL}${endpoint}`, {
-            headers: {
-                'X-Telegram-Init-Data': tg.initData
-            }
+            headers: headers
         });
         
         console.log('Response status:', response.status);
@@ -852,18 +856,34 @@ async function loadTasks() {
             console.error('Full response:', response);
             
             // Показываем детальную информацию об ошибке
+            let errorMessage = 'Неизвестная ошибка';
+            let errorDetails = errorText;
+            
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.error || errorJson.message || errorMessage;
+                errorDetails = errorJson.details || errorText;
+            } catch (e) {
+                // Если не JSON, используем как есть
+            }
+            
             tasksList.innerHTML = `
                 <div style="text-align: center; padding: 20px; background: rgba(255,0,0,0.1); border-radius: 8px; margin: 20px;">
                     <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px; color: red;"></i>
-                    <h3 style="margin-bottom: 8px; color: red;">Ошибка ${response.status}</h3>
+                    <h3 style="margin-bottom: 8px; color: red;">Не удалось загрузить задачи</h3>
+                    <p style="margin: 10px 0;">${errorMessage}</p>
                     <div style="font-size: 12px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <div><b>Статус:</b> ${response.status}</div>
                         <div><b>URL:</b> ${API_URL}${endpoint}</div>
                         <div><b>InitData:</b> ${tg.initData ? 'Present' : 'Missing'}</div>
                         <div><b>User ID:</b> ${tg.initDataUnsafe?.user?.id || 'Unknown'}</div>
-                        <div><b>Error:</b> ${errorText.substring(0, 200)}</div>
+                        <div><b>Детали:</b> ${errorDetails.substring(0, 200)}</div>
                     </div>
                     <button onclick="loadTasks()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px;">
                         Попробовать снова
+                    </button>
+                    <button onclick="testDatabaseConnection()" style="margin-top: 10px; margin-left: 10px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px;">
+                        Тест базы данных
                     </button>
                 </div>
             `;
