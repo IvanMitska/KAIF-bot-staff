@@ -2,7 +2,6 @@
 
 // Ждем загрузки основного app.js
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Applying critical fixes...');
     
     // Проверяем Telegram WebApp
     const tg = window.Telegram?.WebApp;
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Исправляем загрузку профиля
     const originalLoadProfile = window.loadProfile;
     window.loadProfile = async function() {
-        console.log('Loading profile with fix...');
         try {
             const response = await fetch(`${API_URL}/api/profile`, {
                 headers: {
@@ -24,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (response.ok) {
                 const userData = await response.json();
-                console.log('Profile loaded:', userData);
                 
                 // Обновляем UI
                 document.getElementById('profileName').textContent = userData.name || 'Не указано';
@@ -54,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Исправляем загрузку задач
     const originalLoadTasks = window.loadTasks;
     window.loadTasks = async function() {
-        console.log('Loading tasks with fix...');
         const tasksList = document.getElementById('tasksList');
         if (!tasksList) return;
         
@@ -75,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (response.ok) {
                 const tasks = await response.json();
-                console.log(`Loaded ${tasks.length} tasks`);
                 
                 // Сохраняем задачи глобально
                 window.currentTasks = tasks;
@@ -230,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Обновление статуса задачи
     window.updateTaskStatus = async function(taskId, newStatus) {
-        console.log(`Updating task ${taskId} to ${newStatus}`);
         try {
             const response = await fetch(`${API_URL}/api/tasks/${taskId}/status`, {
                 method: 'PUT',
@@ -264,8 +258,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.showTaskDetails = function(taskId) {
         const task = currentTasks.find(t => t.id === taskId);
         if (!task) return;
-        
-        console.log('Showing task details:', task);
         
         // Создаем модальное окно
         const modal = document.createElement('div');
@@ -384,7 +376,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Исправляем загрузку сотрудников
     const originalLoadEmployees = window.loadEmployees;
     window.loadEmployees = async function() {
-        console.log('Loading employees with fix...');
         const employeesList = document.getElementById('employeesList');
         
         if (!employeesList) {
@@ -405,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (response.ok) {
                 const employees = await response.json();
-                console.log(`Loaded ${employees.length} employees`);
                 
                 if (employees.length === 0) {
                     employeesList.innerHTML = `
@@ -460,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Автоматически загружаем профиль при старте
     if (typeof loadProfile === 'function') {
         setTimeout(() => {
-            console.log('Auto-loading profile...');
             loadProfile();
         }, 100);
     }
@@ -468,12 +457,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Автоматически загружаем задачи если на странице задач
     if (document.getElementById('tasks')?.classList.contains('active')) {
         setTimeout(() => {
-            console.log('Auto-loading tasks...');
             loadTasks();
         }, 200);
     }
     
-    console.log('✅ All fixes applied successfully');
 });
 
 // CSS для исправлений
@@ -831,5 +818,3 @@ fixStyles.textContent = `
     }
 `;
 document.head.appendChild(fixStyles);
-
-console.log('Fix-all script loaded');

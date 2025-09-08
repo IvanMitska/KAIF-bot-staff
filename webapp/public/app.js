@@ -3,48 +3,17 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Проверка initData
-console.log('Telegram WebApp initialized:', {
-    initData: tg.initData ? 'Present' : 'Missing',
-    initDataLength: tg.initData?.length || 0,
-    user: tg.initDataUnsafe?.user,
-    platform: tg.platform,
-    version: tg.version
-});
+// Проверка initData только в dev режиме
+if (window.location.hostname === 'localhost') {
+    console.log('Telegram WebApp initialized:', {
+        initData: tg.initData ? 'Present' : 'Missing',
+        platform: tg.platform
+    });
+}
 
-// Показываем отладочную информацию на странице (временно)
-if (!tg.initData) {
-    console.warn('⚠️ NO TELEGRAM INIT DATA DETECTED!');
-    console.log('Window location:', window.location.href);
-    console.log('Telegram WebApp object:', tg);
-    
-    // Добавляем отладочную панель на страницу
-    setTimeout(() => {
-        const debugPanel = document.createElement('div');
-        debugPanel.id = 'debug-panel';
-        debugPanel.style.cssText = `
-            position: fixed;
-            bottom: 70px;
-            left: 10px;
-            right: 10px;
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid red;
-            padding: 10px;
-            font-size: 12px;
-            z-index: 9999;
-            max-height: 200px;
-            overflow-y: auto;
-        `;
-        debugPanel.innerHTML = `
-            <div style="color: red; font-weight: bold;">🔴 DEBUG INFO:</div>
-            <div>InitData: ${tg.initData ? 'YES' : 'NO'}</div>
-            <div>Platform: ${tg.platform || 'unknown'}</div>
-            <div>Version: ${tg.version || 'unknown'}</div>
-            <div>URL: ${window.location.href}</div>
-            <div>Origin: ${window.location.origin}</div>
-        `;
-        document.body.appendChild(debugPanel);
-    }, 1000);
+// Убираем отладочную панель из продакшна
+if (!tg.initData && window.location.hostname === 'localhost') {
+    console.warn('⚠️ NO TELEGRAM INIT DATA DETECTED (dev mode)');
 }
 
 // Установка темы
