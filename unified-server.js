@@ -831,6 +831,56 @@ app.get('/api/debug/db-test', async (req, res) => {
   }
 });
 
+// НОВЫЙ: Прямой тест PostgreSQL
+app.get('/api/debug/postgres-direct', async (req, res) => {
+  const postgresService = require('./src/services/postgresService');
+  
+  console.log('🔵 Direct PostgreSQL test');
+  
+  try {
+    // 1. Тест подключения
+    const connected = await postgresService.testConnection();
+    console.log('Connection test:', connected);
+    
+    // 2. Получаем статистику
+    const stats = await postgresService.getStats();
+    console.log('Stats:', stats);
+    
+    // 3. Получаем задачи для тестового пользователя
+    const tasks = await postgresService.getTasksByAssignee('1734337242');
+    console.log('Tasks found:', tasks.length);
+    
+    // 4. Получаем всех пользователей
+    const allTasks = await postgresService.getAllTasks();
+    
+    res.json({
+      success: true,
+      connection: connected,
+      stats: stats,
+      test: {
+        userId: '1734337242',
+        tasksFound: tasks.length,
+        firstTask: tasks[0] || null,
+        totalTasksInDB: allTasks.length
+      },
+      database: {
+        url: process.env.DATABASE_URL ? 'Present' : 'Missing',
+        isInternal: process.env.DATABASE_URL?.includes('.railway.internal')
+      }
+    });
+  } catch (error) {
+    console.error('❌ PostgreSQL direct test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      database: {
+        url: process.env.DATABASE_URL ? 'Present' : 'Missing'
+      }
+    });
+  }
+});
+
 // Status endpoint
 app.get('/status', (req, res) => {
   res.json({ 
