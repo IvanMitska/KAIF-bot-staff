@@ -298,6 +298,21 @@
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Загрузка задач...</p>
                 </div>
+                <!-- Кнопка для принудительной загрузки -->
+                <div style="text-align: center; padding: 20px; display: none;" id="tasksErrorContainer">
+                    <button onclick="forceLoadTasks()" style="
+                        padding: 12px 24px;
+                        background: var(--primary-color, #667eea);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 500;
+                    ">
+                        🔄 Загрузить задачи
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -1294,6 +1309,7 @@
     <script src="telegram-fix.js"></script>
     <script src="employees-fix.js"></script>
     <script src="tasks-fix.js"></script>
+    <script src="force-tasks-load.js"></script>
     <script src="admin-data-fix.js"></script>
     <script src="calendar-fix.js"></script>
     
