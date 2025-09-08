@@ -10,6 +10,13 @@ class RailwayOptimizedService {
   async initialize() {
     if (this.initialized) return;
     
+    console.log('🔍 Initializing Railway Service...');
+    console.log('Environment check:', {
+      HAS_DATABASE_URL: !!process.env.DATABASE_URL,
+      NODE_ENV: process.env.NODE_ENV,
+      RAILWAY_ENV: process.env.RAILWAY_ENVIRONMENT
+    });
+    
     try {
       // Проверяем наличие DATABASE_URL для Railway
       if (process.env.DATABASE_URL) {
@@ -21,8 +28,12 @@ class RailwayOptimizedService {
         console.log('✅ Railway PostgreSQL connected successfully!');
         
         // Показываем статистику при подключении
-        const stats = await this.cache.getCacheStats();
-        console.log('📊 Database stats:', stats);
+        try {
+          const stats = await this.cache.getCacheStats();
+          console.log('📊 Database stats:', stats);
+        } catch (statsError) {
+          console.warn('⚠️ Could not get cache stats:', statsError.message);
+        }
       } else {
         // Нет DATABASE_URL - используем прямые Notion вызовы
         console.log('⚠️ DATABASE_URL not configured');
@@ -36,6 +47,7 @@ class RailwayOptimizedService {
       }
     } catch (error) {
       console.error('❌ PostgreSQL connection failed:', error.message);
+      console.error('Error details:', error);
       console.log('⚠️ Falling back to direct Notion API calls');
       this.cache = null;
       this.initialized = true;

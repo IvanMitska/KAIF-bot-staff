@@ -771,6 +771,66 @@ app.get('/api/debug/info', async (req, res) => {
   }
 });
 
+// Тестовый эндпоинт для проверки БД
+app.get('/api/debug/db-test', async (req, res) => {
+  console.log('🧪 Database test requested');
+  
+  try {
+    // 1. Проверяем инициализацию
+    await railwayService.initialize();
+    console.log('✅ Service initialized');
+    
+    // 2. Проверяем подключение к БД
+    const stats = await railwayService.getStats();
+    console.log('📊 DB Stats:', stats);
+    
+    // 3. Пробуем получить задачи напрямую
+    const testUserId = '1734337242'; // Ivan
+    const tasks = await railwayService.getTasksByAssignee(testUserId);
+    console.log(`📋 Found ${tasks.length} tasks for user ${testUserId}`);
+    
+    // 4. Проверяем кэш сервис напрямую
+    let cacheStatus = 'Not initialized';
+    if (railwayService.cache) {
+      try {
+        const cacheStats = await railwayService.cache.getCacheStats();
+        cacheStatus = `Connected (${cacheStats.tasks} tasks)`;
+      } catch (e) {
+        cacheStatus = `Error: ${e.message}`;
+      }
+    }
+    
+    res.json({
+      success: true,
+      database: {
+        initialized: railwayService.initialized,
+        cacheStatus: cacheStatus,
+        stats: stats
+      },
+      testData: {
+        userId: testUserId,
+        tasksFound: tasks.length,
+        firstTask: tasks[0] || null
+      },
+      environment: {
+        DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
+        NODE_ENV: process.env.NODE_ENV || 'Not set'
+      }
+    });
+  } catch (error) {
+    console.error('❌ DB Test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      database: {
+        initialized: railwayService.initialized,
+        hasCache: !!railwayService.cache
+      }
+    });
+  }
+});
+
 // Status endpoint
 app.get('/status', (req, res) => {
   res.json({ 

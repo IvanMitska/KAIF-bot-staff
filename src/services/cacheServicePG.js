@@ -3,16 +3,40 @@ const { Pool } = require('pg');
 class CacheServicePG {
   constructor() {
     // Railway автоматически предоставляет DATABASE_URL
-    const sslConfig = process.env.DATABASE_URL?.includes('localhost') || 
-                      process.env.DATABASE_URL?.includes('127.0.0.1') || 
-                      process.env.DATABASE_URL?.includes('ballast.proxy.rlwy.net')
-                      ? false 
-                      : { rejectUnauthorized: false };
+    console.log('🔧 CacheServicePG initializing...');
+    console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
+    
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is not set!');
+    }
+    
+    // Railway internal URLs не требуют SSL
+    const isRailwayInternal = process.env.DATABASE_URL?.includes('.railway.internal');
+    const isRailwayProxy = process.env.DATABASE_URL?.includes('ballast.proxy.rlwy.net');
+    const isLocalhost = process.env.DATABASE_URL?.includes('localhost') || 
+                       process.env.DATABASE_URL?.includes('127.0.0.1');
+    
+    let sslConfig = false;
+    
+    if (!isLocalhost && !isRailwayInternal && !isRailwayProxy) {
+      sslConfig = { rejectUnauthorized: false };
+    }
+    
+    console.log('SSL Config:', {
+      isRailwayInternal,
+      isRailwayProxy,
+      isLocalhost,
+      sslEnabled: !!sslConfig
+    });
     
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: sslConfig
+      ssl: sslConfig,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+      max: 20
     });
+    
     console.log('Connecting to PostgreSQL cache...');
   }
 
