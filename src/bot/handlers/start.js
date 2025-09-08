@@ -20,24 +20,7 @@ module.exports = (bot) => {
     const userId = msg.from.id;
     const username = msg.from.username || '';
     
-    // Проверка авторизации
-    if (!security.isUserAuthorized(userId)) {
-      security.secureLog('Unauthorized access attempt', { userId });
-      await bot.sendMessage(chatId, 
-        '🚫 Извините, вы не авторизованы для использования этого бота.\n\n' +
-        'Обратитесь к администратору для получения доступа.'
-      );
-      return;
-    }
-    
-    // Проверка rate limit
-    const rateLimit = security.checkRateLimit(userId, 'start', 5, 300000); // 5 раз за 5 минут
-    if (!rateLimit.allowed) {
-      await bot.sendMessage(chatId, 
-        `⏳ Слишком много попыток. Попробуйте через ${rateLimit.resetIn} секунд.`
-      );
-      return;
-    }
+    // Убираем все проверки - бот доступен всем
     
     try {
       console.log('Checking for existing user with ID:', userId);
