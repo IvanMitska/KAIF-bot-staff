@@ -881,6 +881,43 @@ app.get('/api/debug/postgres-direct', async (req, res) => {
   }
 });
 
+// Эндпоинт для активации всех пользователей
+app.get('/api/debug/activate-users', async (req, res) => {
+  const postgresService = require('./src/services/postgresService');
+  
+  console.log('🔄 Activating all users...');
+  
+  try {
+    await postgresService.initialize();
+    
+    // Активируем всех пользователей
+    const updateQuery = `UPDATE users SET is_active = true WHERE is_active = false OR is_active IS NULL`;
+    const result = await postgresService.pool.query(updateQuery);
+    console.log(`✅ Activated ${result.rowCount} users`);
+    
+    // Получаем обновленный список
+    const users = await postgresService.pool.query('SELECT telegram_id, name, position, is_active FROM users ORDER BY name');
+    
+    res.json({
+      success: true,
+      activated: result.rowCount,
+      totalUsers: users.rows.length,
+      users: users.rows.map(u => ({
+        name: u.name,
+        telegramId: u.telegram_id,
+        position: u.position,
+        active: u.is_active
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Failed to activate users:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Status endpoint
 app.get('/status', (req, res) => {
   res.json({ 
