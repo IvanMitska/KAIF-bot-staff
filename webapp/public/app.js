@@ -54,6 +54,19 @@ document.documentElement.style.setProperty('--tg-theme-text-color', tg.themePara
 // API URL
 const API_URL = window.location.origin;
 
+// Проверяем, есть ли параметр test в URL
+const urlParams = new URLSearchParams(window.location.search);
+const isTestMode = urlParams.has('test') || window.location.search.includes('test=');
+
+// Если мы в тестовом режиме и нет Telegram данных, добавляем параметр test к API запросам
+function getApiUrl(endpoint) {
+    if (isTestMode && !tg.initData) {
+        const separator = endpoint.includes('?') ? '&' : '?';
+        return `${API_URL}${endpoint}${separator}test=1`;
+    }
+    return `${API_URL}${endpoint}`;
+}
+
 // Функция показа уведомлений
 function showNotification(message, type = 'info') {
     console.log(`Notification [${type}]:`, message);

@@ -76,9 +76,10 @@ const authMiddleware = (req, res, next) => {
     userAgent: req.headers['user-agent']?.substring(0, 50)
   });
   
-  // В режиме разработки разрешаем тестовый доступ
-  if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) && !initData) {
-    console.log('⚠️ Dev mode: Allowing test access without Telegram auth');
+  // В режиме разработки или при наличии test параметра разрешаем тестовый доступ
+  const isTestMode = req.headers.referer?.includes('test=') || req.query?.test;
+  if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV || isTestMode) && !initData) {
+    console.log('⚠️ Test mode: Allowing test access without Telegram auth');
     // Используем тестового пользователя
     req.telegramUser = {
       id: 1734337242, // ID Ивана для тестирования
@@ -741,6 +742,20 @@ app.get('/health', (req, res) => {
     status: 'OK',
     service: 'unified-server',
     timestamp: new Date() 
+  });
+});
+
+// Эндпоинт для включения тестового режима
+app.get('/api/test-mode', (req, res) => {
+  res.json({
+    testMode: true,
+    message: 'Test mode enabled. You can now access the app without Telegram auth.',
+    testUser: {
+      id: 1734337242,
+      name: 'Test User (Ivan)',
+      position: 'Программист'
+    },
+    hint: 'Add ?test=1 to any API endpoint to use test mode'
   });
 });
 
