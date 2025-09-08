@@ -488,16 +488,24 @@ app.get('/api/employees', authMiddleware, async (req, res) => {
     const MANAGER_IDS = [385436658, 1734337242];
     const userId = parseInt(req.telegramUser.id);
     
+    console.log('📋 Getting employees for user:', userId);
+    
     if (!MANAGER_IDS.includes(userId)) {
+      console.log('❌ Access denied for user:', userId);
       return res.status(403).json({ error: 'Доступ запрещен' });
     }
     
+    console.log('✅ User authorized, fetching employees...');
+    console.log('Railway service initialized:', railwayService.initialized);
+    
     const users = await railwayService.getAllActiveUsers();
-    console.log(`👥 Found ${users.length} active employees`);
+    console.log(`👥 Found ${users?.length || 0} active employees`);
+    
     res.json(users || []);
   } catch (error) {
-    console.error('Employees error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Employees API error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 
@@ -974,7 +982,26 @@ app.get('/api/debug/status', async (req, res) => {
   }
 });
 
-// Эндпоинт для активации всех пользователей
+// Эндпоинт для прямого получения пользователей из БД
+app.get('/api/debug/users', async (req, res) => {
+  const databasePool = require('./src/services/databasePool');
+  
+  try {
+    const pool = await databasePool.getPool();
+    const result = await pool.query('SELECT * FROM users ORDER BY name');
+    
+    res.json({
+      count: result.rows.length,
+      users: result.rows,
+      railwayServiceInit: railwayService.initialized,
+      cacheAvailable: !!railwayService.cache
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Эндпоинт для активации всех пользователей  
 app.get('/api/debug/activate-users', async (req, res) => {
   const postgresService = require('./src/services/postgresService');
   
