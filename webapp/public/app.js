@@ -819,12 +819,33 @@ async function loadTasks() {
         console.log('Response headers:', response.headers);
         
         if (response.ok) {
-            const tasks = await response.json();
-            console.log('✅ Tasks loaded successfully:', tasks.length);
-            console.log('First task:', tasks[0]);
+            let tasks;
+            try {
+                tasks = await response.json();
+            } catch (jsonError) {
+                console.error('❌ Failed to parse JSON:', jsonError);
+                tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: неверный формат ответа от сервера</p>';
+                return;
+            }
+            
+            console.log('✅ Tasks loaded successfully:', tasks?.length || 0);
+            console.log('First task:', tasks?.[0]);
+            
+            if (!tasks || !Array.isArray(tasks)) {
+                console.error('❌ Invalid tasks data:', tasks);
+                tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: получены некорректные данные</p>';
+                return;
+            }
+            
             currentTasks = tasks; // Сохраняем задачи глобально
             displayTasks(tasks);
-            updateTaskCounts(tasks);
+            
+            // Проверяем существование функции updateTaskCounts
+            if (typeof updateTaskCounts === 'function') {
+                updateTaskCounts(tasks);
+            } else {
+                console.warn('⚠️ updateTaskCounts function not found');
+            }
         } else {
             const errorText = await response.text();
             console.error('❌ Error response:', response.status, errorText);
@@ -861,9 +882,31 @@ async function loadTasks() {
     }
 }
 
+// Функция открытия деталей задачи
+function openTaskDetail(taskId) {
+    console.log('Opening task detail:', taskId);
+    const task = currentTasks.find(t => t.id === taskId);
+    if (task) {
+        showTaskModal(task);
+    }
+}
+
 // Отображение задач
 function displayTasks(tasks) {
+    console.log('📋 displayTasks called with', tasks?.length || 0, 'tasks');
+    
     const tasksList = document.getElementById('tasksList');
+    if (!tasksList) {
+        console.error('❌ tasksList element not found!');
+        return;
+    }
+    
+    // Проверяем, что tasks это массив
+    if (!Array.isArray(tasks)) {
+        console.error('❌ tasks is not an array:', tasks);
+        tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: неверный формат данных</p>';
+        return;
+    }
     
     // Фильтрация задач
     let filteredTasks = tasks;
@@ -875,6 +918,8 @@ function displayTasks(tasks) {
         };
         filteredTasks = tasks.filter(task => task.status === statusMap[currentFilter]);
     }
+    
+    console.log('📋 Filtered tasks:', filteredTasks.length);
     
     if (filteredTasks.length === 0) {
         tasksList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Нет задач</p>';
@@ -895,7 +940,7 @@ function displayTasks(tasks) {
         const statusColor = statusColors[statusClass];
         
         return `
-            <div class="task-item-modern" onclick="openTaskDetail('${task.id}')" 
+            <div class="task-item-modern" 
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
