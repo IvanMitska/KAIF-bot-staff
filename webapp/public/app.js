@@ -17,6 +17,34 @@ if (!tg.initData) {
     console.warn('⚠️ NO TELEGRAM INIT DATA DETECTED!');
     console.log('Window location:', window.location.href);
     console.log('Telegram WebApp object:', tg);
+    
+    // Добавляем отладочную панель на страницу
+    setTimeout(() => {
+        const debugPanel = document.createElement('div');
+        debugPanel.id = 'debug-panel';
+        debugPanel.style.cssText = `
+            position: fixed;
+            bottom: 70px;
+            left: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid red;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 9999;
+            max-height: 200px;
+            overflow-y: auto;
+        `;
+        debugPanel.innerHTML = `
+            <div style="color: red; font-weight: bold;">🔴 DEBUG INFO:</div>
+            <div>InitData: ${tg.initData ? 'YES' : 'NO'}</div>
+            <div>Platform: ${tg.platform || 'unknown'}</div>
+            <div>Version: ${tg.version || 'unknown'}</div>
+            <div>URL: ${window.location.href}</div>
+            <div>Origin: ${window.location.origin}</div>
+        `;
+        document.body.appendChild(debugPanel);
+    }, 1000);
 }
 
 // Установка темы
@@ -726,7 +754,18 @@ function switchTaskType(type) {
 // Загрузка задач
 async function loadTasks() {
     const tasksList = document.getElementById('tasksList');
-    tasksList.innerHTML = `
+    
+    // Добавляем отладочную информацию прямо в интерфейс
+    const debugInfo = `
+        <div style="background: rgba(255,255,0,0.1); padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 12px;">
+            <div>🔍 Debug Mode</div>
+            <div>InitData: ${tg.initData ? '✅ Present' : '❌ Missing'}</div>
+            <div>User: ${tg.initDataUnsafe?.user?.first_name || 'Unknown'}</div>
+            <div>Platform: ${tg.platform || 'Unknown'}</div>
+        </div>
+    `;
+    
+    tasksList.innerHTML = debugInfo + `
         <div class="loading">
             <div class="spinner"></div>
             <p style="margin-top: 16px;">Загрузка задач...</p>
@@ -791,18 +830,23 @@ async function loadTasks() {
             console.error('❌ Error response:', response.status, errorText);
             console.error('Full response:', response);
             
-            if (response.status === 401) {
-                tasksList.innerHTML = `
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                        <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
-                        <h3 style="margin-bottom: 8px;">Требуется авторизация</h3>
-                        <p>Откройте приложение через Telegram бота</p>
+            // Показываем детальную информацию об ошибке
+            tasksList.innerHTML = `
+                <div style="text-align: center; padding: 20px; background: rgba(255,0,0,0.1); border-radius: 8px; margin: 20px;">
+                    <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px; color: red;"></i>
+                    <h3 style="margin-bottom: 8px; color: red;">Ошибка ${response.status}</h3>
+                    <div style="font-size: 12px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <div><b>URL:</b> ${API_URL}${endpoint}</div>
+                        <div><b>InitData:</b> ${tg.initData ? 'Present' : 'Missing'}</div>
+                        <div><b>User ID:</b> ${tg.initDataUnsafe?.user?.id || 'Unknown'}</div>
+                        <div><b>Error:</b> ${errorText.substring(0, 200)}</div>
                     </div>
-                `;
-                lucide.createIcons();
-            } else {
-                tasksList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Ошибка: ${response.status}</p>`;
-            }
+                    <button onclick="loadTasks()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px;">
+                        Попробовать снова
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
         }
     } catch (error) {
         console.error('Error loading tasks:', error);
