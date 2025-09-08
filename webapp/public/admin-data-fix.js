@@ -1,22 +1,74 @@
 // ===== ИСПРАВЛЕНИЕ ЗАГРУЗКИ РЕАЛЬНЫХ ДАННЫХ В АДМИН-ПАНЕЛИ =====
 
+// Получаем Telegram WebApp и API URL
+const tg = window.Telegram?.WebApp;
+const API_URL = window.location.origin;
+
 // Переопределяем функцию загрузки dashboard с реальными данными
 async function loadDashboard() {
+    console.log('🔄 Loading dashboard data...');
+    
+    // Скрываем сообщение об ошибке
+    const errorOverlay = document.querySelector('.error-overlay');
+    if (errorOverlay) {
+        errorOverlay.style.display = 'none';
+    }
+    
     try {
-        console.log('Loading real dashboard data...');
+        // Определяем параметры запроса
+        const headers = {};
+        let testParam = '';
         
-        // Загружаем реальные данные из API с правильными эндпоинтами
-        const headers = tg.initData ? { 'X-Telegram-Init-Data': tg.initData } : {};
-        const testParam = !tg.initData ? '?test=1' : '';
+        if (tg && tg.initData) {
+            headers['X-Telegram-Init-Data'] = tg.initData;
+        } else {
+            testParam = '?test=1';
+        }
         
-        const [statsRes, reportsRes, attendanceRes] = await Promise.all([
-            // Общая статистика
-            fetch(`${API_URL}/api/admin/dashboard/stats${testParam}`, { headers }),
-            // Отчеты 
-            fetch(`${API_URL}/api/admin/reports${testParam}`, { headers }),
-            // Присутствие
-            fetch(`${API_URL}/api/admin/attendance${testParam}`, { headers })
-        ]);
+        console.log('📡 Fetching from:', `${API_URL}/api/admin/dashboard/stats${testParam}`);
+        console.log('Headers:', headers);
+        
+        // Делаем запросы по одному для лучшей отладки
+        let statsRes, reportsRes, attendanceRes;
+        
+        try {
+            statsRes = await fetch(`${API_URL}/api/admin/dashboard/stats${testParam}`, { 
+                headers,
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'same-origin'
+            });
+            console.log('Stats response:', statsRes.status, statsRes.ok);
+        } catch (err) {
+            console.error('Stats fetch error:', err);
+            statsRes = { ok: false };
+        }
+        
+        try {
+            reportsRes = await fetch(`${API_URL}/api/admin/reports${testParam}`, { 
+                headers,
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'same-origin'
+            });
+            console.log('Reports response:', reportsRes.status, reportsRes.ok);
+        } catch (err) {
+            console.error('Reports fetch error:', err);
+            reportsRes = { ok: false };
+        }
+        
+        try {
+            attendanceRes = await fetch(`${API_URL}/api/admin/attendance${testParam}`, { 
+                headers,
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'same-origin'
+            });
+            console.log('Attendance response:', attendanceRes.status, attendanceRes.ok);
+        } catch (err) {
+            console.error('Attendance fetch error:', err);
+            attendanceRes = { ok: false };
+        }
 
         // Обработка общей статистики
         if (statsRes.ok) {
@@ -99,9 +151,17 @@ async function loadDashboard() {
         loadRealTopEmployees();
         
     } catch (error) {
-        console.error('Error loading real dashboard data:', error);
+        console.error('❌ Error loading dashboard data:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            API_URL: API_URL
+        });
         
-        // Если произошла ошибка, загружаем данные из локального хранилища или показываем нули
+        // Показываем сообщение об ошибке пользователю
+        showErrorMessage('Не удалось загрузить данные. Проверьте подключение к интернету.');
+        
+        // Загружаем резервные данные
         loadFallbackDashboard();
     }
 }
@@ -286,6 +346,34 @@ function stopDashboardAutoUpdate() {
     if (dashboardUpdateInterval) {
         clearInterval(dashboardUpdateInterval);
         dashboardUpdateInterval = null;
+    }
+}
+
+// Функция показа сообщения об ошибке
+function showErrorMessage(message) {
+    // Создаем элемент для сообщения об ошибке
+    const errorElement = document.createElement('div');
+    errorElement.className = 'dashboard-error-message';
+    errorElement.style.cssText = `
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        padding: 16px;
+        border-radius: 12px;
+        margin: 20px;
+        text-align: center;
+        font-size: 14px;
+    `;
+    errorElement.textContent = message;
+    
+    // Вставляем в начало dashboard content
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (dashboardContent) {
+        const existingError = dashboardContent.querySelector('.dashboard-error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        dashboardContent.insertBefore(errorElement, dashboardContent.firstChild);
     }
 }
 
