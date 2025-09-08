@@ -120,13 +120,25 @@ class RailwayOptimizedService {
   async createReport(reportData) {
     await this.initialize();
     
-    const tempId = `report-${Date.now()}`;
-    const reportWithId = { ...reportData, id: tempId, synced: false };
+    // Проверяем, нет ли уже отчета за сегодня
+    const today = new Date().toISOString().split('T')[0];
+    if (this.cache) {
+      const existingReport = await this.cache.getCachedTodayReport(reportData.telegramId);
+      if (existingReport) {
+        console.log(`⚠️ Report for today already exists for user ${reportData.telegramId}`);
+        // Обновляем существующий отчет вместо создания нового
+        return { id: existingReport.id, ...reportData };
+      }
+    }
+    
+    // Генерируем финальный ID сразу
+    const reportId = `report-${reportData.telegramId}-${today}-${Date.now()}`;
+    const reportWithId = { ...reportData, id: reportId, synced: false };
     
     if (this.cache) {
-      // Мгновенно сохраняем в кэш
+      // Сохраняем в кэш только один раз
       await this.cache.cacheReport(reportWithId);
-      console.log(`✅ Report saved to PostgreSQL cache: ${tempId}`);
+      console.log(`✅ Report saved to PostgreSQL cache: ${reportId}`);
     }
     
     // Создаем в Notion в фоне
@@ -134,17 +146,12 @@ class RailwayOptimizedService {
       const notionReport = await notionService.createReport(reportData);
       
       if (this.cache && notionReport.id) {
-        // Обновляем кэш с реальным ID
-        await this.cache.cacheReport({
-          ...reportData,
-          id: notionReport.id,
-          synced: true
-        });
-        // Удаляем временную запись если нужно
-        await this.cache.markReportSynced(tempId);
+        // Обновляем только статус синхронизации, не создаем новую запись
+        await this.cache.markReportSynced(reportId);
+        console.log(`✅ Report synced with Notion: ${notionReport.id}`);
       }
       
-      return { id: notionReport.id, ...reportData };
+      return { id: notionReport.id || reportId, ...reportData };
     } catch (error) {
       console.error('Notion report creation failed, keeping in cache:', error);
       return reportWithId;

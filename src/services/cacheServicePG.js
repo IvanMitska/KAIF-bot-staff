@@ -100,6 +100,8 @@ class CacheServicePG {
       // Индексы для производительности
       `CREATE INDEX IF NOT EXISTS idx_reports_telegram ON reports(telegram_id)`,
       `CREATE INDEX IF NOT EXISTS idx_reports_date ON reports(date)`,
+      // Уникальный индекс для предотвращения дублирования отчетов
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_unique ON reports(telegram_id, date)`,
       `CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON tasks(assignee_id)`,
       `CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)`,
       `CREATE INDEX IF NOT EXISTS idx_attendance_employee ON attendance(employee_id)`,
@@ -184,15 +186,23 @@ class CacheServicePG {
   // ========== REPORTS ==========
   async cacheReport(reportData) {
     const reportId = reportData.id || `report-${Date.now()}`;
+    
+    // Используем ON CONFLICT для telegram_id и date чтобы предотвратить дубли
     const query = `
       INSERT INTO reports 
       (id, telegram_id, employee_name, date, what_done, problems, goals, timestamp, status, synced)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      ON CONFLICT (id) DO UPDATE SET
-        what_done = $5, problems = $6, goals = $7, status = $9, synced = $10
+      ON CONFLICT (telegram_id, date) DO UPDATE SET
+        what_done = EXCLUDED.what_done, 
+        problems = EXCLUDED.problems, 
+        goals = EXCLUDED.goals, 
+        timestamp = EXCLUDED.timestamp,
+        status = EXCLUDED.status, 
+        synced = EXCLUDED.synced
+      RETURNING id
     `;
     
-    await databasePool.query(query, [
+    const result = await databasePool.query(query, [
       reportId,
       reportData.telegramId,
       reportData.employeeName,
@@ -205,7 +215,7 @@ class CacheServicePG {
       reportData.synced || false
     ]);
     
-    return reportId;
+    return result.rows[0]?.id || reportId;
   }
 
   async getCachedTodayReport(telegramId) {
