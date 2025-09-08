@@ -454,9 +454,9 @@ class CacheServicePG {
     return databasePool;
   }
 
-  // Метод для совместимости с getInstance
-  async initialize() {
-    return this.init();
+  // Метод init для обратной совместимости
+  async init() {
+    return this.initialize();
   }
 }
 
