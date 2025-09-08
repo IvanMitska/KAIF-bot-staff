@@ -460,33 +460,38 @@ function updateNavIndicator(activeBtn) {
 // Загрузка профиля
 async function loadProfile() {
     try {
-        // Проверяем, что приложение открыто через Telegram
+        // В режиме без initData продолжаем работать с test=1
         if (!tg.initData || tg.initData.length === 0) {
-            console.error('No initData available. WebApp context:', {
-                platform: tg.platform,
-                version: tg.version,
-                initDataUnsafe: tg.initDataUnsafe
-            });
+            console.warn('No initData available, using test mode');
             
-            // Показываем красивое сообщение об ошибке
-            const errorHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px;">
-                    <div style="background: var(--bg-card); border-radius: 20px; padding: 32px; text-align: center; max-width: 320px;">
-                        <div style="font-size: 64px; margin-bottom: 24px;">🔒</div>
-                        <h2 style="margin-bottom: 16px; color: var(--text-primary);">Требуется авторизация</h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                            Откройте приложение через Telegram бота @Report_KAIF_bot
-                        </p>
-                        <div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px;">
-                            <p style="color: var(--text-muted); font-size: 14px; margin: 0;">
-                                Отправьте команду /start боту для доступа к приложению
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.innerHTML = errorHTML;
-            return;
+            // Устанавливаем тестового пользователя
+            currentUser = {
+                id: 1734337242,
+                telegramId: 1734337242,
+                name: 'Test User',
+                first_name: 'Test',
+                last_name: 'User',
+                username: 'testuser',
+                isManager: true
+            };
+            
+            // НЕ блокируем приложение, продолжаем работу в test режиме
+            console.log('Working in test mode without Telegram auth');
+            document.getElementById('userName').textContent = 'Test User';
+            
+            // Показываем кнопку создания задачи
+            const createTaskBtn = document.getElementById('createTaskBtn');
+            if (createTaskBtn) {
+                createTaskBtn.style.display = 'block';
+            }
+            
+            // Показываем секцию админа для тестового пользователя
+            const adminSection = document.querySelector('[data-section="admin"]');
+            if (adminSection) {
+                adminSection.style.display = 'block';
+            }
+            
+            return; // Выходим из функции, не блокируя приложение
         }
         
         console.log('Loading profile with initData length:', tg.initData.length);
@@ -574,15 +579,14 @@ async function checkReportStatus() {
 // Загрузка количества задач
 async function loadTasksCount() {
     try {
-        if (!tg.initData) {
-            console.error('No initData for tasks count');
-            return;
+        // Используем getApiUrl которая автоматически добавит test=1 если нет initData
+        const headers = {};
+        if (tg.initData) {
+            headers['X-Telegram-Init-Data'] = tg.initData;
         }
         
-        const response = await fetch(`${API_URL}/api/tasks/my`, {
-            headers: {
-                'X-Telegram-Init-Data': tg.initData
-            }
+        const response = await fetch(getApiUrl('/api/tasks/my'), {
+            headers: headers
         });
         
         console.log('Tasks count response:', response.status);
