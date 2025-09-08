@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
     <title>KAIF Staff App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Telegram Fix Script - загружается сразу после Telegram SDK -->
+    <!-- Critical Fix - загружается ПЕРВЫМ -->
+    <script src="critical-fix.js"></script>
+    <!-- Telegram Fix Script - загружается после critical fix -->
     <script src="telegram-fix.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="improved-calendar.css">
