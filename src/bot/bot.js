@@ -1,14 +1,5 @@
 const SimpleBot = require('./simple-bot');
 const startHandler = require('./handlers/start');
-const reportHandler = require('./handlers/report');
-const commandsHandler = require('./handlers/commands');
-const tasksHandler = require('./handlers/tasks');
-const mainCallbackHandler = require('./handlers/mainCallbackHandler');
-const { handleTaskCreationFlow } = require('./handlers/taskCreation');
-const { handleTaskCompletion } = require('./handlers/taskList');
-const { handleQuickTask } = require('./handlers/quickTask');
-const { handleQuickTaskInput } = require('./handlers/quickTaskMenu');
-const { handleReplyKeyboard } = require('./handlers/replyHandler');
 const schedulerService = require('../services/schedulerService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -31,39 +22,9 @@ bot.deleteWebHook().then(() => {
     console.log('Bot info:', info);
     console.log(`Bot username: @${info.username}`);
     
-    // ВАЖНО: порядок регистрации имеет значение!
-    // Сначала регистрируем start handler для обработки регистрации
+    // Регистрируем только start handler для WebApp
     startHandler(bot);
-    // Потом остальные обработчики
-    commandsHandler(bot);
-    reportHandler(bot);
-    
-   
-    
-    // Единый централизованный обработчик всех callback queries
-    bot.on('callback_query', async (callbackQuery) => {
-      await mainCallbackHandler(bot, callbackQuery);
-    });
-    
-    // Обработчик текстовых сообщений для создания задач
-    bot.on('message', async (msg) => {
-      if (msg.text && !msg.text.startsWith('/')) {
-        // Сначала проверяем reply клавиатуру
-        const replyHandled = await handleReplyKeyboard(bot, msg);
-        if (replyHandled) return;
-        
-        // Затем проверяем быстрые задачи
-        const quickTaskHandled = await handleQuickTaskInput(bot, msg);
-        if (quickTaskHandled) return;
-        
-        const taskFlowHandled = await handleTaskCreationFlow(bot, msg);
-        if (taskFlowHandled) return;
-        
-        // Обработка завершения задач
-        const taskCompletionHandled = await handleTaskCompletion(bot, msg);
-        if (taskCompletionHandled) return;
-      }
-    });
+    // Убираем все остальные обработчики - теперь все через WebApp
     
     schedulerService.initScheduler(bot);
     

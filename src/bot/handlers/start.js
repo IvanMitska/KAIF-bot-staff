@@ -44,86 +44,63 @@ module.exports = (bot) => {
       const existingUser = await userService.getUserByTelegramId(userId);
       console.log('Existing user:', existingUser);
       
-      if (existingUser) {
-        console.log('Sending welcome back message');
-        const MANAGER_IDS = [385436658, 1734337242];
-        const isManager = MANAGER_IDS.includes(userId);
+      // Всегда отправляем приветствие с WebApp, независимо от того, новый пользователь или нет
+      console.log('Sending welcome message');
+      
+      // Отправляем приветствие с кнопкой Web App
+      let webAppUrl = process.env.WEBAPP_URL;
+      
+      // Проверяем, установлен ли WEBAPP_URL
+      if (!webAppUrl) {
+        console.warn('⚠️ WEBAPP_URL not set in environment!');
         
-        // Отправляем приветствие с кнопкой Web App
-        let webAppUrl = process.env.WEBAPP_URL;
-        
-        // Проверяем, установлен ли WEBAPP_URL
-        if (!webAppUrl) {
-          console.warn('⚠️ WEBAPP_URL not set in environment!');
-          
-          // Автоматическое определение URL для Railway
-          if (process.env.RAILWAY_STATIC_URL) {
-            webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
-            console.log('Using RAILWAY_STATIC_URL:', webAppUrl);
-          } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-            webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
-            console.log('Using RAILWAY_PUBLIC_DOMAIN:', webAppUrl);
-          } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
-            // Railway v2
-            webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
-            console.log('Using RAILWAY_DEPLOYMENT_NAME:', webAppUrl);
-          } else {
-            // Для локальной разработки используем ngrok или другой HTTPS туннель
-            webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
-            console.log('Using production URL fallback:', webAppUrl);
-          }
+        // Автоматическое определение URL для Railway
+        if (process.env.RAILWAY_STATIC_URL) {
+          webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
+          console.log('Using RAILWAY_STATIC_URL:', webAppUrl);
+        } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+          webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+          console.log('Using RAILWAY_PUBLIC_DOMAIN:', webAppUrl);
+        } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
+          // Railway v2
+          webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
+          console.log('Using RAILWAY_DEPLOYMENT_NAME:', webAppUrl);
+        } else {
+          // Для локальной разработки используем ngrok или другой HTTPS туннель
+          webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+          console.log('Using production URL fallback:', webAppUrl);
         }
-        
-        // Убедимся, что URL использует HTTPS
-        if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
-          webAppUrl = webAppUrl.replace('http://', 'https://');
-          console.log('Converted to HTTPS:', webAppUrl);
-        }
-        
-        console.log('✅ Final WebApp URL:', webAppUrl);
-        console.log('Environment variables check:', {
-          WEBAPP_URL: process.env.WEBAPP_URL || 'NOT SET',
-          NODE_ENV: process.env.NODE_ENV || 'NOT SET',
-          RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT || 'NOT SET'
-        });
-        
-        await bot.sendMessage(chatId, 
-          `С возвращением, ${existingUser.name}! 👋\n\n` +
-          `Используйте Web App для удобной работы или продолжите в обычном режиме.`,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: '🚀 Открыть KAIF App',
-                    web_app: { url: webAppUrl }
-                  }
-                ],
-                [
-                  { text: '📱 Обычный режим', callback_data: 'classic_mode' }
-                ]
-              ]
-            }
-          }
-        );
-        // Удаляем состояние регистрации если есть
-        registrationStates.delete(userId);
-      } else {
-        console.log('New user, sending registration prompt to chat:', chatId);
-        await bot.sendMessage(chatId, 
-          'Добро пожаловать! 👋\n\n' +
-          'Я бот для сбора ежедневных отчетов.\n' +
-          'Давайте начнем с регистрации.\n\n' +
-          'Как вас зовут?'
-        );
-        
-        // Устанавливаем состояние регистрации
-        registrationStates.set(userId, {
-          step: 'name',
-          chatId: chatId,
-          username: username
-        });
       }
+      
+      // Убедимся, что URL использует HTTPS
+      if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
+        webAppUrl = webAppUrl.replace('http://', 'https://');
+        console.log('Converted to HTTPS:', webAppUrl);
+      }
+      
+      console.log('✅ Final WebApp URL:', webAppUrl);
+      
+      const userName = existingUser ? existingUser.name : 'Пользователь';
+      
+      await bot.sendMessage(chatId, 
+        `Добро пожаловать в KAIF Staff! 👋\n\n` +
+        `Используйте Web App для работы с системой.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '🚀 Открыть KAIF App',
+                  web_app: { url: webAppUrl }
+                }
+              ]
+            ]
+          }
+        }
+      );
+      
+      // Удаляем состояние регистрации если есть
+      registrationStates.delete(userId);
     } catch (error) {
       console.error('Start command error:', error);
       console.error('Error details:', error.message);
@@ -132,94 +109,5 @@ module.exports = (bot) => {
     }
   });
 
-  // Обработчик всех сообщений для регистрации
-  bot.on('message', async (msg) => {
-    console.log('Message handler in start.js:', msg.text, 'from:', msg.from.id);
-    
-    // Игнорируем команды
-    if (msg.text && msg.text.startsWith('/')) {
-      console.log('Ignoring command in registration handler');
-      return;
-    }
-    
-    const userId = msg.from.id;
-    const chatId = msg.chat.id;
-    
-    // Проверяем, есть ли пользователь в процессе регистрации
-    console.log('Current registration states:', Array.from(registrationStates.keys()));
-    console.log('Checking for userId:', userId);
-    
-    if (registrationStates.has(userId)) {
-      const state = registrationStates.get(userId);
-      console.log('User state found:', state);
-      
-      if (state.step === 'name') {
-        const name = msg.text;
-        
-        // Валидация имени
-        const sanitizedName = security.sanitizeInput(name, security.getFieldLimits().name);
-        if (sanitizedName.length < 2) {
-          await bot.sendMessage(chatId, '❌ Имя слишком короткое. Минимум 2 символа.');
-          return;
-        }
-        
-        security.secureLog('User provided name', { userId });
-        
-        await bot.sendMessage(chatId, `Приятно познакомиться, ${security.escapeMarkdown(sanitizedName)}!\n\nКакая у вас должность?`);
-        
-        // Обновляем состояние
-        registrationStates.set(userId, {
-          ...state,
-          step: 'position',
-          name: sanitizedName
-        });
-        
-      } else if (state.step === 'position') {
-        const position = msg.text;
-        
-        // Валидация должности
-        const sanitizedPosition = security.sanitizeInput(position, security.getFieldLimits().position);
-        if (sanitizedPosition.length < 2) {
-          await bot.sendMessage(chatId, '❌ Должность слишком короткая. Минимум 2 символа.');
-          return;
-        }
-        
-        security.secureLog('User provided position', { userId });
-        
-        try {
-          await userService.createUser({
-            telegramId: userId,
-            username: state.username,
-            name: state.name,
-            position: sanitizedPosition
-          });
-          
-          await bot.sendMessage(chatId, 
-            `Отлично! Регистрация завершена. ✅\n\n` +
-            `Имя: ${state.name}\n` +
-            `Должность: ${sanitizedPosition}\n\n` +
-            `Теперь вы можете отправлять ежедневные отчеты.\n` +
-            `Каждый день в 20:00 я буду напоминать вам об этом.`,
-            {
-              reply_markup: keyboards.mainMenu()
-            }
-          );
-          
-          // Удаляем состояние регистрации
-          registrationStates.delete(userId);
-          
-        } catch (error) {
-          console.error('Registration error:', error);
-          bot.sendMessage(chatId, 'Произошла ошибка при регистрации. Попробуйте еще раз /start');
-          registrationStates.delete(userId);
-        }
-      }
-    } else {
-      // Если пользователь не в процессе регистрации, проверяем сессию отчета
-      const reportHandler = require('./report');
-      if (reportHandler.handleMessageInput) {
-        await reportHandler.handleMessageInput(bot, msg);
-      }
-    }
-  });
+  // Удаляем обработчик регистрации - теперь все происходит через WebApp
 };
