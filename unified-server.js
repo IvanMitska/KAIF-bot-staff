@@ -896,6 +896,84 @@ app.get('/api/debug/postgres-direct', async (req, res) => {
   }
 });
 
+// Эндпоинт для проверки состояния БД и сервисов
+app.get('/api/debug/status', async (req, res) => {
+  const databasePool = require('./src/services/databasePool');
+  
+  try {
+    console.log('📊 Checking system status...');
+    
+    // Проверяем переменные окружения
+    const envStatus = {
+      DATABASE_URL: !!process.env.DATABASE_URL,
+      DATABASE_URL_TYPE: process.env.DATABASE_URL ? 
+        (process.env.DATABASE_URL.includes('railway.internal') ? 'internal' : 'proxy') : 'missing',
+      DATABASE_HOST: process.env.DATABASE_URL ? 
+        process.env.DATABASE_URL.split('@')[1]?.split(':')[0] : 'unknown',
+      TELEGRAM_BOT_TOKEN: !!process.env.TELEGRAM_BOT_TOKEN,
+      NODE_ENV: process.env.NODE_ENV || 'not set',
+      RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT || 'not railway'
+    };
+    
+    // Проверяем подключение к БД
+    let dbStatus = { connected: false };
+    try {
+      const pool = await databasePool.getPool();
+      const result = await pool.query('SELECT NOW() as time, COUNT(*) as users FROM users');
+      dbStatus = {
+        connected: true,
+        time: result.rows[0].time,
+        userCount: result.rows[0].users
+      };
+      
+      // Проверяем таблицы
+      const tables = await pool.query(`
+        SELECT tablename, 
+               (SELECT COUNT(*) FROM users) as users_count,
+               (SELECT COUNT(*) FROM tasks) as tasks_count,
+               (SELECT COUNT(*) FROM reports) as reports_count
+        FROM pg_tables 
+        WHERE schemaname = 'public'
+        LIMIT 1
+      `);
+      
+      if (tables.rows[0]) {
+        dbStatus.tables = {
+          users: tables.rows[0].users_count,
+          tasks: tables.rows[0].tasks_count,
+          reports: tables.rows[0].reports_count
+        };
+      }
+    } catch (dbError) {
+      dbStatus.error = dbError.message;
+    }
+    
+    // Проверяем инициализацию сервисов
+    const servicesStatus = {
+      railwayService: railwayService.initialized,
+      postgresService: !!require('./src/services/postgresService').pool
+    };
+    
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      environment: envStatus,
+      database: dbStatus,
+      services: servicesStatus
+    });
+    
+  } catch (error) {
+    console.error('❌ Status check failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      environment: {
+        DATABASE_URL: !!process.env.DATABASE_URL
+      }
+    });
+  }
+});
+
 // Эндпоинт для активации всех пользователей
 app.get('/api/debug/activate-users', async (req, res) => {
   const postgresService = require('./src/services/postgresService');
