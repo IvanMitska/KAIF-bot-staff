@@ -61,10 +61,16 @@ document.addEventListener('DOMContentLoaded', function() {
         tasksList.innerHTML = '<div class="loading">Загрузка задач...</div>';
         
         try {
-            const response = await fetch(`${API_URL}/api/tasks`, {
-                headers: {
-                    'X-Telegram-Init-Data': tg.initData || ''
-                }
+            // Используем правильный endpoint и добавляем test=1 если нет initData
+            let url = `${API_URL}/api/tasks/my`;
+            if (!tg.initData) {
+                url += '?test=1';
+            }
+            
+            const response = await fetch(url, {
+                headers: tg.initData ? {
+                    'X-Telegram-Init-Data': tg.initData
+                } : {}
             });
             
             if (response.ok) {
@@ -75,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.currentTasks = tasks;
                 
                 // Обновляем счетчик
-                const activeTasks = tasks.filter(t => t.status !== 'completed');
+                const activeTasks = tasks.filter(t => t.status !== 'Выполнена');
                 const badge = document.getElementById('tasksBadge');
                 if (badge) {
                     if (activeTasks.length > 0) {
@@ -122,9 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tasksList) return;
         
         const tasksByStatus = {
-            pending: tasks.filter(t => t.status === 'pending'),
-            in_progress: tasks.filter(t => t.status === 'in_progress'),
-            completed: tasks.filter(t => t.status === 'completed')
+            pending: tasks.filter(t => t.status === 'Новая'),
+            in_progress: tasks.filter(t => t.status === 'В работе'),
+            completed: tasks.filter(t => t.status === 'Выполнена')
         };
         
         let html = '';
@@ -135,8 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<h3 class="tasks-section-title">Активные задачи</h3>';
             
             [...tasksByStatus.in_progress, ...tasksByStatus.pending].forEach(task => {
-                const statusClass = task.status === 'in_progress' ? 'in-progress' : 'pending';
-                const statusText = task.status === 'in_progress' ? 'В работе' : 'Ожидает';
+                const statusClass = task.status === 'В работе' ? 'in-progress' : 'pending';
+                const statusText = task.status === 'В работе' ? 'В работе' : 'Новая';
                 
                 html += `
                     <div class="task-card glass-card ${statusClass}" onclick="showTaskDetails('${task.id}')">
@@ -155,13 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             </span>
                         </div>
                         <div class="task-actions">
-                            ${task.status === 'pending' ? 
-                                `<button onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'in_progress')" class="btn-action">
+                            ${task.status === 'Новая' ? 
+                                `<button onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'В работе')" class="btn-action">
                                     <i data-lucide="play"></i> Начать
                                 </button>` : ''
                             }
-                            ${task.status === 'in_progress' ? 
-                                `<button onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'completed')" class="btn-action btn-complete">
+                            ${task.status === 'В работе' ? 
+                                `<button onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'Выполнена')" class="btn-action btn-complete">
                                     <i data-lucide="check"></i> Завершить
                                 </button>` : ''
                             }
