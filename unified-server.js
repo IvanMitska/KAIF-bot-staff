@@ -985,16 +985,48 @@ app.get('/api/debug/status', async (req, res) => {
 // Эндпоинт для прямого получения пользователей из БД
 app.get('/api/debug/users', async (req, res) => {
   const databasePool = require('./src/services/databasePool');
+  const { getInstance } = require('./src/services/cacheServicePG');
   
   try {
     const pool = await databasePool.getPool();
     const result = await pool.query('SELECT * FROM users ORDER BY name');
     
+    // Попробуем получить пользователей через cache
+    let cacheUsers = [];
+    let cacheError = null;
+    try {
+      const cache = await getInstance();
+      cacheUsers = await cache.getAllUsers();
+    } catch (err) {
+      cacheError = err.message;
+    }
+    
+    // Попробуем через railwayService
+    let railwayUsers = [];
+    let railwayError = null;
+    try {
+      railwayUsers = await railwayService.getAllActiveUsers();
+    } catch (err) {
+      railwayError = err.message;
+    }
+    
     res.json({
-      count: result.rows.length,
-      users: result.rows,
-      railwayServiceInit: railwayService.initialized,
-      cacheAvailable: !!railwayService.cache
+      directDB: {
+        count: result.rows.length,
+        users: result.rows
+      },
+      cache: {
+        count: cacheUsers.length,
+        error: cacheError
+      },
+      railway: {
+        count: railwayUsers.length,  
+        error: railwayError
+      },
+      status: {
+        railwayServiceInit: railwayService.initialized,
+        cacheAvailable: !!railwayService.cache
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
