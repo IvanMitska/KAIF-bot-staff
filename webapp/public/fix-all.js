@@ -267,9 +267,119 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Showing task details:', task);
         
-        // Здесь можно показать модальное окно с деталями задачи
-        // Пока просто логируем
+        // Создаем модальное окно
+        const modal = document.createElement('div');
+        modal.id = 'taskModal';
+        modal.className = 'task-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="closeTaskModal()"></div>
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 class="modal-title">${task.title}</h2>
+                    <button class="modal-close" onclick="closeTaskModal()">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="task-detail-status">
+                        <span class="task-status ${getStatusClass(task.status)}">${task.status}</span>
+                        <span class="task-priority priority-${task.priority || 'medium'}">
+                            ${getPriorityText(task.priority)}
+                        </span>
+                    </div>
+                    
+                    ${task.description ? `
+                        <div class="task-detail-section">
+                            <h3>Описание</h3>
+                            <p>${task.description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="task-detail-section">
+                        <h3>Информация</h3>
+                        <div class="task-detail-info">
+                            <div class="info-item">
+                                <i data-lucide="calendar"></i>
+                                <span>Дедлайн: ${formatDate(task.deadline)}</span>
+                            </div>
+                            <div class="info-item">
+                                <i data-lucide="user"></i>
+                                <span>Создал: ${task.creatorName || 'Неизвестно'}</span>
+                            </div>
+                            <div class="info-item">
+                                <i data-lucide="clock"></i>
+                                <span>Создана: ${formatDate(task.createdDate)}</span>
+                            </div>
+                            ${task.completedDate ? `
+                                <div class="info-item">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>Выполнена: ${formatDate(task.completedDate)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    ${task.status === 'Новая' ? `
+                        <button class="btn-primary" onclick="updateTaskStatusFromModal('${task.id}', 'В работе')">
+                            <i data-lucide="play"></i>
+                            Начать выполнение
+                        </button>
+                    ` : ''}
+                    ${task.status === 'В работе' ? `
+                        <button class="btn-success" onclick="updateTaskStatusFromModal('${task.id}', 'Выполнена')">
+                            <i data-lucide="check"></i>
+                            Завершить задачу
+                        </button>
+                    ` : ''}
+                    <button class="btn-secondary" onclick="closeTaskModal()">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Обновляем иконки
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+        
+        // Анимация появления
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
     };
+    
+    // Закрытие модального окна
+    window.closeTaskModal = function() {
+        const modal = document.getElementById('taskModal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    };
+    
+    // Обновление статуса из модального окна
+    window.updateTaskStatusFromModal = async function(taskId, newStatus) {
+        await updateTaskStatus(taskId, newStatus);
+        closeTaskModal();
+    };
+    
+    // Вспомогательная функция для определения класса статуса
+    function getStatusClass(status) {
+        switch(status) {
+            case 'Новая': return 'pending';
+            case 'В работе': return 'in-progress';
+            case 'Выполнена': return 'completed';
+            default: return '';
+        }
+    }
     
     // Исправляем загрузку сотрудников
     const originalLoadEmployees = window.loadEmployees;
@@ -526,6 +636,198 @@ fixStyles.textContent = `
     
     .employee-status.offline {
         color: #6b7280;
+    }
+    
+    /* Модальное окно для задачи */
+    .task-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .task-modal.active {
+        opacity: 1;
+    }
+    
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+        position: relative;
+        width: 90%;
+        max-width: 500px;
+        max-height: 85vh;
+        overflow-y: auto;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 0;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+    
+    .task-modal.active .modal-content {
+        transform: scale(1);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        padding-right: 20px;
+    }
+    
+    .modal-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+    
+    .modal-body {
+        padding: 24px;
+    }
+    
+    .task-detail-status {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    
+    .task-detail-section {
+        margin-bottom: 24px;
+    }
+    
+    .task-detail-section h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    
+    .task-detail-section p {
+        color: white;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    .task-detail-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+    }
+    
+    .info-item i {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .modal-footer {
+        padding: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .modal-footer button {
+        flex: 1;
+        min-width: 120px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .modal-footer button i {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
     }
 `;
 document.head.appendChild(fixStyles);
