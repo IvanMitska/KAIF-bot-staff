@@ -792,13 +792,13 @@ async function loadTasks() {
         console.log('Init data length:', tg.initData?.length || 0);
         console.log('User from Telegram:', tg.initDataUnsafe?.user);
         
-        // Если нет Telegram данных, пробуем загрузить в тестовом режиме
-        if (!tg.initData) {
-            console.warn('⚠️ No Telegram init data, trying fallback...');
+        // Если нет Telegram данных, проверяем тестовый режим
+        if (!tg.initData && !isTestMode) {
+            console.warn('⚠️ No Telegram init data and not in test mode');
             
             // В режиме разработки пытаемся загрузить без авторизации
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('🔧 Development mode detected, trying to load without auth...');
+                console.log('🔧 Development mode detected, continuing...');
                 // Продолжаем выполнение без initData
             } else {
                 tasksList.innerHTML = `
@@ -809,6 +809,11 @@ async function loadTasks() {
                         <p style="margin-top: 16px; font-size: 14px;">
                             Перейдите в бота <a href="https://t.me/Report_KAIF_bot" target="_blank">@Report_KAIF_bot</a> 
                             и используйте кнопку "Открыть приложение"
+                        </p>
+                        <p style="margin-top: 20px;">
+                            <button onclick="window.location.href='?test=1'" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                🧪 Включить тестовый режим
+                            </button>
                         </p>
                     </div>
                 `;
@@ -828,7 +833,7 @@ async function loadTasks() {
             headers['X-Telegram-Init-Data'] = tg.initData;
         }
         
-        const response = await fetch(`${API_URL}${endpoint}`, {
+        const response = await fetch(getApiUrl(endpoint), {
             headers: headers
         });
         

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
     <title>KAIF Staff App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Telegram Fix Script - загружается сразу после Telegram SDK -->
+    <script src="telegram-fix.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="improved-calendar.css">
     <link rel="stylesheet" href="nav-ios-liquid.css">
@@ -1285,6 +1287,10 @@
     
     <script src="app.js"></script>
     <script src="fix-all.js"></script>
+    
+    <!-- Additional Fixes -->
+    <script src="telegram-fix.js"></script>
+    <script src="employees-fix.js"></script>
     <script src="admin-data-fix.js"></script>
     <script src="calendar-fix.js"></script>
     
@@ -1345,10 +1351,5 @@
         });
     </script>
     
-    <!-- Скрипт для тестирования базы данных -->
-    <script src="test-db.js"></script>
-    
-    <!-- Скрипт для тестового режима -->
-    <script src="test-mode.js"></script>
 </body>
 </html>
