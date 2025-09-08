@@ -5,24 +5,17 @@ async function loadDashboard() {
     try {
         console.log('Loading real dashboard data...');
         
-        // Загружаем реальные данные из API
-        const [statsRes, reportsRes, tasksRes, attendanceRes] = await Promise.all([
+        // Загружаем реальные данные из API с правильными эндпоинтами
+        const headers = tg.initData ? { 'X-Telegram-Init-Data': tg.initData } : {};
+        const testParam = !tg.initData ? '?test=1' : '';
+        
+        const [statsRes, reportsRes, attendanceRes] = await Promise.all([
             // Общая статистика
-            fetch(`${API_URL}/api/admin/stats`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            }),
-            // Отчеты за сегодня
-            fetch(`${API_URL}/api/admin/reports/today`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            }),
-            // Статистика задач
-            fetch(`${API_URL}/api/admin/tasks/stats`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            }),
+            fetch(`${API_URL}/api/admin/dashboard/stats${testParam}`, { headers }),
+            // Отчеты 
+            fetch(`${API_URL}/api/admin/reports${testParam}`, { headers }),
             // Присутствие
-            fetch(`${API_URL}/api/admin/attendance/today`, {
-                headers: { 'X-Telegram-Init-Data': tg.initData }
-            })
+            fetch(`${API_URL}/api/admin/attendance${testParam}`, { headers })
         ]);
 
         // Обработка общей статистики
@@ -66,14 +59,14 @@ async function loadDashboard() {
             }
         }
 
-        // Обработка статистики задач
-        if (tasksRes.ok) {
-            const tasksStats = await tasksRes.json();
-            console.log('Tasks stats loaded:', tasksStats);
+        // Обработка статистики задач из общей статистики
+        if (statsRes.ok) {
+            const stats = await statsRes.json();
             
-            const activeTasks = tasksStats.active || 0;
-            const completedToday = tasksStats.completedToday || 0;
-            const totalTasks = tasksStats.total || 0;
+            // Используем данные о задачах из общей статистики
+            const activeTasks = stats.activeTasks || 0;
+            const completedToday = stats.completedToday || 0;
+            const totalTasks = stats.totalTasks || 0;
             const completionRate = totalTasks > 0 ? Math.round((completedToday / totalTasks) * 100) : 0;
             
             updateElementSafely('dashboardActiveTasks', activeTasks);
@@ -313,7 +306,8 @@ window.switchAdminTab = function(tab) {
     }
 }
 
-// Экспортируем функции для использования в других местах
-window.loadRealDashboard = loadDashboard;
+// Переопределяем глобальную функцию loadDashboard
+window.loadDashboard = loadDashboard;
+window.loadRealDashboard = loadDashboard; // Для обратной совместимости
 window.startDashboardAutoUpdate = startDashboardAutoUpdate;
 window.stopDashboardAutoUpdate = stopDashboardAutoUpdate;
