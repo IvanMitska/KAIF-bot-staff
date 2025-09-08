@@ -114,33 +114,7 @@ class RailwayOptimizedService {
     }
   }
 
-  async getAllActiveUsers() {
-    await this.initialize();
-    
-    if (this.cache) {
-      const cached = await this.cache.getAllCachedUsers();
-      if (cached.length > 0) {
-        console.log(`✅ Loaded ${cached.length} users from PostgreSQL cache`);
-        return cached;
-      }
-    }
-    
-    // Загружаем из Notion
-    console.log(`📥 Loading users from Notion...`);
-    const users = await notionService.getAllActiveUsers();
-    
-    // Кэшируем всех пользователей
-    if (this.cache) {
-      for (const user of users) {
-        await this.cache.cacheUser({
-          ...user,
-          synced: true
-        });
-      }
-    }
-    
-    return users;
-  }
+  // Удалён дублирующий метод - используем метод из строки 740
 
   // ========== REPORT METHODS ==========
   async createReport(reportData) {
@@ -743,13 +717,17 @@ class RailwayOptimizedService {
     if (this.cache) {
       try {
         const users = await this.cache.getAllUsers();
-        return users.filter(u => u.isActive !== false);
+        console.log(`📋 Found ${users.length} users in cache`);
+        const activeUsers = users.filter(u => u.isActive !== false);
+        console.log(`✅ Returning ${activeUsers.length} active users`);
+        return activeUsers;
       } catch (error) {
         console.error('Cache error, falling back to Notion:', error);
       }
     }
     
     // Fallback к Notion
+    console.log('📥 Loading users from Notion...');
     return await notionService.getAllActiveUsers();
   }
 
