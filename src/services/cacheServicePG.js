@@ -447,6 +447,17 @@ class CacheServicePG {
     const result = await databasePool.query(query, params);
     return result.rows[0] || null;
   }
+
+  // Обеспечиваем обратную совместимость
+  get pool() {
+    console.warn('⚠️ Direct pool access is deprecated. Use databasePool instead.');
+    return databasePool;
+  }
+
+  // Метод для совместимости с getInstance
+  async initialize() {
+    return this.init();
+  }
 }
 
 // Singleton

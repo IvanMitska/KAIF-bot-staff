@@ -58,9 +58,10 @@ const API_URL = window.location.origin;
 const urlParams = new URLSearchParams(window.location.search);
 const isTestMode = urlParams.has('test') || window.location.search.includes('test=');
 
-// Если мы в тестовом режиме и нет Telegram данных, добавляем параметр test к API запросам
+// Если мы в тестовом режиме или нет Telegram данных, добавляем параметр test к API запросам
 function getApiUrl(endpoint) {
-    if (isTestMode && !tg.initData) {
+    // Всегда добавляем test=1 если нет initData, независимо от isTestMode
+    if (!tg.initData || isTestMode) {
         const separator = endpoint.includes('?') ? '&' : '?';
         return `${API_URL}${endpoint}${separator}test=1`;
     }
