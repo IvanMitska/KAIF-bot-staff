@@ -828,9 +828,14 @@ async function loadTasks() {
         }
         
         const endpoint = currentTaskType === 'my' ? '/api/tasks/my' : '/api/tasks/created';
+        const fullUrl = getApiUrl(endpoint);
         
-        console.log('Fetching from:', `${API_URL}${endpoint}`);
-        console.log('Headers:', { 'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing' });
+        console.log('📍 Task loading debug:');
+        console.log('  - Endpoint:', endpoint);
+        console.log('  - Full URL:', fullUrl);
+        console.log('  - InitData present:', !!tg.initData);
+        console.log('  - Test mode:', isTestMode);
+        console.log('  - Headers:', { 'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing' });
         
         // Создаем заголовки в зависимости от наличия initData
         const headers = {};
@@ -838,7 +843,7 @@ async function loadTasks() {
             headers['X-Telegram-Init-Data'] = tg.initData;
         }
         
-        const response = await fetch(getApiUrl(endpoint), {
+        const response = await fetch(fullUrl, {
             headers: headers
         });
         
@@ -847,16 +852,23 @@ async function loadTasks() {
         
         if (response.ok) {
             let tasks;
+            let rawResponse;
             try {
-                tasks = await response.json();
+                const responseText = await response.text();
+                console.log('📥 Raw response:', responseText.substring(0, 200));
+                rawResponse = responseText;
+                tasks = JSON.parse(responseText);
             } catch (jsonError) {
                 console.error('❌ Failed to parse JSON:', jsonError);
+                console.error('❌ Raw response was:', rawResponse);
                 tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: неверный формат ответа от сервера</p>';
                 return;
             }
             
             console.log('✅ Tasks loaded successfully:', tasks?.length || 0);
-            console.log('First task:', tasks?.[0]);
+            console.log('✅ Task type:', typeof tasks);
+            console.log('✅ Is array:', Array.isArray(tasks));
+            console.log('✅ First task:', tasks?.[0]);
             
             if (!tasks || !Array.isArray(tasks)) {
                 console.error('❌ Invalid tasks data:', tasks);
