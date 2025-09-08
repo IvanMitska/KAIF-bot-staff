@@ -68,10 +68,16 @@ module.exports = (bot) => {
             webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
             console.log('Using RAILWAY_DEPLOYMENT_NAME:', webAppUrl);
           } else {
-            // Для локальной разработки используем правильный путь
-            webAppUrl = 'http://localhost:3000/webapp/public';
-            console.log('Using localhost fallback:', webAppUrl);
+            // Для локальной разработки используем ngrok или другой HTTPS туннель
+            webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+            console.log('Using production URL fallback:', webAppUrl);
           }
+        }
+        
+        // Убедимся, что URL использует HTTPS
+        if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
+          webAppUrl = webAppUrl.replace('http://', 'https://');
+          console.log('Converted to HTTPS:', webAppUrl);
         }
         
         console.log('✅ Final WebApp URL:', webAppUrl);
