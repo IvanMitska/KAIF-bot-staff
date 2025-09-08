@@ -1,57 +1,15 @@
-const { Pool } = require('pg');
+const databasePool = require('./databasePool');
 
 class CacheServicePG {
   constructor() {
-    // Railway автоматически предоставляет DATABASE_URL
-    console.log('🔧 CacheServicePG initializing...');
-    console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
-    
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL is not set!');
-    }
-    
-    // Railway internal URLs не требуют SSL
-    const isRailwayInternal = process.env.DATABASE_URL?.includes('.railway.internal');
-    const isRailwayProxy = process.env.DATABASE_URL?.includes('ballast.proxy.rlwy.net');
-    const isLocalhost = process.env.DATABASE_URL?.includes('localhost') || 
-                       process.env.DATABASE_URL?.includes('127.0.0.1');
-    
-    // Railway internal connections НИКОГДА не используют SSL
-    let sslConfig = null;
-    
-    // Если это Railway internal URL - SSL должен быть выключен
-    if (isRailwayInternal) {
-      sslConfig = false; // Явно выключаем SSL для internal
-      console.log('🚂 Railway internal connection detected - SSL disabled');
-    } else if (isLocalhost || isRailwayProxy) {
-      sslConfig = false; // Также выключаем для localhost и proxy
-    } else {
-      // Для внешних подключений используем SSL
-      sslConfig = { rejectUnauthorized: false };
-    }
-    
-    console.log('SSL Config:', {
-      isRailwayInternal,
-      isRailwayProxy,
-      isLocalhost,
-      sslEnabled: !!sslConfig
-    });
-    
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: sslConfig,
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
-      max: 20
-    });
-    
-    console.log('Connecting to PostgreSQL cache...');
+    console.log('🔧 CacheServicePG using shared database pool');
+    // Используем единый пул соединений
   }
 
   async initialize() {
     try {
       // Тестируем подключение
-      const testQuery = await this.pool.query('SELECT NOW()');
+      const testQuery = await databasePool.query('SELECT NOW()');
       console.log('✅ PostgreSQL connection test passed:', testQuery.rows[0].now);
       
       // Создаем таблицы
@@ -60,7 +18,7 @@ class CacheServicePG {
       
       // Проверяем количество записей
       try {
-        const countQuery = await this.pool.query('SELECT COUNT(*) FROM tasks');
+        const countQuery = await databasePool.query('SELECT COUNT(*) FROM tasks');
         console.log('📊 Tasks in database:', countQuery.rows[0].count);
       } catch (e) {
         console.log('📋 Tables created, no tasks yet');
@@ -149,7 +107,7 @@ class CacheServicePG {
     ];
 
     for (const query of queries) {
-      await this.pool.query(query);
+      await databasePool.query(query);
     }
   }
 
@@ -165,7 +123,7 @@ class CacheServicePG {
         position = $5, is_active = $6, updated_at = CURRENT_TIMESTAMP
     `;
     
-    await this.pool.query(query, [
+    await databasePool.query(query, [
       userData.telegramId,
       userData.id,
       userData.name,
@@ -178,7 +136,7 @@ class CacheServicePG {
 
   async getCachedUser(telegramId) {
     const query = `SELECT * FROM users WHERE telegram_id = $1`;
-    const result = await this.pool.query(query, [telegramId.toString()]);
+    const result = await databasePool.query(query, [telegramId.toString()]);
     
     if (result.rows.length > 0) {
       const user = result.rows[0];
@@ -197,7 +155,7 @@ class CacheServicePG {
 
   async getAllCachedUsers() {
     const query = `SELECT * FROM users WHERE is_active = true`;
-    const result = await this.pool.query(query);
+    const result = await databasePool.query(query);
     
     return result.rows.map(user => ({
       id: user.notion_id,
@@ -210,7 +168,7 @@ class CacheServicePG {
   // Метод getAllUsers для совместимости с railwayOptimizedService
   async getAllUsers() {
     const query = `SELECT * FROM users ORDER BY name`;
-    const result = await this.pool.query(query);
+    const result = await databasePool.query(query);
     
     return result.rows.map(user => ({
       id: user.notion_id,
@@ -234,7 +192,7 @@ class CacheServicePG {
         what_done = $5, problems = $6, goals = $7, status = $9, synced = $10
     `;
     
-    await this.pool.query(query, [
+    await databasePool.query(query, [
       reportId,
       reportData.telegramId,
       reportData.employeeName,
@@ -253,7 +211,7 @@ class CacheServicePG {
   async getCachedTodayReport(telegramId) {
     const today = new Date().toISOString().split('T')[0];
     const query = `SELECT * FROM reports WHERE telegram_id = $1 AND date = $2`;
-    const result = await this.pool.query(query, [telegramId.toString(), today]);
+    const result = await databasePool.query(query, [telegramId.toString(), today]);
     
     return result.rows.length > 0 ? result.rows[0] : null;
   }
@@ -265,7 +223,7 @@ class CacheServicePG {
       ORDER BY date DESC, timestamp DESC 
       LIMIT $2
     `;
-    const result = await this.pool.query(query, [telegramId.toString(), limit]);
+    const result = await databasePool.query(query, [telegramId.toString(), limit]);
     
     return result.rows.map(report => ({
       id: report.id,
@@ -279,13 +237,13 @@ class CacheServicePG {
 
   async getUnsyncedReports() {
     const query = `SELECT * FROM reports WHERE synced = false`;
-    const result = await this.pool.query(query);
+    const result = await databasePool.query(query);
     return result.rows;
   }
 
   async markReportSynced(reportId) {
     const query = `UPDATE reports SET synced = true WHERE id = $1`;
-    await this.pool.query(query, [reportId]);
+    await databasePool.query(query, [reportId]);
   }
 
   // ========== TASKS ==========
@@ -300,7 +258,7 @@ class CacheServicePG {
         status = $9, completed_date = $13, synced = $14, updated_at = CURRENT_TIMESTAMP
     `;
     
-    await this.pool.query(query, [
+    await databasePool.query(query, [
       taskData.id,
       taskData.taskId || `TASK-${Date.now()}`,
       taskData.title,
@@ -328,7 +286,7 @@ class CacheServicePG {
     }
     
     query += ` ORDER BY priority, created_date DESC`;
-    const result = await this.pool.query(query, params);
+    const result = await databasePool.query(query, params);
     
     return result.rows.map(task => ({
       id: task.id,
@@ -353,18 +311,18 @@ class CacheServicePG {
       ${status === 'Выполнена' ? ', completed_date = CURRENT_TIMESTAMP' : ''}
       WHERE id = $2
     `;
-    await this.pool.query(query, [status, taskId]);
+    await databasePool.query(query, [status, taskId]);
   }
 
   async getUnsyncedTasks() {
     const query = `SELECT * FROM tasks WHERE synced = false`;
-    const result = await this.pool.query(query);
+    const result = await databasePool.query(query);
     return result.rows;
   }
 
   async markTaskSynced(taskId) {
     const query = `UPDATE tasks SET synced = true WHERE id = $1`;
-    await this.pool.query(query, [taskId]);
+    await databasePool.query(query, [taskId]);
   }
 
   // ========== ATTENDANCE ==========
@@ -381,7 +339,7 @@ class CacheServicePG {
         location_out = $10, synced = $11
     `;
     
-    await this.pool.query(query, [
+    await databasePool.query(query, [
       attendanceId,
       attendanceData.employeeId,
       attendanceData.employeeName,
@@ -401,7 +359,7 @@ class CacheServicePG {
   async getCachedTodayAttendance(employeeId) {
     const today = new Date().toISOString().split('T')[0];
     const query = `SELECT * FROM attendance WHERE employee_id = $1 AND date = $2`;
-    const result = await this.pool.query(query, [employeeId.toString(), today]);
+    const result = await databasePool.query(query, [employeeId.toString(), today]);
     
     if (result.rows.length > 0) {
       const attendance = result.rows[0];
@@ -422,7 +380,7 @@ class CacheServicePG {
   async updateAttendanceCheckOut(employeeId, date, checkOut, location = null) {
     // Получаем время прихода
     const getQuery = `SELECT check_in FROM attendance WHERE employee_id = $1 AND date = $2`;
-    const result = await this.pool.query(getQuery, [employeeId.toString(), date]);
+    const result = await databasePool.query(getQuery, [employeeId.toString(), date]);
     
     if (result.rows.length > 0 && result.rows[0].check_in) {
       const checkInTime = new Date(result.rows[0].check_in);
@@ -436,7 +394,7 @@ class CacheServicePG {
         WHERE employee_id = $4 AND date = $5
       `;
       
-      await this.pool.query(updateQuery, [
+      await databasePool.query(updateQuery, [
         checkOut,
         workHours,
         location ? JSON.stringify(location) : null,
@@ -455,7 +413,7 @@ class CacheServicePG {
     
     const tables = ['users', 'reports', 'tasks', 'attendance'];
     for (const table of tables) {
-      const result = await this.pool.query(`SELECT COUNT(*) as count FROM ${table}`);
+      const result = await databasePool.query(`SELECT COUNT(*) as count FROM ${table}`);
       stats[table] = parseInt(result.rows[0].count);
     }
     
@@ -463,7 +421,7 @@ class CacheServicePG {
     const sizeQuery = `
       SELECT pg_database_size(current_database()) as size
     `;
-    const sizeResult = await this.pool.query(sizeQuery);
+    const sizeResult = await databasePool.query(sizeQuery);
     stats.sizeBytes = parseInt(sizeResult.rows[0].size);
     stats.sizeMB = (stats.sizeBytes / (1024 * 1024)).toFixed(2);
     
@@ -476,17 +434,17 @@ class CacheServicePG {
 
   // Для совместимости с SQLite версией
   async runQuery(query, params = []) {
-    const result = await this.pool.query(query, params);
+    const result = await databasePool.query(query, params);
     return result;
   }
 
   async getAll(query, params = []) {
-    const result = await this.pool.query(query, params);
+    const result = await databasePool.query(query, params);
     return result.rows;
   }
 
   async getOne(query, params = []) {
-    const result = await this.pool.query(query, params);
+    const result = await databasePool.query(query, params);
     return result.rows[0] || null;
   }
 }

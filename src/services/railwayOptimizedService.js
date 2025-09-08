@@ -1,6 +1,7 @@
 const postgresService = require('./postgresService');
 const notionService = require('./notionService'); // Оставляем для совместимости
 const { getInstance: getCacheInstance } = require('./cacheServicePG');
+const databasePool = require('./databasePool');
 
 class RailwayOptimizedService {
   constructor() {
@@ -593,7 +594,7 @@ class RailwayOptimizedService {
       try {
         // Получаем все задачи из кэша
         const query = 'SELECT * FROM tasks ORDER BY created_date DESC LIMIT 10';
-        const result = await this.cache.pool.query(query);
+        const result = await databasePool.query(query);
         
         console.log(`📊 Total tasks in cache: ${result.rows.length}`);
         
@@ -629,11 +630,11 @@ class RailwayOptimizedService {
     if (this.cache) {
       try {
         // Test database connection
-        const testQuery = await this.cache.pool.query('SELECT COUNT(*) as count FROM tasks');
+        const testQuery = await databasePool.query('SELECT COUNT(*) as count FROM tasks');
         console.log(`✅ Database connected. Total tasks: ${testQuery.rows[0].count}`);
         
         // Get unique assignees
-        const assigneesQuery = await this.cache.pool.query(
+        const assigneesQuery = await databasePool.query(
           'SELECT DISTINCT assignee_id, assignee_name FROM tasks WHERE assignee_id IS NOT NULL'
         );
         console.log(`👥 Unique assignees: ${assigneesQuery.rows.length}`);

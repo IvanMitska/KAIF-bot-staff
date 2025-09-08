@@ -907,11 +907,12 @@ app.get('/api/debug/activate-users', async (req, res) => {
     
     // Активируем всех пользователей
     const updateQuery = `UPDATE users SET is_active = true WHERE is_active = false OR is_active IS NULL`;
-    const result = await postgresService.pool.query(updateQuery);
+    const databasePool = require('./src/services/databasePool');
+    const result = await databasePool.query(updateQuery);
     console.log(`✅ Activated ${result.rowCount} users`);
     
     // Получаем обновленный список
-    const users = await postgresService.pool.query('SELECT telegram_id, name, position, is_active FROM users ORDER BY name');
+    const users = await databasePool.query('SELECT telegram_id, name, position, is_active FROM users ORDER BY name');
     
     res.json({
       success: true,
