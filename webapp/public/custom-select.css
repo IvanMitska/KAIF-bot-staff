@@ -1,13 +1,13 @@
 /* ===== CUSTOM SELECT DROPDOWN ===== */
 /* Стилизованный выпадающий список в стиле iOS/liquid glass */
 
-/* Скрываем стандартный select */
+/* Скрываем стандартный select - ТОЛЬКО для select внутри custom-select-wrapper */
 .custom-select-wrapper {
     position: relative;
     width: 100%;
 }
 
-.custom-select {
+.custom-select-wrapper .custom-select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -25,13 +25,13 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.custom-select:hover {
+.custom-select-wrapper .custom-select:hover {
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(139, 92, 246, 0.4);
     box-shadow: 0 6px 20px rgba(139, 92, 246, 0.2);
 }
 
-.custom-select:focus {
+.custom-select-wrapper .custom-select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
@@ -55,14 +55,14 @@
 }
 
 /* Опции (для браузеров, которые поддерживают) */
-.custom-select option {
+.custom-select-wrapper .custom-select option {
     background: #2D0050;
     color: var(--text-primary);
     padding: 12px;
     font-size: 15px;
 }
 
-.custom-select option:hover {
+.custom-select-wrapper .custom-select option:hover {
     background: rgba(139, 92, 246, 0.2);
 }
 

@@ -192,8 +192,7 @@
 
 /* ===== КНОПКИ ===== */
 .btn,
-.button,
-.nav-btn {
+.button {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     color: var(--text-primary) !important;
@@ -203,16 +202,14 @@
 }
 
 .btn:hover,
-.button:hover,
-.nav-btn:hover {
+.button:hover {
     background: rgba(255, 255, 255, 0.15) !important;
     border-color: var(--accent-border) !important;
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
     transform: translateY(-1px);
 }
 
-.btn-primary,
-.nav-btn.active {
+.btn-primary {
     background: var(--gradient-primary) !important;
     border: none !important;
     box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
@@ -328,30 +325,7 @@ hr {
     }
 }
 
-/* ===== НАВИГАЦИЯ ВНИЗУ ===== */
-.bottom-nav,
-.tab-bar {
-    background: rgba(0, 0, 0, 0.8) !important;
-    backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.nav-item {
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: 20%;
-    right: 20%;
-    height: 2px;
-    background: var(--gradient-primary);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-}
+/* Навигация оставлена без изменений - используются оригинальные стили */
 
 /* ===== СКРОЛЛБАР ===== */
 ::-webkit-scrollbar {
