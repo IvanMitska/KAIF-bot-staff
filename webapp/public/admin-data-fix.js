@@ -85,13 +85,27 @@ async function loadDashboard() {
             updateElementSafely('dashboardTodayReports', todayReportsCount);
             updateElementSafely('dashboardMissingReports', missingReportsCount);
             
-            // Обновляем процент и прогресс бар
-            const percentElement = document.querySelector('.metric-trend .trend-value');
-            if (percentElement) {
-                percentElement.textContent = `${reportsPercentage > 0 ? '+' : ''}${reportsPercentage}%`;
+            // Обновляем процент "Без отчетов" (вторая карточка) 
+            const warningPercentElement = document.querySelector('.metric-card.warning .metric-trend .trend-value');
+            if (warningPercentElement) {
+                // Показываем разницу в количестве, а не процент
+                warningPercentElement.textContent = `-${missingReportsCount}`;
                 
                 // Обновляем класс тренда
-                const trendContainer = percentElement.closest('.metric-trend');
+                const trendContainer = warningPercentElement.closest('.metric-trend');
+                if (trendContainer) {
+                    trendContainer.classList.remove('positive', 'negative');
+                    trendContainer.classList.add(missingReportsCount > 0 ? 'negative' : 'positive');
+                }
+            }
+            
+            // Обновляем процент отчетов (первая карточка)
+            const reportsPercentElement = document.querySelector('.metric-card.primary .metric-trend .trend-value');
+            if (reportsPercentElement) {
+                reportsPercentElement.textContent = `${reportsPercentage > 0 ? '+' : ''}${reportsPercentage}%`;
+                
+                // Обновляем класс тренда
+                const trendContainer = reportsPercentElement.closest('.metric-trend');
                 if (trendContainer) {
                     trendContainer.classList.remove('positive', 'negative');
                     trendContainer.classList.add(reportsPercentage >= 50 ? 'positive' : 'negative');
@@ -118,13 +132,28 @@ async function loadDashboard() {
             // Используем данные о задачах из общей статистики
             const activeTasks = stats.activeTasks || 0;
             const completedToday = stats.completedToday || 0;
-            const totalTasks = stats.totalTasks || 0;
+            const totalTasks = activeTasks + completedToday;
             const completionRate = totalTasks > 0 ? Math.round((completedToday / totalTasks) * 100) : 0;
             
             updateElementSafely('dashboardActiveTasks', activeTasks);
             updateElementSafely('dashboardCompletedToday', completedToday);
             
-            // Обновляем процент выполнения задач
+            // Используем реальное изменение отчетов если есть
+            if (stats.reportsChange !== undefined) {
+                const reportsPercentElement = document.querySelector('.metric-card.primary .metric-trend .trend-value');
+                if (reportsPercentElement) {
+                    const change = stats.reportsChange;
+                    reportsPercentElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                    
+                    const trendContainer = reportsPercentElement.closest('.metric-trend');
+                    if (trendContainer) {
+                        trendContainer.classList.remove('positive', 'negative');
+                        trendContainer.classList.add(change >= 0 ? 'positive' : 'negative');
+                    }
+                }
+            }
+            
+            // Обновляем процент выполнения задач (третья карточка)
             const tasksPercentElement = document.querySelector('.metric-card.success .metric-trend .trend-value');
             if (tasksPercentElement) {
                 tasksPercentElement.textContent = `${completionRate}%`;

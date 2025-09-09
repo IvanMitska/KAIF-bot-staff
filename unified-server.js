@@ -550,8 +550,11 @@ app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
     
     // Получаем данные для dashboard
     const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
     const tasks = await railwayService.getAllTasks();
     const reports = await railwayService.getReportsForPeriod(today, today);
+    const yesterdayReports = await railwayService.getReportsForPeriod(yesterday, yesterday);
     
     const activeTasks = tasks.filter(t => t.status !== 'Выполнена' && t.status !== 'Отменена').length;
     const completedToday = tasks.filter(t => 
@@ -559,6 +562,13 @@ app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
       t.updatedAt && 
       t.updatedAt.startsWith(today)
     ).length;
+    
+    // Расчет изменений по сравнению с вчерашним днем
+    const todayReportsCount = reports.length;
+    const yesterdayReportsCount = yesterdayReports.length;
+    const reportsChange = yesterdayReportsCount > 0 
+      ? Math.round(((todayReportsCount - yesterdayReportsCount) / yesterdayReportsCount) * 100)
+      : 0;
     
     // Получаем топ сотрудников за последние 30 дней
     const thirtyDaysAgo = new Date();
@@ -601,6 +611,9 @@ app.get('/api/admin/dashboard/stats', authMiddleware, async (req, res) => {
       completedToday,
       weekActivity,
       topEmployees,
+      reportsChange,  // Процентное изменение отчетов по сравнению с вчера
+      todayReportsCount,
+      yesterdayReportsCount,
       tasksStatus: {
         new: tasks.filter(t => t.status === 'Новая').length,
         inProgress: tasks.filter(t => t.status === 'В работе').length,
