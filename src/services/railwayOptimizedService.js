@@ -741,6 +741,8 @@ class RailwayOptimizedService {
   async getReportsForPeriod(startDate, endDate, employeeId = null) {
     await this.initialize();
     
+    console.log(`📅 getReportsForPeriod called with: startDate=${startDate}, endDate=${endDate}, employeeId=${employeeId}`);
+    
     if (this.cache) {
       try {
         let query = 'SELECT * FROM reports WHERE date >= $1 AND date <= $2';
@@ -754,6 +756,7 @@ class RailwayOptimizedService {
         query += ' ORDER BY date DESC, timestamp DESC';
         
         const result = await databasePool.query(query, params);
+        console.log(`📊 Found ${result.rows.length} reports in database for period ${startDate} to ${endDate}`);
         return result.rows.map(row => ({
           id: row.id,
           date: row.date,
