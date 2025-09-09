@@ -753,7 +753,7 @@ class RailwayOptimizedService {
         
         query += ' ORDER BY date DESC, timestamp DESC';
         
-        const result = await this.cache.pool.query(query, params);
+        const result = await databasePool.query(query, params);
         return result.rows.map(row => ({
           id: row.id,
           date: row.date,
@@ -789,7 +789,7 @@ class RailwayOptimizedService {
         
         query += ' ORDER BY date DESC, check_in DESC';
         
-        const result = await this.cache.pool.query(query, params);
+        const result = await databasePool.query(query, params);
         return result.rows.map(row => ({
           id: row.id,
           employeeId: row.employee_id,
@@ -823,7 +823,7 @@ class RailwayOptimizedService {
           ORDER BY check_in DESC
         `;
         
-        const result = await this.cache.pool.query(query, [today]);
+        const result = await databasePool.query(query, [today]);
         return result.rows.map(row => ({
           id: row.id,
           employeeId: row.employee_id,
@@ -843,55 +843,7 @@ class RailwayOptimizedService {
     return await notionService.getCurrentAttendanceStatus();
   }
 
-  async updateAttendanceCheckOut(attendanceId, checkOut, location = null) {
-    await this.initialize();
-    
-    if (this.cache) {
-      try {
-        // Получаем запись
-        const getQuery = 'SELECT * FROM attendance WHERE id = $1';
-        const getResult = await this.cache.pool.query(getQuery, [attendanceId]);
-        
-        if (getResult.rows.length === 0) {
-          throw new Error('Attendance record not found');
-        }
-        
-        const attendance = getResult.rows[0];
-        const checkInTime = new Date(attendance.check_in);
-        const checkOutTime = new Date(checkOut);
-        
-        // Вычисляем рабочие часы
-        const workHours = ((checkOutTime - checkInTime) / (1000 * 60 * 60)).toFixed(2);
-        
-        // Обновляем запись
-        const updateQuery = `
-          UPDATE attendance 
-          SET check_out = $1, work_hours = $2, status = $3
-          WHERE id = $4
-          RETURNING *
-        `;
-        
-        await this.cache.pool.query(updateQuery, [
-          checkOut,
-          workHours,
-          'Завершен',
-          attendanceId
-        ]);
-        
-        // Обновляем в Notion в фоне
-        notionService.updateAttendanceCheckOut(attendanceId, checkOut, location).catch(error => {
-          console.error('Notion update failed:', error);
-        });
-        
-        return workHours;
-      } catch (error) {
-        console.error('Cache error, falling back to Notion:', error);
-      }
-    }
-    
-    // Fallback к Notion
-    return await notionService.updateAttendanceCheckOut(attendanceId, checkOut, location);
-  }
+  // Удален дублирующий метод updateAttendanceCheckOut - используется версия на строке 352
 }
 
 // Создаем singleton
