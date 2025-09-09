@@ -2081,6 +2081,11 @@ async function loadAdminPanel() {
                 employeeFilter.appendChild(option);
             });
             
+            // Инициализируем custom select
+            if (window.initCustomSelect) {
+                window.initCustomSelect(employeeFilter);
+            }
+            
             // Обновляем количество активных сотрудников
             document.getElementById('adminActiveEmployees').textContent = employees.length;
         }
@@ -2856,6 +2861,11 @@ async function loadAttendanceTab() {
                 employees.map(emp => 
                     `<option value="${emp.telegramId}">${emp.name}</option>`
                 ).join('');
+            
+            // Инициализируем custom select
+            if (window.initCustomSelect) {
+                window.initCustomSelect(employeeFilter);
+            }
         }
         
         // Обработчик изменения периода
