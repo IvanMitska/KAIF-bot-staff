@@ -1,6 +1,7 @@
 const SimpleBot = require('./simple-bot');
 const startHandler = require('./handlers/start');
 const schedulerService = require('../services/schedulerService');
+const mainCallbackHandler = require('./handlers/mainCallbackHandler');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -24,7 +25,11 @@ bot.deleteWebHook().then(() => {
     
     // Регистрируем только start handler для WebApp
     startHandler(bot);
-    // Убираем все остальные обработчики - теперь все через WebApp
+    
+    // Регистрируем обработчик callback_query для кнопок
+    bot.on('callback_query', async (callbackQuery) => {
+      await mainCallbackHandler(bot, callbackQuery);
+    });
     
     schedulerService.initScheduler(bot);
     

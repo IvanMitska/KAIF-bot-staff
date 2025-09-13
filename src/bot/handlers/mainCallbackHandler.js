@@ -1,6 +1,29 @@
 // Централизованный обработчик всех callback_query
 const { handleCallbackQuery: handleTasksCallback } = require('./callbackHandler');
 
+// Функция для получения URL веб-приложения
+function getWebAppUrl() {
+  let webAppUrl = process.env.WEBAPP_URL;
+  
+  if (!webAppUrl) {
+    if (process.env.RAILWAY_STATIC_URL) {
+      webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
+    } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+    } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
+      webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
+    } else {
+      webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+    }
+  }
+  
+  if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
+    webAppUrl = webAppUrl.replace('http://', 'https://');
+  }
+  
+  return webAppUrl;
+}
+
 async function mainCallbackHandler(bot, callbackQuery) {
   const data = callbackQuery.data;
   const chatId = callbackQuery.message.chat.id;
@@ -100,10 +123,21 @@ async function mainCallbackHandler(bot, callbackQuery) {
         
       case 'send_report':
         await bot.answerCallbackQuery(callbackQuery.id);
-        const reportHandler = require('./report');
-        if (reportHandler.startReportSession) {
-          await reportHandler.startReportSession(bot, chatId, userId);
-        }
+        // Открываем web-приложение для отправки отчета
+        const webAppUrl = getWebAppUrl();
+        await bot.sendMessage(chatId,
+          '📝 Используйте web-приложение для отправки отчета:',
+          {
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '🚀 Открыть KAIF App',
+                  web_app: { url: webAppUrl }
+                }
+              ]]
+            }
+          }
+        );
         return;
         
       case 'tasks_menu':

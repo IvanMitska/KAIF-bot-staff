@@ -1,19 +1,37 @@
+// Функция для получения URL веб-приложения
+function getWebAppUrl() {
+  let webAppUrl = process.env.WEBAPP_URL;
+  
+  if (!webAppUrl) {
+    if (process.env.RAILWAY_STATIC_URL) {
+      webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
+    } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+    } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
+      webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
+    } else {
+      webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+    }
+  }
+  
+  if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
+    webAppUrl = webAppUrl.replace('http://', 'https://');
+  }
+  
+  return webAppUrl;
+}
+
 module.exports = {
-  mainMenu: () => ({
-    inline_keyboard: [
-      [
-        { text: '📝 Отправить отчет', callback_data: 'send_report' },
-        { text: '📊 Моя статистика', callback_data: 'my_stats' }
-      ],
-      [
-        { text: '📋 История отчетов', callback_data: 'report_history' },
-        { text: '❓ Помощь', callback_data: 'help' }
-      ],
-      [
-        { text: '📂 Задачи', callback_data: 'tasks_menu' }
+  mainMenu: () => {
+    const webAppUrl = getWebAppUrl();
+    return {
+      inline_keyboard: [
+        [
+          { text: '🚀 Открыть KAIF App', web_app: { url: webAppUrl } }
+        ]
       ]
-    ]
-  }),
+    };
+  },
 
   reportStepNavigation: (step, canGoBack = true) => {
     const keyboard = [];
@@ -43,16 +61,19 @@ module.exports = {
     ]
   }),
 
-  reminderOptions: () => ({
-    inline_keyboard: [
-      [
-        { text: '📝 Отправить отчет', callback_data: 'send_report' }
-      ],
-      [
-        { text: '⏰ Напомнить через час', callback_data: 'remind_later' }
+  reminderOptions: () => {
+    const webAppUrl = getWebAppUrl();
+    return {
+      inline_keyboard: [
+        [
+          { text: '📝 Отправить отчет', web_app: { url: webAppUrl } }
+        ],
+        [
+          { text: '⏰ Напомнить через час', callback_data: 'remind_later' }
+        ]
       ]
-    ]
-  }),
+    };
+  },
 
   reportEditMenu: () => ({
     inline_keyboard: [

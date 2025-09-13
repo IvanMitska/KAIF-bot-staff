@@ -6,6 +6,29 @@ const keyboards = require('../bot/keyboards/inline');
 
 const scheduledReminders = new Map();
 
+// Функция для получения URL веб-приложения
+function getWebAppUrl() {
+  let webAppUrl = process.env.WEBAPP_URL;
+  
+  if (!webAppUrl) {
+    if (process.env.RAILWAY_STATIC_URL) {
+      webAppUrl = `https://${process.env.RAILWAY_STATIC_URL}/webapp/public`;
+    } else if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      webAppUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webapp/public`;
+    } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
+      webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
+    } else {
+      webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+    }
+  }
+  
+  if (webAppUrl.startsWith('http://') && !webAppUrl.includes('localhost')) {
+    webAppUrl = webAppUrl.replace('http://', 'https://');
+  }
+  
+  return webAppUrl;
+}
+
 const schedulerService = {
   initScheduler(bot) {
     console.log('Initializing scheduler...');
@@ -48,13 +71,27 @@ async function sendDailyReminders(bot) {
         const todayReport = await notionService.getTodayReport(user.telegramId);
         
         if (!todayReport) {
+          const webAppUrl = getWebAppUrl();
+          
           await bot.sendMessage(user.telegramId,
             '🕐 *Время отчета!*\n\n' +
             `Привет, ${user.name}! Не забудьте отправить ежедневный отчет о проделанной работе.\n\n` +
             '_Это займет всего пару минут_',
             {
               parse_mode: 'Markdown',
-              reply_markup: keyboards.reminderOptions()
+              reply_markup: {
+                inline_keyboard: [[
+                  {
+                    text: '📝 Отправить отчет',
+                    web_app: { url: webAppUrl }
+                  }
+                ], [
+                  {
+                    text: '⏰ Напомнить через час',
+                    callback_data: 'remind_later'
+                  }
+                ]]
+              }
             }
           );
           
@@ -80,13 +117,27 @@ async function sendSecondReminders(bot) {
         const todayReport = await notionService.getTodayReport(telegramId);
         
         if (!todayReport && reminderData.firstReminderSent) {
+          const webAppUrl = getWebAppUrl();
+          
           await bot.sendMessage(telegramId,
             '⏰ *Повторное напоминание*\n\n' +
             `${reminderData.name}, вы еще не отправили отчет за сегодня.\n\n` +
             'Пожалуйста, уделите этому несколько минут.',
             {
               parse_mode: 'Markdown',
-              reply_markup: keyboards.reminderOptions()
+              reply_markup: {
+                inline_keyboard: [[
+                  {
+                    text: '📝 Отправить отчет',
+                    web_app: { url: webAppUrl }
+                  }
+                ], [
+                  {
+                    text: '⏰ Напомнить через час',
+                    callback_data: 'remind_later'
+                  }
+                ]]
+              }
             }
           );
         }
@@ -147,12 +198,26 @@ schedulerService.handleRemindLater = async (bot, chatId, userId) => {
       const todayReport = await notionService.getTodayReport(userId);
       
       if (!todayReport) {
+        const webAppUrl = getWebAppUrl();
+        
         await bot.sendMessage(chatId,
           '⏰ *Напоминание*\n\n' +
           'Прошел час. Пора отправить отчет!',
           {
             parse_mode: 'Markdown',
-            reply_markup: keyboards.reminderOptions()
+            reply_markup: {
+              inline_keyboard: [[
+                {
+                  text: '📝 Отправить отчет',
+                  web_app: { url: webAppUrl }
+                }
+              ], [
+                {
+                  text: '⏰ Напомнить через час',
+                  callback_data: 'remind_later'
+                }
+              ]]
+            }
           }
         );
       }
