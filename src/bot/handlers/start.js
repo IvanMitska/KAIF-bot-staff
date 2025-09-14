@@ -50,8 +50,7 @@ module.exports = (bot) => {
           console.log('Using RAILWAY_DEPLOYMENT_NAME:', webAppUrl);
         } else {
           // Для локальной разработки используем ngrok или другой HTTPS туннель
-          // Попробуем использовать название из репозитория
-          webAppUrl = 'https://kaif-bot-staff-production.up.railway.app/webapp/public';
+          webAppUrl = 'https://telegram-report-bot-production.up.railway.app/webapp/public';
           console.log('Using production URL fallback:', webAppUrl);
         }
       }
