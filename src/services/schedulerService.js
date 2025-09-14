@@ -18,7 +18,7 @@ function getWebAppUrl() {
     } else if (process.env.RAILWAY_DEPLOYMENT_NAME) {
       webAppUrl = `https://${process.env.RAILWAY_DEPLOYMENT_NAME}.up.railway.app/webapp/public`;
     } else {
-      webAppUrl = 'https://tgbotkaifstaff-production.up.railway.app/webapp/public';
+      webAppUrl = 'https://kaif-bot-staff-production.up.railway.app/webapp/public';
     }
   }
   
