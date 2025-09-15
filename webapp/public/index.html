@@ -273,21 +273,21 @@
             
             <!-- Фильтры задач -->
             <div class="task-filters">
-                <button class="filter-btn active" onclick="filterTasks('all')">
+                <button class="filter-btn active" onclick="filterTasks('all', event)">
                     <span class="filter-text">Все</span>
                     <span class="count">0</span>
                 </button>
-                <button class="filter-btn" onclick="filterTasks('new')">
+                <button class="filter-btn" onclick="filterTasks('new', event)">
                     <div class="filter-indicator new"></div>
                     <span class="filter-text">Новые</span>
                     <span class="count">0</span>
                 </button>
-                <button class="filter-btn" onclick="filterTasks('in-progress')">
+                <button class="filter-btn" onclick="filterTasks('in-progress', event)">
                     <div class="filter-indicator in-progress"></div>
                     <span class="filter-text">В работе</span>
                     <span class="count">0</span>
                 </button>
-                <button class="filter-btn" onclick="filterTasks('completed')">
+                <button class="filter-btn" onclick="filterTasks('completed', event)">
                     <div class="filter-indicator completed"></div>
                     <span class="filter-text">Выполнены</span>
                     <span class="count">0</span>

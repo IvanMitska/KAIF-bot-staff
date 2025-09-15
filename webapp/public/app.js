@@ -1080,26 +1080,46 @@ function updateTaskCounts(tasks) {
     };
     
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        const filter = btn.getAttribute('onclick').match(/filterTasks\('(.+)'\)/)[1];
-        const countSpan = btn.querySelector('.count');
-        if (countSpan) {
-            countSpan.textContent = counts[filter] || 0;
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr) {
+            const match = onclickAttr.match(/filterTasks\('(.+?)'/);
+            if (match) {
+                const filter = match[1];
+                const countSpan = btn.querySelector('.count');
+                if (countSpan) {
+                    countSpan.textContent = counts[filter] || 0;
+                }
+            }
         }
     });
 }
 
 // Фильтрация задач с анимациями
-function filterTasks(filter) {
+function filterTasks(filter, event) {
     currentFilter = filter;
     
     // Обновляем активную кнопку с анимацией
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
-        if (btn === event.target) {
-            btn.style.animation = 'bounceIn 0.4s ease-out';
-        }
     });
-    event.target.classList.add('active');
+    
+    // Если event передан, используем его для определения нажатой кнопки
+    if (event && event.target) {
+        event.target.classList.add('active');
+        event.target.style.animation = 'bounceIn 0.4s ease-out';
+    } else {
+        // Иначе находим кнопку по фильтру
+        const filterMap = {
+            'all': 0,
+            'new': 1,
+            'in-progress': 2,
+            'completed': 3
+        };
+        const buttons = document.querySelectorAll('.filter-btn');
+        if (buttons[filterMap[filter]]) {
+            buttons[filterMap[filter]].classList.add('active');
+        }
+    }
     
     // Анимация исчезновения текущих задач
     const tasksContainer = document.querySelector('.tasks-container');
