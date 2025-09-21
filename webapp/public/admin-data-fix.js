@@ -1,8 +1,8 @@
 // ===== ИСПРАВЛЕНИЕ ЗАГРУЗКИ РЕАЛЬНЫХ ДАННЫХ В АДМИН-ПАНЕЛИ =====
 
 // Получаем Telegram WebApp и API URL
-const tg = window.Telegram?.WebApp;
-const API_URL = window.location.origin;
+const telegramApp = window.Telegram?.WebApp;
+const ADMIN_ADMIN_API_URL = window.location.origin;
 
 // Переопределяем функцию загрузки dashboard с реальными данными
 async function loadDashboard() {
@@ -19,20 +19,20 @@ async function loadDashboard() {
         const headers = {};
         let testParam = '';
         
-        if (tg && tg.initData) {
-            headers['X-Telegram-Init-Data'] = tg.initData;
+        if (telegramApp && telegramApp.initData) {
+            headers['X-Telegram-Init-Data'] = telegramApp.initData;
         } else {
             testParam = '?test=1';
         }
         
-        console.log('📡 Fetching from:', `${API_URL}/api/admin/dashboard/stats${testParam}`);
+        console.log('📡 Fetching from:', `${ADMIN_API_URL}/api/admin/dashboard/stats${testParam}`);
         console.log('Headers:', headers);
         
         // Делаем запросы по одному для лучшей отладки
         let statsRes, reportsRes, attendanceRes;
         
         try {
-            statsRes = await fetch(`${API_URL}/api/admin/dashboard/stats${testParam}`, { 
+            statsRes = await fetch(`${ADMIN_API_URL}/api/admin/dashboard/stats${testParam}`, { 
                 headers,
                 method: 'GET',
                 mode: 'cors',
@@ -45,7 +45,7 @@ async function loadDashboard() {
         }
         
         try {
-            reportsRes = await fetch(`${API_URL}/api/admin/reports${testParam}`, { 
+            reportsRes = await fetch(`${ADMIN_API_URL}/api/admin/reports${testParam}`, { 
                 headers,
                 method: 'GET',
                 mode: 'cors',
@@ -58,7 +58,7 @@ async function loadDashboard() {
         }
         
         try {
-            attendanceRes = await fetch(`${API_URL}/api/admin/attendance${testParam}`, { 
+            attendanceRes = await fetch(`${ADMIN_API_URL}/api/admin/attendance${testParam}`, { 
                 headers,
                 method: 'GET',
                 mode: 'cors',
@@ -184,7 +184,7 @@ async function loadDashboard() {
         console.error('Error details:', {
             message: error.message,
             stack: error.stack,
-            API_URL: API_URL
+            ADMIN_API_URL: ADMIN_API_URL
         });
         
         // Показываем сообщение об ошибке пользователю
@@ -239,8 +239,8 @@ function updateAttendanceWidget(present, total, percentage) {
 // Загрузка реального графика активности
 async function loadRealActivityChart() {
     try {
-        const response = await fetch(`${API_URL}/api/admin/activity/week`, {
-            headers: { 'X-Telegram-Init-Data': tg.initData }
+        const response = await fetch(`${ADMIN_API_URL}/api/admin/activity/week`, {
+            headers: { 'X-Telegram-Init-Data': telegramApp.initData }
         });
         
         if (response.ok) {
@@ -279,8 +279,8 @@ async function loadRealActivityChart() {
 // Загрузка топ сотрудников
 async function loadRealTopEmployees() {
     try {
-        const response = await fetch(`${API_URL}/api/admin/employees/top`, {
-            headers: { 'X-Telegram-Init-Data': tg.initData }
+        const response = await fetch(`${ADMIN_API_URL}/api/admin/employees/top`, {
+            headers: { 'X-Telegram-Init-Data': telegramApp.initData }
         });
         
         if (response.ok) {

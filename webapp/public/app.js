@@ -740,25 +740,37 @@ function switchTaskType(type) {
 
 // Загрузка задач
 async function loadTasks() {
+    console.log('🚀 loadTasks() function called');
+    console.log('📍 Current URL:', window.location.href);
+    console.log('🔍 Current page section:', document.querySelector('.tab-content.active')?.id);
+
     const tasksList = document.getElementById('tasksList');
-    
+    console.log('📋 tasksList element found:', !!tasksList);
+
+    if (!tasksList) {
+        console.error('❌ tasksList element not found in DOM!');
+        return;
+    }
+
     // Добавляем отладочную информацию прямо в интерфейс
     const debugInfo = `
         <div style="background: rgba(255,255,0,0.1); padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 12px;">
-            <div>🔍 Debug Mode</div>
+            <div>🔍 Debug Mode - loadTasks Called</div>
             <div>InitData: ${tg.initData ? '✅ Present' : '❌ Missing'}</div>
             <div>User: ${tg.initDataUnsafe?.user?.first_name || 'Unknown'}</div>
             <div>Platform: ${tg.platform || 'Unknown'}</div>
+            <div>Current Filter: ${currentFilter}</div>
+            <div>Current Task Type: ${currentTaskType}</div>
         </div>
     `;
-    
+
     tasksList.innerHTML = debugInfo + `
         <div class="loading">
             <div class="spinner"></div>
             <p style="margin-top: 16px;">Загрузка задач...</p>
         </div>
     `;
-    
+
     try {
         console.log('=== LOADING TASKS ===');
         console.log('Task type:', currentTaskType);
@@ -1128,10 +1140,15 @@ window.handleTaskClick = handleTaskClick;
 // Отображение задач
 function displayTasks(tasks) {
     console.log('📋 displayTasks called with', tasks?.length || 0, 'tasks');
-    
+    console.log('🔍 Tasks data:', tasks);
+    console.log('📍 Current filter:', currentFilter);
+    console.log('📍 Current task type:', currentTaskType);
+
     const tasksList = document.getElementById('tasksList');
+    console.log('📋 tasksList element in displayTasks:', !!tasksList);
+
     if (!tasksList) {
-        console.error('❌ tasksList element not found!');
+        console.error('❌ tasksList element not found in displayTasks!');
         return;
     }
     
