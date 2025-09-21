@@ -915,6 +915,203 @@ function openTaskDetail(taskId) {
     }
 }
 
+// Показать модальное окно просмотра задачи
+function showTaskModal(task) {
+    // Создаем или обновляем модальное окно просмотра задачи
+    let modal = document.getElementById('taskDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'taskDetailModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+
+    const statusColors = {
+        'Новая': { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6' },
+        'В работе': { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b' },
+        'Выполнена': { color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981' }
+    };
+
+    const statusClass = task.status || 'Новая';
+    const statusColor = statusColors[statusClass];
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px; margin: 0 auto;">
+            <div class="modal-header">
+                <h2 style="margin: 0; color: var(--text-primary);">Детали задачи</h2>
+                <button class="close-btn" onclick="closeTaskDetailModal()" style="
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: var(--text-secondary);
+                ">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="
+                        margin: 0 0 8px 0;
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                    ">${task.title}</h3>
+
+                    <span style="
+                        display: inline-flex;
+                        align-items: center;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        background: ${statusColor.bg};
+                        color: ${statusColor.color};
+                        border: 1px solid ${statusColor.border}40;
+                    ">${task.status}</span>
+                </div>
+
+                ${task.description ? `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="
+                            margin: 0 0 8px 0;
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: var(--text-secondary);
+                        ">Описание:</h4>
+                        <p style="
+                            margin: 0;
+                            font-size: 14px;
+                            color: var(--text-primary);
+                            line-height: 1.5;
+                            white-space: pre-wrap;
+                        ">${task.description}</p>
+                    </div>
+                ` : ''}
+
+                <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                    margin-bottom: 20px;
+                ">
+                    <div>
+                        <h4 style="
+                            margin: 0 0 4px 0;
+                            font-size: 12px;
+                            font-weight: 500;
+                            color: var(--text-secondary);
+                            text-transform: uppercase;
+                        ">Дедлайн</h4>
+                        <p style="
+                            margin: 0;
+                            font-size: 14px;
+                            color: var(--text-primary);
+                        ">${formatDate(task.deadline)}</p>
+                    </div>
+
+                    <div>
+                        <h4 style="
+                            margin: 0 0 4px 0;
+                            font-size: 12px;
+                            font-weight: 500;
+                            color: var(--text-secondary);
+                            text-transform: uppercase;
+                        ">Исполнитель</h4>
+                        <p style="
+                            margin: 0;
+                            font-size: 14px;
+                            color: var(--text-primary);
+                        ">${task.assigneeName || 'Не назначен'}</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="
+                        margin: 0 0 4px 0;
+                        font-size: 12px;
+                        font-weight: 500;
+                        color: var(--text-secondary);
+                        text-transform: uppercase;
+                    ">Создатель</h4>
+                    <p style="
+                        margin: 0;
+                        font-size: 14px;
+                        color: var(--text-primary);
+                    ">${task.creatorName || 'Система'}</p>
+                </div>
+
+                ${task.status !== 'Выполнена' && (currentUser?.id === task.assigneeId || currentUser?.isManager) ? `
+                    <div style="
+                        display: flex;
+                        gap: 12px;
+                        padding-top: 20px;
+                        border-top: 1px solid rgba(255, 255, 255, 0.08);
+                    ">
+                        ${task.status === 'Новая' && currentUser?.id === task.assigneeId ? `
+                            <button onclick="updateTaskStatus('${task.id}', 'В работе'); closeTaskDetailModal();" style="
+                                flex: 1;
+                                padding: 12px 16px;
+                                background: linear-gradient(135deg, #f59e0b, #d97706);
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            ">Взять в работу</button>
+                        ` : ''}
+
+                        ${currentUser?.id === task.assigneeId ? `
+                            <button onclick="updateTaskStatus('${task.id}', 'Выполнена'); closeTaskDetailModal();" style="
+                                flex: 1;
+                                padding: 12px 16px;
+                                background: linear-gradient(135deg, #10b981, #059669);
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            ">Выполнить</button>
+                        ` : ''}
+
+                        ${currentUser?.isManager && currentTaskType === 'created' ? `
+                            <button onclick="editTask('${task.id}'); closeTaskDetailModal();" style="
+                                flex: 1;
+                                padding: 12px 16px;
+                                background: linear-gradient(135deg, #6366f1, #4f46e5);
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            ">Редактировать</button>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    // Показываем модальное окно
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+
+    // Предотвращаем скролл фона
+    document.body.style.overflow = 'hidden';
+}
+
+// Закрыть модальное окно просмотра задачи
+function closeTaskDetailModal() {
+    const modal = document.getElementById('taskDetailModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
 // Отображение задач
 function displayTasks(tasks) {
     console.log('📋 displayTasks called with', tasks?.length || 0, 'tasks');
@@ -940,10 +1137,13 @@ function displayTasks(tasks) {
             'in-progress': 'В работе',
             'completed': 'Выполнена'
         };
-        filteredTasks = tasks.filter(task => task.status === statusMap[currentFilter]);
+        const targetStatus = statusMap[currentFilter];
+        console.log('🎯 Filtering by status:', targetStatus, 'from filter:', currentFilter);
+        console.log('📊 Available statuses in tasks:', [...new Set(tasks.map(t => t.status))]);
+        filteredTasks = tasks.filter(task => task.status === targetStatus);
     }
     
-    console.log('📋 Filtered tasks:', filteredTasks.length);
+    console.log('📋 Filtered tasks:', filteredTasks.length, 'from total:', tasks.length);
     
     if (filteredTasks.length === 0) {
         tasksList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Нет задач</p>';
@@ -964,7 +1164,7 @@ function displayTasks(tasks) {
         const statusColor = statusColors[statusClass];
         
         return `
-            <div class="task-item-modern" 
+            <div class="task-item-modern"
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
@@ -977,6 +1177,7 @@ function displayTasks(tasks) {
                     position: relative;
                     overflow: hidden;
                  "
+                 onclick="openTaskDetail('${task.id}')"
                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'"
                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'"
             >
@@ -1096,6 +1297,7 @@ function updateTaskCounts(tasks) {
 
 // Фильтрация задач с анимациями
 function filterTasks(filter, event) {
+    console.log('🔍 filterTasks called:', filter, event);
     currentFilter = filter;
     
     // Обновляем активную кнопку с анимацией
@@ -1105,8 +1307,15 @@ function filterTasks(filter, event) {
     
     // Если event передан, используем его для определения нажатой кнопки
     if (event && event.target) {
-        event.target.classList.add('active');
-        event.target.style.animation = 'bounceIn 0.4s ease-out';
+        // Находим кнопку (может быть клик по дочернему элементу)
+        let button = event.target;
+        if (button.tagName !== 'BUTTON') {
+            button = button.closest('button');
+        }
+        if (button) {
+            button.classList.add('active');
+            button.style.animation = 'bounceIn 0.4s ease-out';
+        }
     } else {
         // Иначе находим кнопку по фильтру
         const filterMap = {
