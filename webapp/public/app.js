@@ -131,6 +131,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateNavIndicator(activeBtn);
         }
     }, 100);
+
+    // ДИАГНОСТИКА: Принудительный тест страницы задач через 2 секунды
+    setTimeout(() => {
+        console.log('🔧 ДИАГНОСТИКА: Принудительно открываем страницу задач для тестирования...');
+        showPage('tasks');
+    }, 2000);
 });
 
 // Инициализация современного UI с расширенными анимациями
@@ -339,10 +345,18 @@ let isPageSwitching = false;
 
 // Навигация между страницами
 function showPage(pageId) {
+    console.log('🔄 showPage() called with pageId:', pageId);
+
     const currentPage = document.querySelector('.page.active');
     const targetPage = document.getElementById(pageId);
-    
-    if (!targetPage) return;
+
+    console.log('📍 Current page:', currentPage?.id);
+    console.log('🎯 Target page element found:', !!targetPage);
+
+    if (!targetPage) {
+        console.error('❌ Target page not found:', pageId);
+        return;
+    }
     
     // Если пытаемся переключиться на ту же страницу
     if (currentPage === targetPage) {
@@ -392,16 +406,22 @@ function showPage(pageId) {
     
     // Асинхронно загружаем данные для страницы (не блокируем UI)
     setTimeout(() => {
+        console.log('📊 Loading data for page:', pageId);
         switch(pageId) {
             case 'tasks':
+                console.log('🎯 Calling loadTasks() from showPage...');
                 loadTasks();
                 break;
             case 'stats':
+                console.log('📈 Calling loadStats() from showPage...');
                 loadStats();
                 break;
             case 'profile':
+                console.log('👤 Calling loadFullProfile() from showPage...');
                 loadFullProfile();
                 break;
+            default:
+                console.log('❓ Unknown page ID:', pageId);
         }
     }, 0);
     
