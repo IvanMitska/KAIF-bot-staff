@@ -908,10 +908,15 @@ async function loadTasks() {
 
 // Функция открытия деталей задачи
 function openTaskDetail(taskId) {
-    console.log('Opening task detail:', taskId);
+    console.log('🔍 openTaskDetail called with taskId:', taskId);
+    console.log('📋 currentTasks array:', currentTasks);
     const task = currentTasks.find(t => t.id === taskId);
+    console.log('🎯 Found task:', task);
     if (task) {
+        console.log('✅ Calling showTaskModal with task:', task.title);
         showTaskModal(task);
+    } else {
+        console.error('❌ Task not found in currentTasks array for taskId:', taskId);
     }
 }
 
@@ -2878,12 +2883,12 @@ function displayTaskDetail(task) {
             ${canComplete ? `
                 <div class="task-actions modern">
                     ${task.status === 'Новая' ? `
-                        <button class="task-action-btn modern start" onclick="updateTaskStatus('${task.id}', 'В работе')">
+                        <button class="task-action-btn modern start" onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'В работе')">
                             <i data-lucide="play" class="btn-icon"></i>
                             Взять в работу
                         </button>
                     ` : ''}
-                    <button class="task-action-btn modern complete" onclick="updateTaskStatus('${task.id}', 'Выполнена')">
+                    <button class="task-action-btn modern complete" onclick="event.stopPropagation(); updateTaskStatus('${task.id}', 'Выполнена')">
                         <i data-lucide="check-circle" class="btn-icon"></i>
                         Выполнить
                     </button>
@@ -2892,7 +2897,7 @@ function displayTaskDetail(task) {
             
             ${window.isManager && currentTaskType === 'created' ? `
                 <div class="task-actions modern" style="margin-top: 12px;">
-                    <button class="task-action-btn modern edit" onclick="editTask('${task.id}')">
+                    <button class="task-action-btn modern edit" onclick="event.stopPropagation(); editTask('${task.id}')">
                         <i data-lucide="edit-3" class="btn-icon"></i>
                         Редактировать
                     </button>
