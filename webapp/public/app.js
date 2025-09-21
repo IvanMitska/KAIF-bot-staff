@@ -1123,6 +1123,7 @@ function closeTaskDetailModal() {
 // Делаем функции глобально доступными
 window.showTaskModal = showTaskModal;
 window.closeTaskDetailModal = closeTaskDetailModal;
+window.handleTaskClick = handleTaskClick;
 
 // Отображение задач
 function displayTasks(tasks) {
@@ -1176,7 +1177,7 @@ function displayTasks(tasks) {
         const statusColor = statusColors[statusClass];
         
         return `
-            <div class="task-item-modern"
+            <div class="task-item-modern" data-task-id="${task.id}"
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
@@ -1189,7 +1190,6 @@ function displayTasks(tasks) {
                     position: relative;
                     overflow: hidden;
                  "
-                 onclick="console.log('🔥 TASK CLICKED:', '${task.id}'); openTaskDetail('${task.id}')"
                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'"
                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'"
             >
@@ -1281,6 +1281,42 @@ function displayTasks(tasks) {
             </div>
         `;
     }).join('');
+
+    // Добавляем обработчики событий после создания HTML
+    console.log('🔧 Adding click event listeners to task items...');
+    setTimeout(() => {
+        const taskItems = document.querySelectorAll('.task-item-modern[data-task-id]');
+        console.log('📋 Found task items:', taskItems.length);
+
+        taskItems.forEach((item, index) => {
+            const taskId = item.getAttribute('data-task-id');
+            console.log(`🎯 Adding listener to task ${index + 1}:`, taskId);
+
+            // Удаляем старые обработчики если есть
+            item.removeEventListener('click', handleTaskClick);
+
+            // Добавляем новый обработчик
+            item.addEventListener('click', function(event) {
+                console.log('🔥 TASK CLICKED via addEventListener:', taskId);
+                console.log('🔍 Event target:', event.target);
+                console.log('🔍 Current target:', event.currentTarget);
+
+                // Проверяем, что клик не по кнопке
+                if (event.target.closest('.task-action-btn')) {
+                    console.log('⚠️ Click was on action button, ignoring');
+                    return;
+                }
+
+                handleTaskClick(taskId);
+            });
+        });
+    }, 100);
+}
+
+// Функция обработки клика по задаче
+function handleTaskClick(taskId) {
+    console.log('🚀 handleTaskClick called with:', taskId);
+    openTaskDetail(taskId);
 }
 
 // Обновление счетчиков задач
