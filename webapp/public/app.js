@@ -920,6 +920,9 @@ function openTaskDetail(taskId) {
     }
 }
 
+// Делаем функцию глобально доступной
+window.openTaskDetail = openTaskDetail;
+
 // Показать модальное окно просмотра задачи
 function showTaskModal(task) {
     // Создаем или обновляем модальное окно просмотра задачи
@@ -1117,6 +1120,10 @@ function closeTaskDetailModal() {
     }
 }
 
+// Делаем функции глобально доступными
+window.showTaskModal = showTaskModal;
+window.closeTaskDetailModal = closeTaskDetailModal;
+
 // Отображение задач
 function displayTasks(tasks) {
     console.log('📋 displayTasks called with', tasks?.length || 0, 'tasks');
@@ -1182,7 +1189,7 @@ function displayTasks(tasks) {
                     position: relative;
                     overflow: hidden;
                  "
-                 onclick="openTaskDetail('${task.id}')"
+                 onclick="console.log('🔥 TASK CLICKED:', '${task.id}'); openTaskDetail('${task.id}')"
                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'"
                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'"
             >
