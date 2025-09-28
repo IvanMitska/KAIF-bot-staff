@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест фиксированной темы - KAIF Staff</title>
+    <link rel="stylesheet" href="webapp/public/styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>🔒 Фиксированная темная тема</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 30px;">
+            Приложение всегда отображается в темной теме, независимо от настроек Telegram
+        </p>
+
+        <!-- Симуляция разных цветов фона Telegram -->
+        <div style="margin-bottom: 30px;">
+            <h3>Симуляция фона Telegram:</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px;">
+                <button onclick="simulateTgBg('#FFFFFF')" style="padding: 10px; background: #FFFFFF; color: #000; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;">
+                    Белый фон
+                </button>
+                <button onclick="simulateTgBg('#F0F0F0')" style="padding: 10px; background: #F0F0F0; color: #000; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;">
+                    Светло-серый
+                </button>
+                <button onclick="simulateTgBg('#17212B')" style="padding: 10px; background: #17212B; color: #fff; border: 1px solid #555; border-radius: 8px; cursor: pointer;">
+                    Темно-синий
+                </button>
+                <button onclick="simulateTgBg('#0F0F14')" style="padding: 10px; background: #0F0F14; color: #fff; border: 1px solid #555; border-radius: 8px; cursor: pointer;">
+                    Черный
+                </button>
+            </div>
+            <p id="currentBg" style="margin-top: 10px; font-size: 14px; color: var(--text-muted);">
+                Текущий фон: #0F0F14 (по умолчанию)
+            </p>
+        </div>
+
+        <!-- Тестовые элементы -->
+        <div class="action-grid">
+            <div class="action-card">
+                <div class="action-icon-wrapper">
+                    <i data-lucide="file-text" class="action-icon"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Отправить отчет</h3>
+                    <p>Проверка читаемости текста</p>
+                </div>
+                <div class="action-arrow">
+                    <i data-lucide="chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon-wrapper">
+                    <i data-lucide="check-square" class="action-icon"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Мои задачи</h3>
+                    <p>Контрастность элементов</p>
+                </div>
+                <div class="action-arrow">
+                    <i data-lucide="chevron-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div style="margin-top: 30px;">
+            <h3>Навигация:</h3>
+            <nav class="navigation" style="position: relative; margin-top: 15px;">
+                <div class="nav-indicator"></div>
+                <button class="nav-btn active">
+                    <div class="nav-icon-wrapper">
+                        <i data-lucide="home"></i>
+                    </div>
+                    <span class="nav-label">Главная</span>
+                </button>
+                <button class="nav-btn">
+                    <div class="nav-icon-wrapper">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <span class="nav-label">Отчеты</span>
+                </button>
+                <button class="nav-btn">
+                    <div class="nav-icon-wrapper">
+                        <i data-lucide="check-square"></i>
+                    </div>
+                    <span class="nav-label">Задачи</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Форма -->
+        <div style="margin-top: 30px;">
+            <h3>Форма:</h3>
+            <div class="form-card">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="edit-3" class="label-icon"></i>
+                        Тестовое поле
+                    </label>
+                    <input type="text" class="form-input" placeholder="Проверка читаемости..." value="Тестовый текст">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="file-text" class="label-icon"></i>
+                        Описание
+                    </label>
+                    <textarea class="form-textarea" placeholder="Многострочный текст...">Этот текст должен быть хорошо читаемым в любых условиях</textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i data-lucide="send" class="btn-icon"></i>
+                    Тестовая кнопка
+                </button>
+            </div>
+        </div>
+
+        <!-- Результат теста -->
+        <div style="margin-top: 30px; padding: 20px; background: var(--glass-white); border-radius: var(--radius-lg); border: 1px solid var(--border-glass);">
+            <h3 style="color: var(--success);">✅ Результат:</h3>
+            <p style="color: var(--text-primary);">
+                Интерфейс должен выглядеть одинаково независимо от фона Telegram
+            </p>
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                Все элементы используют фиксированную темную тему
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация иконок
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            console.log('🔒 Тема заблокирована на темной версии');
+        });
+
+        // Симуляция изменения фона Telegram
+        function simulateTgBg(color) {
+            // Применяем CSS переменную (как это делал бы реальный Telegram)
+            document.documentElement.style.setProperty('--tg-theme-bg-color', color);
+
+            // Обновляем отображение
+            document.getElementById('currentBg').textContent = `Текущий фон: ${color}`;
+
+            console.log('🎨 Симуляция фона Telegram:', color);
+            console.log('💡 Но приложение остается в темной теме!');
+        }
+
+        // Проверяем, что тема не меняется
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    console.log('🔍 Проверка класса HTML:', document.documentElement.className);
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    </script>
+</body>
+</html>

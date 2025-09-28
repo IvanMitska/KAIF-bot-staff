@@ -663,11 +663,17 @@ body::before {
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    animation: fadeIn 0.3s ease-out;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.3s ease-out;
 }
 
 .modal-overlay.show {
-    display: flex;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 .modal-container {
@@ -1129,21 +1135,8 @@ body::before {
     opacity: 1;
 }
 
-/* ===== ТЕМНАЯ ТЕМА (если потребуется) ===== */
-@media (prefers-color-scheme: light) {
-    :root {
-        --glass-white: rgba(255, 255, 255, 0.7);
-        --glass-white-strong: rgba(255, 255, 255, 0.85);
-        --text-primary: rgba(30, 30, 30, 0.95);
-        --text-secondary: rgba(60, 60, 60, 0.75);
-        --text-muted: rgba(100, 100, 100, 0.5);
-        --border-glass: rgba(0, 0, 0, 0.1);
-    }
-    
-    body {
-        background: linear-gradient(180deg, #F3E8FF 0%, #E9D5FF 50%, #D8B4FE 100%);
-    }
-}
+/* ===== ТЕМА ЗАБЛОКИРОВАНА НА ТЕМНОЙ ВЕРСИИ ===== */
+/* Светлая тема удалена - приложение всегда использует темную тему */
 /* ===== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ ИСПРАВЛЕНИЯ ВЕРСТКИ ===== */
 
 /* Секции и заголовки */

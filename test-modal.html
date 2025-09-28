@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест модального окна - KAIF Staff</title>
+    <link rel="stylesheet" href="webapp/public/styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>🎯 Тест модального окна создания задачи</h1>
+
+        <div style="margin-bottom: 30px;">
+            <button onclick="testShowModal()" class="submit-btn" style="margin-right: 15px;">
+                <i data-lucide="plus" class="btn-icon"></i>
+                Открыть модальное окно
+            </button>
+
+            <button onclick="testCloseModal()" class="btn-secondary" style="margin-right: 15px;">
+                <i data-lucide="x" class="btn-icon"></i>
+                Закрыть модальное окно
+            </button>
+
+            <button onclick="checkModalExistence()" class="btn-secondary">
+                <i data-lucide="search" class="btn-icon"></i>
+                Проверить DOM
+            </button>
+        </div>
+
+        <div id="status" style="padding: 15px; background: var(--glass-white); border-radius: var(--radius-lg); margin-bottom: 20px;">
+            <p><strong>Статус:</strong> <span id="statusText">Готов к тестированию</span></p>
+        </div>
+
+        <div style="background: var(--glass-white); padding: 20px; border-radius: var(--radius-lg);">
+            <h3>Логи:</h3>
+            <div id="logs" style="font-family: monospace; font-size: 12px; line-height: 1.4; max-height: 200px; overflow-y: auto;">
+                <div>🟢 Готов к тестированию модального окна</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Копируем модальное окно из основного файла -->
+    <div id="taskModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-icon">
+                        <i data-lucide="plus-circle"></i>
+                    </div>
+                    <h2 class="modal-title">Новая задача</h2>
+                </div>
+                <button class="modal-close" onclick="testCloseModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <form id="taskForm" onsubmit="submitTask(event)" class="modern-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="user" class="label-icon"></i>
+                        Исполнитель
+                    </label>
+                    <div class="custom-select-wrapper">
+                        <select id="taskEmployee" name="employee" required class="custom-select">
+                            <option value="">Выберите сотрудника</option>
+                            <option value="ivan">Ivan</option>
+                            <option value="anna">Anna</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="edit-3" class="label-icon"></i>
+                        Название задачи
+                    </label>
+                    <input type="text" name="title" required placeholder="Кратко опишите задачу" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-lucide="file-text" class="label-icon"></i>
+                        Описание <span class="optional-label">(опционально)</span>
+                    </label>
+                    <textarea name="description" rows="4" placeholder="Подробное описание задачи, требования, ссылки..." class="form-textarea"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label class="form-label">
+                            <i data-lucide="calendar" class="label-icon"></i>
+                            Срок выполнения
+                        </label>
+                        <input type="date" id="taskDeadline" name="deadline" required class="form-input">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label class="form-label">
+                            <i data-lucide="flag" class="label-icon"></i>
+                            Приоритет
+                        </label>
+                        <div class="custom-select-wrapper">
+                            <select name="priority" class="custom-select">
+                                <option value="Низкий">🟢 Низкий</option>
+                                <option value="Средний" selected>🟡 Средний</option>
+                                <option value="Высокий">🔴 Высокий</option>
+                            </select>
+                            <div class="select-arrow">
+                                <i data-lucide="chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" onclick="testCloseModal()" class="btn-secondary">
+                        <i data-lucide="x"></i>
+                        Отмена
+                    </button>
+                    <button type="submit" class="submit-btn">
+                        <i data-lucide="plus" class="btn-icon"></i>
+                        Создать задачу
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            log('🎨 Lucide иконки инициализированы');
+
+            // Устанавливаем дату по умолчанию на завтра
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dateInput = document.getElementById('taskDeadline');
+            if (dateInput) {
+                dateInput.value = tomorrow.toISOString().split('T')[0];
+                log('📅 Дата по умолчанию установлена: ' + dateInput.value);
+            }
+        });
+
+        // Функция логирования
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML += `<div>${time} - ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(message);
+        }
+
+        // Функция обновления статуса
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        // Тестовая функция открытия модального окна
+        function testShowModal() {
+            log('🎯 Попытка открыть модальное окно...');
+            updateStatus('Открываем модальное окно...');
+
+            const modal = document.getElementById('taskModal');
+            if (!modal) {
+                log('❌ Модальное окно taskModal не найдено в DOM');
+                updateStatus('ОШИБКА: Модальное окно не найдено');
+                return;
+            }
+
+            log('✅ Модальное окно найдено в DOM');
+
+            // Прокручиваем к началу
+            window.scrollTo(0, 0);
+            log('📜 Прокрутка к началу страницы');
+
+            // Отображаем модальное окно
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+
+            // Принудительно устанавливаем свойства для видимости
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            modal.style.pointerEvents = 'auto';
+
+            // Блокируем прокрутку страницы
+            document.body.style.overflow = 'hidden';
+
+            log('✨ Модальное окно отображено');
+            updateStatus('Модальное окно открыто');
+
+            // Инициализируем иконки
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                log('🎨 Иконки в модальном окне обновлены');
+            }
+        }
+
+        // Тестовая функция закрытия модального окна
+        function testCloseModal() {
+            log('🔒 Попытка закрыть модальное окно...');
+            updateStatus('Закрываем модальное окно...');
+
+            const modal = document.getElementById('taskModal');
+            if (!modal) {
+                log('❌ Модальное окно не найдено');
+                return;
+            }
+
+            modal.classList.remove('show');
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            modal.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                modal.style.display = 'none';
+                log('🔒 Модальное окно скрыто');
+            }, 300);
+
+            // Восстанавливаем прокрутку
+            document.body.style.overflow = '';
+
+            const form = document.getElementById('taskForm');
+            if (form) {
+                form.reset();
+                log('📝 Форма сброшена');
+            }
+
+            updateStatus('Модальное окно закрыто');
+        }
+
+        // Проверка существования модального окна
+        function checkModalExistence() {
+            log('🔍 Проверяем DOM...');
+
+            const modal = document.getElementById('taskModal');
+            if (modal) {
+                log('✅ Модальное окно найдено: ' + modal.tagName);
+                log('📊 Текущий display: ' + getComputedStyle(modal).display);
+                log('📊 Текущий opacity: ' + getComputedStyle(modal).opacity);
+                log('📊 Текущий visibility: ' + getComputedStyle(modal).visibility);
+                log('📊 Классы: ' + modal.className);
+                updateStatus('Модальное окно существует в DOM');
+            } else {
+                log('❌ Модальное окно НЕ найдено в DOM');
+                updateStatus('ОШИБКА: Модальное окно отсутствует');
+            }
+        }
+
+        // Обработка формы
+        function submitTask(event) {
+            event.preventDefault();
+            log('📝 Форма отправлена (тестовый режим)');
+            updateStatus('Форма обработана');
+
+            const formData = new FormData(event.target);
+            log('📋 Данные формы:');
+            for (let [key, value] of formData.entries()) {
+                log(`  ${key}: ${value}`);
+            }
+
+            // Закрываем модальное окно после отправки
+            setTimeout(() => {
+                testCloseModal();
+            }, 1000);
+        }
+
+        // Закрытие по клику на фон
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('taskModal');
+            if (event.target === modal) {
+                log('🖱️ Клик по фону модального окна');
+                testCloseModal();
+            }
+        });
+    </script>
+</body>
+</html>

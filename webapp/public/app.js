@@ -16,9 +16,12 @@ if (!tg.initData && window.location.hostname === 'localhost') {
     console.warn('⚠️ NO TELEGRAM INIT DATA DETECTED (dev mode)');
 }
 
-// Установка темы
-document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#0F0F14');
-document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#FFFFFF');
+// Принудительно используем только темную тему
+// Игнорируем настройки темы Telegram - приложение всегда в темной теме
+document.documentElement.style.setProperty('--tg-theme-bg-color', '#0F0F14');
+document.documentElement.style.setProperty('--tg-theme-text-color', '#FFFFFF');
+
+console.log('🎨 Тема заблокирована на темной версии');
 
 // API URL
 const API_URL = window.location.origin;
@@ -2630,9 +2633,11 @@ function createTaskForEmployee(employeeId, employeeName) {
 function showCreateTaskModal(employeeId = null, employeeName = null) {
     const modal = document.getElementById('taskModal');
     if (!modal) {
-        createTaskModal();
+        console.error('❌ Модальное окно taskModal не найдено в DOM');
         return;
     }
+
+    console.log('🎯 Открываем модальное окно создания задачи');
     
     // Прокручиваем к началу перед открытием модального окна
     window.scrollTo(0, 0);
@@ -2640,6 +2645,14 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     // Современное отображение модального окна
     modal.style.display = 'flex';
     modal.classList.add('show');
+
+    // Принудительно устанавливаем свойства для видимости
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+
+    // Добавляем body класс для предотвращения скролла
+    document.body.style.overflow = 'hidden';
     
     // Инициализируем Lucide иконки в модальном окне
     if (typeof lucide !== 'undefined') {
@@ -2732,11 +2745,20 @@ async function loadEmployeesForSelect(selectedId = null) {
 function closeTaskModal() {
     const modal = document.getElementById('taskModal');
     if (modal) {
+        console.log('🔒 Закрываем модальное окно создания задачи');
+
         modal.classList.remove('show');
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+        modal.style.pointerEvents = 'none';
+
         setTimeout(() => {
             modal.style.display = 'none';
         }, 300);
-        
+
+        // Восстанавливаем прокрутку
+        document.body.style.overflow = '';
+
         const form = document.getElementById('taskForm');
         if (form) {
             form.reset();
