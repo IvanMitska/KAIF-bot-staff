@@ -775,31 +775,16 @@ async function loadTasks() {
         return;
     }
 
-    // Добавляем отладочную информацию прямо в интерфейс
-    const debugInfo = `
-        <div style="background: rgba(255,255,0,0.1); padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 12px;">
-            <div>🔍 Debug Mode - loadTasks Called</div>
-            <div>InitData: ${tg.initData ? '✅ Present' : '❌ Missing'}</div>
-            <div>User: ${tg.initDataUnsafe?.user?.first_name || 'Unknown'}</div>
-            <div>Platform: ${tg.platform || 'Unknown'}</div>
-            <div>Current Filter: ${currentFilter}</div>
-            <div>Current Task Type: ${currentTaskType}</div>
-        </div>
-    `;
-
-    tasksList.innerHTML = debugInfo + `
+    // Показываем индикатор загрузки
+    tasksList.innerHTML = `
         <div class="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 16px;">Загрузка задач...</p>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Загрузка задач...</p>
         </div>
     `;
 
     try {
-        console.log('=== LOADING TASKS ===');
-        console.log('Task type:', currentTaskType);
-        console.log('Init data available:', !!tg.initData);
-        console.log('Init data length:', tg.initData?.length || 0);
-        console.log('User from Telegram:', tg.initDataUnsafe?.user);
+        console.log('🔄 Загрузка задач...', { type: currentTaskType, hasAuth: !!tg.initData });
         
         // Если нет Telegram данных, проверяем тестовый режим
         if (!tg.initData && !isTestMode) {
@@ -934,10 +919,20 @@ async function loadTasks() {
             <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
                 <i data-lucide="wifi-off" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
                 <h3 style="margin-bottom: 8px;">Ошибка подключения</h3>
-                <p>Не удалось загрузить задачи. Проверьте интернет-соединение.</p>
+                <p style="margin-bottom: 20px;">Не удалось загрузить задачи. Проверьте интернет-соединение.</p>
+                <button onclick="forceLoadTasks()" class="btn-secondary" style="margin-top: 16px;">
+                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                    Попробовать снова
+                </button>
             </div>
         `;
         lucide.createIcons();
+
+        // Показываем контейнер с кнопкой принудительной загрузки
+        const errorContainer = document.getElementById('tasksErrorContainer');
+        if (errorContainer) {
+            errorContainer.style.display = 'block';
+        }
     }
 }
 
@@ -957,6 +952,26 @@ function openTaskDetail(taskId) {
 
 // Делаем функцию глобально доступной
 window.openTaskDetail = openTaskDetail;
+
+// Принудительная загрузка задач (для кнопки в интерфейсе)
+function forceLoadTasks() {
+    console.log('🔄 Принудительная загрузка задач...');
+
+    // Скрываем контейнер с ошибкой
+    const errorContainer = document.getElementById('tasksErrorContainer');
+    if (errorContainer) {
+        errorContainer.style.display = 'none';
+    }
+
+    // Переключаемся на страницу задач если нужно
+    const currentPage = document.querySelector('.page.active');
+    if (currentPage && currentPage.id !== 'tasks') {
+        showPage('tasks');
+    }
+
+    // Загружаем задачи
+    loadTasks();
+}
 
 // Показать модальное окно просмотра задачи
 function showTaskModal(task) {
