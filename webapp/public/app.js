@@ -2802,18 +2802,59 @@ async function loadEmployeesForSelect(selectedId = null) {
                 'X-Telegram-Init-Data': tg.initData
             }
         });
-        
+
         if (response.ok) {
             const employees = await response.json();
             const select = document.getElementById('taskEmployee');
-            
+
             select.innerHTML = '<option value="">Выберите сотрудника</option>' +
-                employees.map(emp => 
+                employees.map(emp =>
                     `<option value="${emp.telegramId}" ${emp.telegramId == selectedId ? 'selected' : ''}>${emp.name}</option>`
                 ).join('');
+
+            // ВАЖНО: Переинициализируем dropdown после загрузки данных
+            console.log('🔄 Переинициализация dropdown после загрузки сотрудников');
+
+            // Удаляем старый dropdown если есть
+            const wrapper = select.closest('.custom-select-wrapper');
+            if (wrapper) {
+                const oldDropdown = wrapper.querySelector('.employee-dropdown');
+                if (oldDropdown) {
+                    oldDropdown.remove();
+                }
+                // Убираем флаг инициализации
+                select.dataset.dropdownInitialized = 'false';
+            }
+
+            // Инициализируем dropdown заново
+            if (typeof initEmployeeDropdown === 'function') {
+                setTimeout(() => {
+                    initEmployeeDropdown();
+                    console.log('✅ Dropdown переинициализирован с новыми данными');
+                }, 100);
+            }
         }
     } catch (error) {
         console.error('Error loading employees:', error);
+
+        // Fallback - используем статические данные
+        const select = document.getElementById('taskEmployee');
+        select.innerHTML = `
+            <option value="">Выберите сотрудника</option>
+            <option value="642664990">Аля</option>
+            <option value="385436658">Борис</option>
+            <option value="5937587032">Дмитрий</option>
+            <option value="1734337242">Иван</option>
+            <option value="1151085087">Ксения</option>
+            <option value="303267717">Максим</option>
+            <option value="726915228">Полина</option>
+            <option value="893020643">Юрий</option>
+        `;
+
+        // Переинициализируем dropdown
+        if (typeof initEmployeeDropdown === 'function') {
+            setTimeout(initEmployeeDropdown, 100);
+        }
     }
 }
 

@@ -51,13 +51,27 @@ class EmployeeDropdown {
     }
 
     renderEmployeeList(searchTerm = '') {
+        console.log(`📝 Рендеринг списка сотрудников. Опций: ${this.options.length}`);
         this.listContainer.innerHTML = '';
+
+        // Проверяем наличие опций
+        if (this.options.length === 0) {
+            console.warn('⚠️ Нет опций для отображения!');
+            this.listContainer.innerHTML = `
+                <div class="employee-empty">
+                    <p>Загрузка сотрудников...</p>
+                </div>
+            `;
+            return;
+        }
 
         // Фильтруем опции
         const filteredOptions = this.options.filter(option => {
             if (option.value === '') return true; // Всегда показываем placeholder
             return option.text.toLowerCase().includes(searchTerm.toLowerCase());
         });
+
+        console.log(`📋 Отфильтровано опций: ${filteredOptions.length}`);
 
         if (filteredOptions.length === 0) {
             this.listContainer.innerHTML = `
@@ -308,11 +322,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Также инициализируем при открытии модального окна
 window.initEmployeeDropdown = function() {
+    console.log('🔄 initEmployeeDropdown вызвана');
     const selects = document.querySelectorAll('#taskEmployee, #editTaskEmployee');
+
     selects.forEach(select => {
-        if (select && !select.dataset.dropdownInitialized) {
-            new EmployeeDropdown(select);
-            select.dataset.dropdownInitialized = 'true';
+        if (select) {
+            // Проверяем, есть ли опции в select
+            console.log(`📋 Опций в ${select.id}: ${select.options.length}`);
+
+            // Если dropdown уже инициализирован, но опции изменились - переинициализируем
+            if (select.dataset.dropdownInitialized === 'true') {
+                const wrapper = select.closest('.custom-select-wrapper');
+                if (wrapper) {
+                    const oldDropdown = wrapper.querySelector('.employee-dropdown');
+                    if (oldDropdown) {
+                        // Проверяем количество элементов в dropdown
+                        const dropdownItems = oldDropdown.querySelectorAll('.employee-option');
+                        if (dropdownItems.length !== select.options.length) {
+                            console.log('⚠️ Количество опций изменилось, переинициализация...');
+                            oldDropdown.remove();
+                            select.dataset.dropdownInitialized = 'false';
+                        }
+                    }
+                }
+            }
+
+            // Инициализируем если еще не инициализирован
+            if (select.dataset.dropdownInitialized !== 'true') {
+                // Блокируем нативное поведение
+                select.style.appearance = 'none';
+                select.style.webkitAppearance = 'none';
+                select.style.mozAppearance = 'none';
+
+                new EmployeeDropdown(select);
+                select.dataset.dropdownInitialized = 'true';
+                console.log(`✅ Dropdown инициализирован для ${select.id} с ${select.options.length} опциями`);
+            }
         }
     });
 };

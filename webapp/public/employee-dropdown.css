@@ -21,20 +21,22 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--glass-white-strong);
+    background: var(--dropdown-bg, #1a1a1f);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border-glass);
+    border: 1px solid var(--dropdown-border, rgba(255, 255, 255, 0.1));
     border-top: none;
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border-radius: 0 0 12px 12px;
     max-height: 320px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 100001;
     opacity: 0;
     transform: translateY(-10px);
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    /* Убедимся что содержимое видно */
+    color: var(--text-primary, #ffffff);
 }
 
 /* Показ dropdown */
