@@ -97,6 +97,11 @@ window.showCreateTaskModal = function(employeeId = null, employeeName = null) {
         setTimeout(() => lucide.createIcons(), 100);
     }
 
+    // Инициализируем улучшенный dropdown для сотрудников
+    if (typeof initEmployeeDropdown === 'function') {
+        setTimeout(() => initEmployeeDropdown(), 150);
+    }
+
     // Устанавливаем дату по умолчанию
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
