@@ -61,7 +61,6 @@ const ApiManager = {
                 { telegramId: '1', name: 'Иван Петров', position: 'Менеджер', isOnline: true },
                 { telegramId: '2', name: 'Мария Иванова', position: 'Бариста', isOnline: true },
                 { telegramId: '3', name: 'Алексей Сидоров', position: 'Официант', isOnline: false },
-                { telegramId: '4', name: 'Елена Козлова', position: 'Администратор', isOnline: true },
                 { telegramId: '5', name: 'Дмитрий Новиков', position: 'Повар', isOnline: false },
                 { telegramId: '6', name: 'Ольга Морозова', position: 'Кассир', isOnline: true },
                 { telegramId: '7', name: 'Сергей Васильев', position: 'Курьер', isOnline: false },
