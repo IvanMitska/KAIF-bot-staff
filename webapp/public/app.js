@@ -2646,28 +2646,59 @@ function createTaskForEmployee(employeeId, employeeName) {
 
 // Показать модальное окно создания задачи
 function showCreateTaskModal(employeeId = null, employeeName = null) {
+    console.log('🚀 showCreateTaskModal вызвана!', { employeeId, employeeName });
+
     const modal = document.getElementById('taskModal');
+    console.log('🔍 Поиск элемента taskModal:', modal);
+
     if (!modal) {
         console.error('❌ Модальное окно taskModal не найдено в DOM');
+        console.log('📋 Все элементы с id:',
+            Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+
+        // Попробуем найти любые модальные окна
+        const allModals = document.querySelectorAll('.modal-overlay, .modal');
+        console.log('🔍 Найденные модальные окна:', allModals);
+
         return;
     }
 
+    console.log('✅ Модальное окно найдено!');
     console.log('🎯 Открываем модальное окно создания задачи');
     
     // Прокручиваем к началу перед открытием модального окна
     window.scrollTo(0, 0);
     
     // Современное отображение модального окна
+    console.log('📝 Устанавливаем display: flex');
     modal.style.display = 'flex';
+
+    console.log('📝 Добавляем класс show');
     modal.classList.add('show');
 
     // Принудительно устанавливаем свойства для видимости
+    console.log('📝 Устанавливаем opacity: 1');
     modal.style.opacity = '1';
+
+    console.log('📝 Устанавливаем visibility: visible');
     modal.style.visibility = 'visible';
+
+    console.log('📝 Устанавливаем pointerEvents: auto');
     modal.style.pointerEvents = 'auto';
 
     // Добавляем body класс для предотвращения скролла
+    console.log('📝 Блокируем скролл body');
     document.body.style.overflow = 'hidden';
+
+    // Проверяем финальные стили
+    const computedStyle = window.getComputedStyle(modal);
+    console.log('🎨 Финальные стили модального окна:', {
+        display: computedStyle.display,
+        opacity: computedStyle.opacity,
+        visibility: computedStyle.visibility,
+        pointerEvents: computedStyle.pointerEvents,
+        zIndex: computedStyle.zIndex
+    });
     
     // Инициализируем Lucide иконки в модальном окне
     if (typeof lucide !== 'undefined') {
@@ -2735,6 +2766,38 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
 
 // Делаем функцию глобально доступной
 window.showCreateTaskModal = showCreateTaskModal;
+
+// Тестовая функция для диагностики модального окна
+window.testModal = function() {
+    console.log('🧪 === ТЕСТ МОДАЛЬНОГО ОКНА ===');
+
+    const modal = document.getElementById('taskModal');
+    console.log('1. Элемент taskModal:', modal);
+
+    if (!modal) {
+        console.log('❌ Модальное окно не найдено!');
+        const allElements = document.querySelectorAll('*[id*="modal"], *[class*="modal"]');
+        console.log('🔍 Найденные модальные элементы:', allElements);
+        return;
+    }
+
+    console.log('2. Текущие стили:', {
+        display: modal.style.display,
+        opacity: modal.style.opacity,
+        visibility: modal.style.visibility,
+        classList: Array.from(modal.classList)
+    });
+
+    console.log('3. Computed стили:', {
+        display: getComputedStyle(modal).display,
+        opacity: getComputedStyle(modal).opacity,
+        visibility: getComputedStyle(modal).visibility,
+        zIndex: getComputedStyle(modal).zIndex
+    });
+
+    console.log('4. Попытка открытия...');
+    showCreateTaskModal();
+};
 
 // Загрузить сотрудников для выбора
 async function loadEmployeesForSelect(selectedId = null) {
