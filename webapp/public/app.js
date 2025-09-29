@@ -2733,6 +2733,9 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     document.getElementById('taskDeadline').min = today;
 }
 
+// Делаем функцию глобально доступной
+window.showCreateTaskModal = showCreateTaskModal;
+
 // Загрузить сотрудников для выбора
 async function loadEmployeesForSelect(selectedId = null) {
     try {
@@ -2780,6 +2783,9 @@ function closeTaskModal() {
         }
     }
 }
+
+// Делаем функцию глобально доступной
+window.closeTaskModal = closeTaskModal;
 
 // Отправить задачу
 async function submitTask(event) {
@@ -2891,6 +2897,9 @@ async function submitTask(event) {
         submitBtn.disabled = false;
     }
 }
+
+// Делаем функцию глобально доступной
+window.submitTask = submitTask;
 
 // Открыть детальный просмотр задачи
 window.openTaskDetail = async function(taskId) {
