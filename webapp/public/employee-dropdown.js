@@ -154,16 +154,21 @@ class EmployeeDropdown {
     }
 
     attachEventListeners() {
-        // ВАЖНО: Предотвращаем стандартное поведение select
-        this.select.addEventListener('mousedown', (e) => {
+        // ВАЖНО: Предотвращаем стандартное поведение select и открываем наш dropdown
+        this.select.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.toggle();
         });
 
-        // Предотвращаем открытие на focus
-        this.select.addEventListener('focus', (e) => {
+        // Также обрабатываем mousedown для полной блокировки нативного select
+        this.select.addEventListener('mousedown', (e) => {
+            // Блокируем нативный dropdown
             e.preventDefault();
+        });
+
+        // Предотвращаем открытие на focus (например при Tab)
+        this.select.addEventListener('focus', (e) => {
             this.select.blur();
         });
 

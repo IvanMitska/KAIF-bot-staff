@@ -16,19 +16,18 @@ select.custom-select:focus {
     box-shadow: none !important;
 }
 
-/* Делаем select не интерактивным напрямую */
-#taskModal select,
-#editTaskModal select {
-    pointer-events: none !important;
-    user-select: none !important;
-}
-
-/* Но wrapper должен быть кликабельным */
+/* Wrapper должен быть кликабельным */
 #taskModal .custom-select-wrapper,
 #editTaskModal .custom-select-wrapper {
-    pointer-events: auto !important;
     cursor: pointer !important;
     position: relative !important;
+}
+
+/* Select элементы остаются кликабельными, но без нативного поведения */
+#taskModal select.custom-select,
+#editTaskModal select.custom-select {
+    cursor: pointer !important;
+    user-select: none !important;
 }
 
 /* Стили для опций приоритета */

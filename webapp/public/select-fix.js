@@ -6,19 +6,15 @@ console.log('🔧 Загружен select-fix.js - исправление дво
 function blockNativeSelect(select) {
     if (!select) return;
 
-    // Блокируем все способы открытия нативного select
+    // Блокируем только нативное открытие при mousedown
     select.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); // Это предотвращает открытие нативного dropdown
     });
 
-    select.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    });
+    // НЕ блокируем click - он нужен для открытия кастомного dropdown
 
+    // Блокируем фокус от Tab
     select.addEventListener('focus', function(e) {
-        e.preventDefault();
         this.blur();
     });
 
@@ -124,39 +120,51 @@ function createSimpleDropdown(select) {
 
     // Обработчик открытия/закрытия
     const toggleDropdown = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         const isOpen = dropdown.style.display === 'flex';
 
         // Закрываем все другие dropdown
         document.querySelectorAll('.simple-dropdown').forEach(dd => {
-            dd.style.display = 'none';
-            dd.parentElement.classList.remove('open');
+            if (dd !== dropdown) {
+                dd.style.display = 'none';
+                dd.classList.remove('show');
+                if (dd.parentElement) {
+                    dd.parentElement.classList.remove('open');
+                }
+            }
         });
 
         if (!isOpen) {
             dropdown.style.display = 'flex';
-            dropdown.classList.add('show');
-            wrapper.classList.add('open');
-
-            // Позиционируем dropdown
             setTimeout(() => {
+                dropdown.classList.add('show');
                 dropdown.style.opacity = '1';
                 dropdown.style.visibility = 'visible';
             }, 10);
+            wrapper.classList.add('open');
         } else {
             dropdown.style.display = 'none';
             dropdown.classList.remove('show');
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'hidden';
             wrapper.classList.remove('open');
         }
     };
 
-    // Клик по wrapper для открытия
-    wrapper.addEventListener('click', toggleDropdown);
-
-    // Клик по select (на всякий случай)
+    // Клик по select
     select.addEventListener('click', toggleDropdown);
+
+    // Клик по wrapper (включая стрелку)
+    wrapper.addEventListener('click', function(e) {
+        // Проверяем что клик не по самому select (чтобы не было двойного срабатывания)
+        if (!e.target.matches('select')) {
+            toggleDropdown(e);
+        }
+    });
 
     console.log('✅ Создан простой dropdown для:', select.name);
 }
