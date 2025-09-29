@@ -2665,28 +2665,23 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
 
     console.log('✅ Модальное окно найдено!');
     console.log('🎯 Открываем модальное окно создания задачи');
-    
+
     // Прокручиваем к началу перед открытием модального окна
     window.scrollTo(0, 0);
-    
-    // Современное отображение модального окна
-    console.log('📝 Устанавливаем display: flex');
-    modal.style.display = 'flex';
 
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: устанавливаем стили принудительно с !important
+    console.log('📝 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Принудительно устанавливаем стили');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('pointer-events', 'auto', 'important');
+    modal.style.setProperty('z-index', '9999', 'important');
+
+    // Добавляем класс после установки стилей
     console.log('📝 Добавляем класс show');
     modal.classList.add('show');
 
-    // Принудительно устанавливаем свойства для видимости
-    console.log('📝 Устанавливаем opacity: 1');
-    modal.style.opacity = '1';
-
-    console.log('📝 Устанавливаем visibility: visible');
-    modal.style.visibility = 'visible';
-
-    console.log('📝 Устанавливаем pointerEvents: auto');
-    modal.style.pointerEvents = 'auto';
-
-    // Добавляем body класс для предотвращения скролла
+    // Блокируем скролл body
     console.log('📝 Блокируем скролл body');
     document.body.style.overflow = 'hidden';
 
