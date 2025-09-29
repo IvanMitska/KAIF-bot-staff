@@ -154,11 +154,17 @@ class EmployeeDropdown {
     }
 
     attachEventListeners() {
-        // Клик по селекту
-        this.select.addEventListener('click', (e) => {
+        // ВАЖНО: Предотвращаем стандартное поведение select
+        this.select.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.toggle();
+        });
+
+        // Предотвращаем открытие на focus
+        this.select.addEventListener('focus', (e) => {
+            e.preventDefault();
+            this.select.blur();
         });
 
         // Клик по стрелке
@@ -270,21 +276,29 @@ class EmployeeDropdown {
 
 // Инициализация для всех селектов сотрудников
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎨 Инициализация улучшенных dropdown для сотрудников');
+    // Откладываем инициализацию чтобы дать время загрузиться модальным окнам
+    setTimeout(() => {
+        console.log('🎨 Инициализация улучшенных dropdown для сотрудников');
 
-    // Ищем селекты в модальных окнах
-    const employeeSelects = [
-        document.getElementById('taskEmployee'),
-        document.getElementById('editTaskEmployee')
-    ].filter(Boolean);
+        // Ищем селекты в модальных окнах
+        const employeeSelects = [
+            document.getElementById('taskEmployee'),
+            document.getElementById('editTaskEmployee')
+        ].filter(Boolean);
 
-    employeeSelects.forEach(select => {
-        if (select && !select.dataset.dropdownInitialized) {
-            new EmployeeDropdown(select);
-            select.dataset.dropdownInitialized = 'true';
-            console.log('✅ Dropdown инициализирован для:', select.id);
-        }
-    });
+        employeeSelects.forEach(select => {
+            if (select && !select.dataset.dropdownInitialized) {
+                // Блокируем нативное поведение
+                select.style.appearance = 'none';
+                select.style.webkitAppearance = 'none';
+                select.style.mozAppearance = 'none';
+
+                new EmployeeDropdown(select);
+                select.dataset.dropdownInitialized = 'true';
+                console.log('✅ Dropdown инициализирован для:', select.id);
+            }
+        });
+    }, 100);
 });
 
 // Также инициализируем при открытии модального окна

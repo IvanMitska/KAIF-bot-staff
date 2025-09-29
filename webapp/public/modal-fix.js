@@ -102,6 +102,11 @@ window.showCreateTaskModal = function(employeeId = null, employeeName = null) {
         setTimeout(() => initEmployeeDropdown(), 150);
     }
 
+    // Инициализируем фикс для всех select элементов
+    if (typeof initModalSelects === 'function') {
+        setTimeout(() => initModalSelects(), 200);
+    }
+
     // Устанавливаем дату по умолчанию
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
