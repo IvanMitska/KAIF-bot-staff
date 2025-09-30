@@ -50,6 +50,51 @@ async function initApp() {
             app.modules.tasks.createTask(taskData);
         };
 
+        // Функции для FAB меню
+        window.toggleFab = () => {
+            const fabMain = document.getElementById('fabMain');
+            const fabMenu = document.getElementById('fabMenu');
+
+            if (fabMenu?.classList.contains('active')) {
+                fabMain?.classList.remove('active');
+                fabMenu?.classList.remove('active');
+            } else {
+                fabMain?.classList.add('active');
+                fabMenu?.classList.add('active');
+            }
+        };
+
+        // Функции для учета времени
+        window.checkIn = () => {
+            console.log('Check in');
+            // TODO: Implement check in
+        };
+
+        window.checkOut = () => {
+            console.log('Check out');
+            // TODO: Implement check out
+        };
+
+        // Функции для админ панели
+        window.switchAdminTab = (tab) => {
+            console.log('Switch admin tab:', tab);
+            // TODO: Implement admin tab switching
+        };
+
+        window.updateAdminPanel = () => {
+            console.log('Update admin panel');
+            // TODO: Implement admin panel update
+        };
+
+        window.showMissingReports = () => {
+            console.log('Show missing reports');
+            // TODO: Implement show missing reports
+        };
+
+        window.forceLoadTasks = () => {
+            app.modules.tasks.loadTasks();
+        };
+
         window.switchTaskType = (type) => {
             console.log('Switching task type to:', type);
             // TODO: Implement task type switching
