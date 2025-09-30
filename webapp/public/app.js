@@ -1,3 +1,6 @@
+// Создаем глобальный namespace для приложения
+window.KaifApp = window.KaifApp || {};
+
 // Инициализация Telegram Web App
 const tg = window.Telegram.WebApp;
 tg.ready();
@@ -312,26 +315,42 @@ function addHoverEffects() {
 }
 
 // Анимированное обновление счетчика
-function animateCounterUpdate(element, newValue) {
-    const currentValue = parseInt(element.textContent) || 0;
-    if (currentValue === newValue) return;
-    
-    const duration = 500;
-    const steps = 30;
-    const stepValue = (newValue - currentValue) / steps;
-    let currentStep = 0;
-    
-    const interval = setInterval(() => {
-        currentStep++;
-        const value = Math.round(currentValue + (stepValue * currentStep));
-        element.textContent = value;
-        
-        if (currentStep >= steps) {
-            element.textContent = newValue;
-            clearInterval(interval);
-            
-            // Добавляем пульсацию если значение увеличилось
-            if (newValue > currentValue) {
+// Универсальная функция анимации чисел
+function animateNumber(element, endValue, options = {}) {
+    const defaults = {
+        duration: 500,
+        startValue: null,
+        addPulse: false,
+        easing: 'easeOut'
+    };
+
+    const settings = { ...defaults, ...options };
+    const startValue = settings.startValue ?? (parseInt(element.textContent) || 0);
+
+    if (startValue === endValue) return;
+
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / settings.duration, 1);
+
+        // Easing function
+        let eased = progress;
+        if (settings.easing === 'easeOut') {
+            eased = 1 - Math.pow(1 - progress, 3);
+        }
+
+        const currentValue = Math.round(startValue + (endValue - startValue) * eased);
+        element.textContent = currentValue;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = endValue;
+
+            // Добавляем пульсацию если нужно
+            if (settings.addPulse && endValue > startValue) {
                 element.style.transform = 'scale(1.2)';
                 element.style.color = 'var(--primary)';
                 setTimeout(() => {
@@ -340,7 +359,14 @@ function animateCounterUpdate(element, newValue) {
                 }, 300);
             }
         }
-    }, duration / steps);
+    }
+
+    requestAnimationFrame(update);
+}
+
+// Совместимость со старыми названиями
+function animateCounterUpdate(element, newValue) {
+    animateNumber(element, newValue, { addPulse: true });
 }
 
 // Переменная для предотвращения множественных переключений
@@ -2644,57 +2670,26 @@ function createTaskForEmployee(employeeId, employeeName) {
     showCreateTaskModal(employeeId, employeeName);
 }
 
-// Показать модальное окно создания задачи
+// Упрощенная функция открытия модального окна задачи
 function showCreateTaskModal(employeeId = null, employeeName = null) {
-    console.log('🚀 showCreateTaskModal вызвана!', { employeeId, employeeName });
-
-    // Сбрасываем флаг отправки при открытии нового окна
-    isSubmittingTask = false;
-
     const modal = document.getElementById('taskModal');
-    console.log('🔍 Поиск элемента taskModal:', modal);
-
     if (!modal) {
-        console.error('❌ Модальное окно taskModal не найдено в DOM');
-        console.log('📋 Все элементы с id:',
-            Array.from(document.querySelectorAll('[id]')).map(el => el.id));
-
-        // Попробуем найти любые модальные окна
-        const allModals = document.querySelectorAll('.modal-overlay, .modal');
-        console.log('🔍 Найденные модальные окна:', allModals);
-
+        console.error('Модальное окно taskModal не найдено');
         return;
     }
 
-    console.log('✅ Модальное окно найдено!');
-    console.log('🎯 Открываем модальное окно создания задачи');
-
-    // Прокручиваем к началу перед открытием модального окна
-    window.scrollTo(0, 0);
-
-    // ВАЖНО: Убираем класс hidden и подготавливаем модальное окно
-    console.log('🧹 Подготавливаем модальное окно к открытию');
-    modal.classList.remove('hidden');
-    modal.classList.remove('show');
+    // Сброс флага и очистка состояния
+    isSubmittingTask = false;
+    modal.className = 'modal-overlay show';
     modal.removeAttribute('style');
 
-    // Принудительный reflow для применения изменений
-    void modal.offsetHeight;
-
-    // Устанавливаем стили для открытия БЕЗ задержки
-    console.log('📝 Устанавливаем стили для открытия');
-    modal.style.display = 'flex';
-    modal.style.opacity = '1';
-    modal.style.visibility = 'visible';
-    modal.style.pointerEvents = 'auto';
-    modal.style.zIndex = '9999';
-
-    // Добавляем класс show
-    modal.classList.add('show');
-
-    // Блокируем скролл body
-    console.log('📝 Блокируем скролл body');
-    document.body.style.overflow = 'hidden';
+    // Открытие модального окна
+    requestAnimationFrame(() => {
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        document.body.style.overflow = 'hidden';
+    });
 
     // Проверяем финальные стили
     const computedStyle = window.getComputedStyle(modal);
@@ -2869,42 +2864,20 @@ async function loadEmployeesForSelect(selectedId = null) {
     }
 }
 
-// Закрыть модальное окно
+// Упрощенная функция закрытия модального окна
 function closeTaskModal() {
     const modal = document.getElementById('taskModal');
-    if (modal) {
-        console.log('🔒 Закрываем модальное окно создания задачи');
+    if (!modal) return;
 
-        // Убираем класс show
-        modal.classList.remove('show');
+    // Полный сброс
+    modal.className = 'modal-overlay hidden';
+    modal.removeAttribute('style');
+    document.body.style.overflow = '';
 
-        // Устанавливаем стили для закрытия
-        modal.style.opacity = '0';
-        modal.style.visibility = 'hidden';
-        modal.style.pointerEvents = 'none';
-
-        // Через 300ms полностью скрываем и очищаем стили
-        setTimeout(() => {
-            // Добавляем класс hidden для полного скрытия
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-            // Полностью очищаем все inline стили для следующего открытия
-            modal.removeAttribute('style');
-            console.log('✅ Модальное окно полностью закрыто и готово к повторному открытию');
-        }, 300);
-
-        // Восстанавливаем прокрутку
-        document.body.style.overflow = '';
-
-        // Сбрасываем форму
-        const form = document.getElementById('taskForm');
-        if (form) {
-            form.reset();
-        }
-
-        // Сбрасываем флаг отправки на всякий случай
-        isSubmittingTask = false;
-    }
+    // Сброс формы и флага
+    const form = document.getElementById('taskForm');
+    if (form) form.reset();
+    isSubmittingTask = false;
 }
 
 // Делаем функцию глобально доступной
@@ -3718,25 +3691,9 @@ function updateMetricValue(elementId, newValue) {
 }
 
 // Function to animate number changes
+// Совместимость со старым названием animateNumberChange
 function animateNumberChange(element, startValue, endValue, duration) {
-    const startTime = performance.now();
-    
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function for smooth animation
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        
-        const currentValue = Math.round(startValue + (endValue - startValue) * easeOut);
-        element.textContent = currentValue;
-        
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
-    }
-    
-    requestAnimationFrame(update);
+    animateNumber(element, endValue, { startValue, duration });
 }
 
 // Function to update metric progress bars
