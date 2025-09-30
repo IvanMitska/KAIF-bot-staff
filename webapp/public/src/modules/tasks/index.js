@@ -61,14 +61,16 @@ export class TasksModule {
             this.view.setSubmitting(true);
             const task = await this.controller.createTask(taskData);
             this.view.closeModal();
+            this.view.setSubmitting(false); // Сбрасываем состояние после успеха
             this.eventBus.emit('notification', 'Задача создана успешно', 'success');
             this.eventBus.emit('tasks:updated');
+            await this.refresh(); // Обновляем список задач
             return task;
         } catch (error) {
-            this.eventBus.emit('notification', 'Ошибка создания задачи', 'error');
+            console.error('Error creating task:', error);
+            this.view.setSubmitting(false); // Разблокируем кнопку при ошибке
+            this.eventBus.emit('notification', error.message || 'Ошибка создания задачи', 'error');
             throw error;
-        } finally {
-            this.view.setSubmitting(false);
         }
     }
 

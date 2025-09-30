@@ -13,10 +13,19 @@ export class TasksView {
     }
 
     setupEventListeners() {
-        // Закрытие модального окна
-        const closeBtn = this.modal?.querySelector('.close');
+        // Закрытие модального окна по кнопке X
+        const closeBtn = this.modal?.querySelector('.modal-close');
         if (closeBtn) {
             closeBtn.onclick = () => this.closeModal();
+        }
+
+        // Закрытие по клику на overlay
+        if (this.modal) {
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.closeModal();
+                }
+            });
         }
 
         // Отправка формы
@@ -84,26 +93,43 @@ export class TasksView {
     }
 
     showCreateModal(employeeId, employeeName) {
-        if (!this.modal) return;
-
-        // Устанавливаем значения для сотрудника
-        const employeeSelect = this.modal.querySelector('#taskAssignee');
-        if (employeeSelect && employeeId) {
-            employeeSelect.value = employeeId;
+        console.log('Opening task modal:', { employeeId, employeeName });
+        if (!this.modal) {
+            console.error('Modal not found!');
+            return;
         }
 
-        // Очищаем форму
+        // Сначала очищаем форму
         const form = this.modal.querySelector('#taskForm');
         if (form) {
             form.reset();
-            if (employeeId) {
-                employeeSelect.value = employeeId;
-            }
         }
+
+        // Устанавливаем значения для сотрудника
+        const employeeSelect = this.modal.querySelector('#taskEmployee, #taskAssignee');
+        if (employeeSelect && employeeId) {
+            // Если селект еще не заполнен опциями, добавим временную опцию
+            if (employeeSelect.options.length === 1 && employeeName) {
+                const option = document.createElement('option');
+                option.value = employeeId;
+                option.textContent = employeeName;
+                employeeSelect.appendChild(option);
+            }
+            employeeSelect.value = employeeId;
+        }
+
+        // Сбрасываем флаг отправки
+        this.setSubmitting(false);
 
         // Показываем модальное окно
         this.modal.classList.remove('hidden');
         this.modal.style.display = 'flex';
+
+        // Фокус на первое поле
+        const firstInput = form?.querySelector('input[name="title"]');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
+        }
     }
 
     closeModal() {
@@ -163,14 +189,26 @@ export class TasksView {
         const form = this.modal?.querySelector('#taskForm');
         if (!form) return;
 
+        // Предотвращаем двойную отправку
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn?.disabled) {
+            console.log('Form already submitting');
+            return;
+        }
+
         const formData = new FormData(form);
         const taskData = {
             title: formData.get('title'),
             description: formData.get('description'),
-            assigneeId: formData.get('assignee'),
+            assigneeId: formData.get('employee') || formData.get('assignee'),
             priority: formData.get('priority'),
             deadline: formData.get('deadline')
         };
+
+        console.log('Submitting task:', taskData);
+
+        // Блокируем кнопку
+        this.setSubmitting(true);
 
         // Генерируем событие отправки
         if (this.onSubmit) {

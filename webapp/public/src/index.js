@@ -21,10 +21,45 @@ async function initApp() {
         const app = new App();
         await app.initialize();
 
-        // Делаем app доступным глобально для отладки
-        if (process.env.NODE_ENV === 'development') {
-            window.KaifApp = app;
-        }
+        // Экспортируем глобальные функции для обратной совместимости с HTML
+        window.KaifApp = app;
+
+        // Глобальные функции для onclick обработчиков в HTML
+        window.showPage = (pageId) => app.showPage(pageId);
+        window.showCreateTaskModal = (employeeId, employeeName) => {
+            console.log('Вызов showCreateTaskModal:', { employeeId, employeeName });
+            app.modules.tasks.showCreateTaskModal(employeeId, employeeName);
+        };
+        window.closeTaskModal = () => app.modules.tasks.closeTaskModal();
+        window.showEmployees = () => app.showPage('employees');
+        window.showAdminPanel = () => app.showPage('adminPanel');
+        window.showHelp = () => console.log('Help page not implemented yet');
+
+        // Функции для задач
+        window.submitTask = (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const taskData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                employeeId: formData.get('employee'),
+                priority: formData.get('priority'),
+                deadline: formData.get('deadline')
+            };
+            app.modules.tasks.createTask(taskData);
+        };
+
+        window.switchTaskType = (type) => {
+            console.log('Switching task type to:', type);
+            // TODO: Implement task type switching
+        };
+
+        window.filterTasks = (filter, event) => {
+            if (event) event.preventDefault();
+            console.log('Filtering tasks by:', filter);
+            // TODO: Implement task filtering
+        };
 
         console.log('✅ Приложение успешно запущено');
     } catch (error) {
