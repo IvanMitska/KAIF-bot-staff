@@ -1,0 +1,130 @@
+/* Адаптивные стили */
+
+/* Мобильные устройства */
+@media (max-width: 480px) {
+    .container {
+        padding: 16px;
+    }
+
+    .nav-menu {
+        font-size: 14px;
+    }
+
+    .nav-item {
+        padding: 10px 8px;
+    }
+
+    .employees-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .attendance-timer {
+        font-size: 36px;
+    }
+
+    .attendance-record {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .record-times {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Планшеты */
+@media (min-width: 481px) and (max-width: 768px) {
+    .employees-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 20px;
+    }
+}
+
+/* Небольшие экраны */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .employees-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Большие экраны */
+@media (min-width: 1025px) {
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .employees-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Высокие экраны */
+@media (min-height: 800px) {
+    .modal-content {
+        max-height: 80vh;
+    }
+}
+
+/* Горизонтальная ориентация */
+@media (orientation: landscape) and (max-height: 500px) {
+    .modal-content {
+        max-height: 95vh;
+        padding: 16px;
+    }
+
+    .attendance-timer {
+        font-size: 32px;
+    }
+}
+
+/* Темный режим */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #0F0F14;
+        --bg-secondary: #1C1C23;
+        --bg-tertiary: #2A2A35;
+    }
+}
+
+/* Уменьшение анимации для пользователей с соответствующими настройками */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Поддержка touch устройств */
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover,
+    .card:hover,
+    .employee-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
