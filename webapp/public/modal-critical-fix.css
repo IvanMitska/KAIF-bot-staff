@@ -58,6 +58,14 @@ body.modal-open {
     overflow: hidden !important;
 }
 
+/* Класс для скрытия модального окна */
+#taskModal.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 /* Дополнительная защита от скрытия другими стилями */
 #taskModal:not(.hidden) {
     display: flex !important;
