@@ -2648,6 +2648,9 @@ function createTaskForEmployee(employeeId, employeeName) {
 function showCreateTaskModal(employeeId = null, employeeName = null) {
     console.log('🚀 showCreateTaskModal вызвана!', { employeeId, employeeName });
 
+    // Сбрасываем флаг отправки при открытии нового окна
+    isSubmittingTask = false;
+
     const modal = document.getElementById('taskModal');
     console.log('🔍 Поиск элемента taskModal:', modal);
 
@@ -2669,31 +2672,28 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     // Прокручиваем к началу перед открытием модального окна
     window.scrollTo(0, 0);
 
-    // ВАЖНО: Сначала очищаем все inline стили
-    console.log('🧹 Сбрасываем все inline стили');
+    // ВАЖНО: Полностью сбрасываем все стили перед открытием
+    console.log('🧹 Полный сброс стилей модального окна');
     modal.removeAttribute('style');
-
-    // Убедимся что класс show удален
     modal.classList.remove('show');
 
-    // Небольшая задержка для применения сброса
-    setTimeout(() => {
-        console.log('📝 Устанавливаем стили для открытия');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('opacity', '1', 'important');
-        modal.style.setProperty('visibility', 'visible', 'important');
-        modal.style.setProperty('pointer-events', 'auto', 'important');
-        modal.style.setProperty('z-index', '9999', 'important');
+    // Принудительный reflow для применения изменений
+    void modal.offsetHeight;
 
-        // Добавляем класс show после установки стилей
-        setTimeout(() => {
-            modal.classList.add('show');
-        }, 10);
+    // Устанавливаем стили для открытия БЕЗ задержки
+    console.log('📝 Устанавливаем стили для открытия');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '9999';
 
-        // Блокируем скролл body
-        console.log('📝 Блокируем скролл body');
-        document.body.style.overflow = 'hidden';
-    }, 10);
+    // Добавляем класс show
+    modal.classList.add('show');
+
+    // Блокируем скролл body
+    console.log('📝 Блокируем скролл body');
+    document.body.style.overflow = 'hidden';
 
     // Проверяем финальные стили
     const computedStyle = window.getComputedStyle(modal);
@@ -2874,33 +2874,33 @@ function closeTaskModal() {
     if (modal) {
         console.log('🔒 Закрываем модальное окно создания задачи');
 
+        // Убираем класс show
         modal.classList.remove('show');
 
-        // ВАЖНО: Удаляем принудительно установленные стили через removeProperty
-        modal.style.removeProperty('opacity');
-        modal.style.removeProperty('visibility');
-        modal.style.removeProperty('pointer-events');
-        modal.style.removeProperty('z-index');
-
-        // Устанавливаем обычные стили для закрытия
+        // Устанавливаем стили для закрытия
         modal.style.opacity = '0';
         modal.style.visibility = 'hidden';
         modal.style.pointerEvents = 'none';
 
+        // Через 300ms полностью скрываем и очищаем стили
         setTimeout(() => {
-            // Полностью удаляем display property чтобы можно было открыть снова
-            modal.style.removeProperty('display');
-            // Сбрасываем все inline стили после закрытия
+            modal.style.display = 'none';
+            // Полностью очищаем все inline стили для следующего открытия
             modal.removeAttribute('style');
+            console.log('✅ Модальное окно полностью закрыто и готово к повторному открытию');
         }, 300);
 
         // Восстанавливаем прокрутку
         document.body.style.overflow = '';
 
+        // Сбрасываем форму
         const form = document.getElementById('taskForm');
         if (form) {
             form.reset();
         }
+
+        // Сбрасываем флаг отправки на всякий случай
+        isSubmittingTask = false;
     }
 }
 
@@ -2996,6 +2996,9 @@ async function submitTask(event) {
             if (form) {
                 form.reset();
             }
+
+            // Сбрасываем флаг отправки перед закрытием
+            isSubmittingTask = false;
 
             // Закрываем модальное окно сразу
             closeTaskModal();
