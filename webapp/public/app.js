@@ -2669,21 +2669,31 @@ function showCreateTaskModal(employeeId = null, employeeName = null) {
     // Прокручиваем к началу перед открытием модального окна
     window.scrollTo(0, 0);
 
-    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: устанавливаем стили принудительно с !important
-    console.log('📝 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Принудительно устанавливаем стили');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('pointer-events', 'auto', 'important');
-    modal.style.setProperty('z-index', '9999', 'important');
+    // ВАЖНО: Сначала очищаем все inline стили
+    console.log('🧹 Сбрасываем все inline стили');
+    modal.removeAttribute('style');
 
-    // Добавляем класс после установки стилей
-    console.log('📝 Добавляем класс show');
-    modal.classList.add('show');
+    // Убедимся что класс show удален
+    modal.classList.remove('show');
 
-    // Блокируем скролл body
-    console.log('📝 Блокируем скролл body');
-    document.body.style.overflow = 'hidden';
+    // Небольшая задержка для применения сброса
+    setTimeout(() => {
+        console.log('📝 Устанавливаем стили для открытия');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('opacity', '1', 'important');
+        modal.style.setProperty('visibility', 'visible', 'important');
+        modal.style.setProperty('pointer-events', 'auto', 'important');
+        modal.style.setProperty('z-index', '9999', 'important');
+
+        // Добавляем класс show после установки стилей
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+
+        // Блокируем скролл body
+        console.log('📝 Блокируем скролл body');
+        document.body.style.overflow = 'hidden';
+    }, 10);
 
     // Проверяем финальные стили
     const computedStyle = window.getComputedStyle(modal);
@@ -2865,12 +2875,23 @@ function closeTaskModal() {
         console.log('🔒 Закрываем модальное окно создания задачи');
 
         modal.classList.remove('show');
+
+        // ВАЖНО: Удаляем принудительно установленные стили через removeProperty
+        modal.style.removeProperty('opacity');
+        modal.style.removeProperty('visibility');
+        modal.style.removeProperty('pointer-events');
+        modal.style.removeProperty('z-index');
+
+        // Устанавливаем обычные стили для закрытия
         modal.style.opacity = '0';
         modal.style.visibility = 'hidden';
         modal.style.pointerEvents = 'none';
 
         setTimeout(() => {
-            modal.style.display = 'none';
+            // Полностью удаляем display property чтобы можно было открыть снова
+            modal.style.removeProperty('display');
+            // Сбрасываем все inline стили после закрытия
+            modal.removeAttribute('style');
         }, 300);
 
         // Восстанавливаем прокрутку
@@ -2886,33 +2907,44 @@ function closeTaskModal() {
 // Делаем функцию глобально доступной
 window.closeTaskModal = closeTaskModal;
 
+// Флаг для предотвращения повторной отправки
+let isSubmittingTask = false;
+
 // Отправить задачу
 async function submitTask(event) {
     console.log('=== submitTask called ===');
     event.preventDefault();
-    
+
+    // Проверка на повторную отправку
+    if (isSubmittingTask) {
+        console.log('⚠️ Task is already being submitted, ignoring duplicate request');
+        return;
+    }
+
+    isSubmittingTask = true;
+
     const formData = new FormData(event.target);
     console.log('Form data collected');
-    
+
     // Если не менеджер, не передаем assigneeId (сервер автоматически поставит на себя)
     // Используем tg.initDataUnsafe.user.id, а не currentUser.telegramId!
     const currentUserId = tg.initDataUnsafe?.user?.id;
     const isManager = currentUserId && [385436658, 1734337242].includes(currentUserId);
-    
+
     console.log('Creating task, currentUserId:', currentUserId, 'isManager:', isManager);
     console.log('Current user from profile:', currentUser);
-    
+
     const task = {
         title: formData.get('title'),
         description: formData.get('description') || '',
         deadline: formData.get('deadline'),
         priority: formData.get('priority')
     };
-    
+
     // ВАЖНО: Теперь ВСЕГДА берем assigneeId из формы, так как поле всегда заполнено
     const employeeId = formData.get('employee');
     console.log('Employee ID from form:', employeeId);
-    
+
     if (employeeId && employeeId !== '') {
         task.assigneeId = parseInt(employeeId);
         console.log('Setting assigneeId:', task.assigneeId);
@@ -2926,9 +2958,9 @@ async function submitTask(event) {
             console.error('ERROR: No user ID available!');
         }
     }
-    
+
     console.log('Task data to send:', JSON.stringify(task));
-    
+
     const submitBtn = event.target.querySelector('.submit-btn');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Создание...';
@@ -2958,20 +2990,26 @@ async function submitTask(event) {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred('success');
             }
-            
+
+            // ВАЖНО: Сбрасываем форму перед закрытием модального окна
+            const form = document.getElementById('taskForm');
+            if (form) {
+                form.reset();
+            }
+
             // Закрываем модальное окно сразу
             closeTaskModal();
-            
+
             // Показываем уведомление
             if (tg.showAlert) {
                 tg.showAlert('Задача успешно создана! ✅');
             }
-            
+
             // Обновляем список задач если он открыт
             if (document.getElementById('tasks').classList.contains('active')) {
                 await loadTasks();
             }
-            
+
             // Также показываем уведомление в интерфейсе
             showNotification('Задача успешно создана! ✅', 'success');
         } else {
@@ -2994,6 +3032,8 @@ async function submitTask(event) {
     } finally {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
+        // Сбрасываем флаг отправки
+        isSubmittingTask = false;
     }
 }
 
