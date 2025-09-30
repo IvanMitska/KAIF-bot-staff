@@ -119,7 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setCurrentDate();
     
     // Обработчик формы отчета
-    document.getElementById('reportForm').addEventListener('submit', submitReport);
+    const reportForm = document.getElementById('reportForm');
+    if (reportForm) {
+        reportForm.addEventListener('submit', submitReport);
+    }
     
     // Автоматическое обновление задач каждые 30 секунд
     setInterval(async () => {
@@ -463,12 +466,29 @@ function showPage(pageId) {
     isPageSwitching = false;
 }
 
+// Функции навигации
+function showTasks() {
+    showPage('tasks');
+}
+
+function showEmployees() {
+    showPage('employees');
+}
+
+function showReportForm() {
+    showPage('report');
+}
+
+function showProfile() {
+    showPage('profile');
+}
+
 // Обновление позиции индикатора навигации
 function updateNavIndicator(activeBtn) {
     const indicator = document.querySelector('.nav-indicator');
     const navBtns = document.querySelectorAll('.nav-btn');
     const index = Array.from(navBtns).indexOf(activeBtn);
-    
+
     if (indicator && index !== -1) {
         const percentage = (index * 100) / navBtns.length;
         indicator.style.left = `${percentage}%`;
