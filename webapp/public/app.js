@@ -1285,7 +1285,6 @@ function displayTasks(tasks) {
         
         return `
             <div class="task-item-modern" data-task-id="${task.id}"
-                 onclick="showTaskDetails('${task.id}')"
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
@@ -1298,8 +1297,6 @@ function displayTasks(tasks) {
                     position: relative;
                     overflow: hidden;
                  "
-                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'"
             >
                 <div style="
                     position: absolute;
@@ -1444,7 +1441,7 @@ function addTaskClickHandlers() {
     let handlersAdded = 0;
 
     taskItems.forEach((item, index) => {
-        const taskId = item.getAttribute('data-task-id');
+        const taskId = parseInt(item.getAttribute('data-task-id'));
 
         // Проверяем, не добавлен ли уже обработчик
         if (item.getAttribute('data-click-handler-added') === 'true') {

@@ -4,26 +4,47 @@ console.log('📋 Загружен task-detail-modal.js');
 // Глобальная переменная для текущей задачи
 let currentTaskDetails = null;
 
+// Защищаем функцию от перезаписи
+Object.defineProperty(window, 'showTaskDetails', {
+    writable: true,
+    configurable: false
+});
+
 // Функция для открытия модального окна с деталями задачи
 window.showTaskDetails = function(taskId) {
-    console.log('🔍 Открытие деталей задачи:', taskId);
+    // Преобразуем taskId в число для надежности
+    taskId = parseInt(taskId);
+
+    console.log('🔍 Открытие деталей задачи:', taskId, typeof taskId);
 
     // Сначала показываем модальное окно с загрузкой
     let modal = document.getElementById('taskDetailModal');
 
     if (!modal) {
         // Создаем модальное окно если его нет
+        console.log('📦 Создаем новое модальное окно');
         createTaskDetailModal();
         modal = document.getElementById('taskDetailModal');
+
+        if (!modal) {
+            console.error('❌ Не удалось создать модальное окно!');
+            return;
+        }
     }
+
+    console.log('✅ Модальное окно найдено/создано');
 
     // Показываем окно с индикатором загрузки
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+
+    console.log('🔍 Ищем задачу в кеше, всего задач:', window.currentTasks?.length);
 
     // Находим задачу в currentTasks если она есть
     if (window.currentTasks && Array.isArray(window.currentTasks)) {
-        const task = window.currentTasks.find(t => t.id === taskId);
+        const task = window.currentTasks.find(t => parseInt(t.id) === taskId);
         if (task) {
             console.log('✅ Задача найдена в кеше:', task);
             currentTaskDetails = task;
@@ -32,8 +53,10 @@ window.showTaskDetails = function(taskId) {
         }
     }
 
+    console.log('⚠️ Задача не найдена в кеше, загружаем с сервера...');
+
     // Если задачи нет в кеше, получаем с сервера
-    const endpoint = getApiUrl ? getApiUrl(`/tasks/${taskId}`) : `/tasks/${taskId}`;
+    const endpoint = typeof getApiUrl === 'function' ? getApiUrl(`/api/tasks/${taskId}`) : `/api/tasks/${taskId}`;
 
     fetch(endpoint)
         .then(response => {
@@ -402,6 +425,14 @@ function getStatusText(status) {
 
 // Интеграция с существующими задачами
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 task-detail-modal.js: DOMContentLoaded');
+
+    // Создаем модальное окно сразу при загрузке
+    if (!document.getElementById('taskDetailModal')) {
+        console.log('📦 Создаем модальное окно при загрузке');
+        createTaskDetailModal();
+    }
+
     // Добавляем обработчики на карточки задач
     setTimeout(() => {
         addTaskClickHandlers();
