@@ -1279,6 +1279,7 @@ function displayTasks(tasks) {
         
         return `
             <div class="task-item-modern" data-task-id="${task.id}"
+                 onclick="showTaskDetails('${task.id}')"
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
