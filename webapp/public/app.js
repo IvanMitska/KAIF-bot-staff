@@ -123,6 +123,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (reportForm) {
         reportForm.addEventListener('submit', submitReport);
     }
+
+    // Event delegation для задач - один обработчик на весь контейнер
+    const tasksList = document.getElementById('tasksList');
+    if (tasksList) {
+        console.log('🎯 Устанавливаем event delegation на tasksList');
+
+        tasksList.addEventListener('click', function(e) {
+            // Находим ближайший .task-item-modern
+            const taskItem = e.target.closest('.task-item-modern[data-task-id]');
+
+            if (taskItem) {
+                const taskId = parseInt(taskItem.getAttribute('data-task-id'));
+                console.log('🖱️ КЛИК по задаче через delegation:', taskId);
+
+                if (typeof window.showTaskDetails === 'function') {
+                    console.log('✅ Вызываем window.showTaskDetails');
+                    window.showTaskDetails(taskId);
+                } else {
+                    console.error('❌ window.showTaskDetails не найдена!');
+                }
+            }
+        });
+
+        console.log('✅ Event delegation установлен для задач');
+    }
     
     // Автоматическое обновление задач каждые 30 секунд
     setInterval(async () => {
@@ -1387,33 +1412,8 @@ function displayTasks(tasks) {
         `;
     }).join('');
 
-    // Добавляем обработчики событий после создания HTML
-    console.log('🔧 Добавляем обработчики клика для задач...');
-
-    // Немедленное добавление через requestAnimationFrame для надежности
-    requestAnimationFrame(() => {
-        addTaskClickHandlers();
-
-        // Дополнительные попытки через интервалы
-        setTimeout(() => addTaskClickHandlers(), 100);
-        setTimeout(() => addTaskClickHandlers(), 500);
-        setTimeout(() => {
-            const items = document.querySelectorAll('.task-item-modern[data-task-id]');
-            console.log(`📋 Финальная проверка: ${items.length} задач на странице`);
-
-            items.forEach(item => {
-                if (!item.hasAttribute('data-click-handler-added')) {
-                    console.log('⚠️ Задача без обработчика:', item.getAttribute('data-task-id'));
-                }
-            });
-
-            // Принудительное добавление если есть задачи без обработчиков
-            if (document.querySelectorAll('.task-item-modern[data-task-id]:not([data-click-handler-added])').length > 0) {
-                console.log('🔄 Принудительное добавление обработчиков...');
-                addTaskClickHandlers();
-            }
-        }, 1000);
-    });
+    // Используем event delegation - один обработчик на контейнер
+    console.log('🔧 Задачи отрисованы, event delegation активен');
 }
 
 // Функция обработки клика по задаче
