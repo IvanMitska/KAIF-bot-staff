@@ -1421,25 +1421,50 @@ function addTaskClickHandlers() {
         // Удаляем inline onclick если есть
         item.removeAttribute('onclick');
 
-        // Удаляем старые обработчики
-        const newItem = item.cloneNode(true);
-        item.parentNode.replaceChild(newItem, item);
-
-        // Добавляем новый обработчик клика
-        newItem.style.cursor = 'pointer';
-        newItem.addEventListener('click', function(e) {
+        // Создаем уникальную функцию для клика
+        const clickHandler = function(e) {
             e.preventDefault();
             e.stopPropagation();
             console.log('🖱️ Клик по задаче:', taskId);
 
-            // Проверяем, что showTaskDetails доступна
+            // Пробуем разные способы вызова
             if (typeof window.showTaskDetails === 'function') {
+                console.log('✅ Используем window.showTaskDetails');
                 window.showTaskDetails(taskId);
             } else {
-                console.error('❌ Функция showTaskDetails не найдена!');
+                console.log('⚠️ window.showTaskDetails недоступна, ждем...');
+                // Ждем загрузки функции
+                let attempts = 0;
+                const waitForFunction = setInterval(() => {
+                    attempts++;
+                    if (typeof window.showTaskDetails === 'function') {
+                        clearInterval(waitForFunction);
+                        console.log('✅ Функция найдена после ожидания');
+                        window.showTaskDetails(taskId);
+                    } else if (attempts > 10) {
+                        clearInterval(waitForFunction);
+                        console.error('❌ Функция showTaskDetails так и не загрузилась');
+                    }
+                }, 100);
             }
-        });
+        };
+
+        // Удаляем старые обработчики
+        item.onclick = null;
+        item.removeEventListener('click', item._clickHandler);
+
+        // Сохраняем ссылку на обработчик для возможности удаления
+        item._clickHandler = clickHandler;
+
+        // Добавляем новый обработчик клика
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', clickHandler);
+
+        // Дополнительно добавляем как onclick для надежности
+        item.onclick = clickHandler;
     });
+
+    console.log('✅ Обработчики клика добавлены ко всем задачам');
 }
 
 // Обновление счетчиков задач

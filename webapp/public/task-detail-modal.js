@@ -446,3 +446,30 @@ if (originalRenderTask) {
 }
 
 console.log('✅ Модальное окно деталей задачи инициализировано');
+
+// Принудительная регистрация функции каждые 500мс для защиты от перезаписи
+setInterval(function() {
+    if (typeof window.showTaskDetails !== 'function') {
+        console.warn('⚠️ showTaskDetails была перезаписана, восстанавливаем...');
+        registerTaskDetailFunctions();
+    }
+}, 500);
+
+// Также регистрируем при загрузке DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerTaskDetailFunctions);
+} else {
+    registerTaskDetailFunctions();
+}
+
+// Функция для регистрации всех функций модального окна
+function registerTaskDetailFunctions() {
+    console.log('🔄 Регистрация функций модального окна задач...');
+
+    // Проверяем, что функции доступны
+    if (typeof window.showTaskDetails === 'function') {
+        console.log('✅ showTaskDetails уже зарегистрирована');
+    } else {
+        console.log('❌ showTaskDetails не найдена, восстанавливаем...');
+    }
+}
