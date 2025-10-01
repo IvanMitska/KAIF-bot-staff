@@ -8,16 +8,61 @@ let currentTaskDetails = null;
 window.showTaskDetails = function(taskId) {
     console.log('🔍 Открытие деталей задачи:', taskId);
 
-    // Получаем данные задачи
-    fetch(`/tasks/${taskId}`)
-        .then(response => response.json())
+    // Сначала показываем модальное окно с загрузкой
+    let modal = document.getElementById('taskDetailModal');
+
+    if (!modal) {
+        // Создаем модальное окно если его нет
+        createTaskDetailModal();
+        modal = document.getElementById('taskDetailModal');
+    }
+
+    // Показываем окно с индикатором загрузки
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    // Находим задачу в currentTasks если она есть
+    if (window.currentTasks && Array.isArray(window.currentTasks)) {
+        const task = window.currentTasks.find(t => t.id === taskId);
+        if (task) {
+            console.log('✅ Задача найдена в кеше:', task);
+            currentTaskDetails = task;
+            displayTaskDetails(task);
+            return;
+        }
+    }
+
+    // Если задачи нет в кеше, получаем с сервера
+    const endpoint = getApiUrl ? getApiUrl(`/tasks/${taskId}`) : `/tasks/${taskId}`;
+
+    fetch(endpoint)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load task');
+            }
+            return response.json();
+        })
         .then(task => {
+            console.log('✅ Задача загружена с сервера:', task);
             currentTaskDetails = task;
             displayTaskDetails(task);
         })
         .catch(error => {
             console.error('❌ Ошибка загрузки задачи:', error);
-            showNotification('Не удалось загрузить детали задачи', 'error');
+            // Показываем сообщение об ошибке в модальном окне
+            const modalContent = modal.querySelector('.task-detail-content');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px; color: red;"></i>
+                        <h3>Не удалось загрузить задачу</h3>
+                        <p style="margin-top: 10px;">Попробуйте обновить страницу</p>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
         });
 };
 
@@ -32,23 +77,35 @@ function displayTaskDetails(task) {
         modal = document.getElementById('taskDetailModal');
     }
 
+    // Безопасное получение элементов
+    const safeSetText = (id, text) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = text;
+        }
+    };
+
     // Заполняем данные
-    document.getElementById('detailTaskTitle').textContent = task.title || 'Без названия';
-    document.getElementById('detailTaskDescription').textContent = task.description || 'Описание отсутствует';
-    document.getElementById('detailTaskEmployee').textContent = task.employeeName || 'Не назначен';
-    document.getElementById('detailTaskCreator').textContent = task.creatorName || 'Неизвестно';
-    document.getElementById('detailTaskDeadline').textContent = formatDate(task.deadline);
-    document.getElementById('detailTaskCreatedAt').textContent = formatDate(task.createdAt);
+    safeSetText('detailTaskTitle', task.title || 'Без названия');
+    safeSetText('detailTaskDescription', task.description || 'Описание отсутствует');
+    safeSetText('detailTaskEmployee', task.employeeName || task.employee || 'Не назначен');
+    safeSetText('detailTaskCreator', task.creatorName || task.creator || 'Неизвестно');
+    safeSetText('detailTaskDeadline', formatDate(task.deadline));
+    safeSetText('detailTaskCreatedAt', formatDate(task.createdAt || task.created_at));
 
     // Устанавливаем приоритет
     const priorityElement = document.getElementById('detailTaskPriority');
-    priorityElement.textContent = getPriorityText(task.priority);
-    priorityElement.className = `task-priority priority-${task.priority?.toLowerCase() || 'low'}`;
+    if (priorityElement) {
+        priorityElement.textContent = getPriorityText(task.priority);
+        priorityElement.className = `task-priority priority-${(task.priority || 'Средний').toLowerCase()}`;
+    }
 
     // Устанавливаем статус
     const statusElement = document.getElementById('detailTaskStatus');
-    statusElement.textContent = getStatusText(task.status);
-    statusElement.className = `task-status status-${task.status || 'new'}`;
+    if (statusElement) {
+        statusElement.textContent = getStatusText(task.status);
+        statusElement.className = `task-status status-${(task.status || 'Новая').toLowerCase().replace(' ', '-')}`;
+    }
 
     // Показываем кнопки действий в зависимости от прав
     updateActionButtons(task);

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест модального окна задачи</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="task-detail-modal.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            background: #1a1a2e;
+            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .debug-output {
+            background: #2a2a2a;
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .task-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .task-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .task-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .task-meta {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: white;">Тест модального окна деталей задачи</h1>
+
+        <div>
+            <button class="test-button" onclick="testWithMockData()">Тест с моковыми данными</button>
+            <button class="test-button" onclick="checkFunctions()">Проверить функции</button>
+            <button class="test-button" onclick="clearDebug()">Очистить логи</button>
+        </div>
+
+        <h3 style="color: white; margin-top: 30px;">Кликните на задачу:</h3>
+        <div id="taskCards">
+            <div class="task-card" onclick="showTaskDetails('task-1')">
+                <div class="task-title">📋 Подготовить отчет по продажам</div>
+                <div class="task-meta">Исполнитель: Иван • Дедлайн: 5 декабря</div>
+            </div>
+            <div class="task-card" onclick="showTaskDetails('task-2')">
+                <div class="task-title">🔧 Исправить баг в системе авторизации</div>
+                <div class="task-meta">Исполнитель: Мария • Дедлайн: 3 декабря</div>
+            </div>
+            <div class="task-card" onclick="showTaskDetails('task-3')">
+                <div class="task-title">📱 Разработать мобильную версию</div>
+                <div class="task-meta">Исполнитель: Алексей • Дедлайн: 10 декабря</div>
+            </div>
+        </div>
+
+        <div id="debugOutput" class="debug-output">Готов к тестированию...</div>
+    </div>
+
+    <!-- Подключаем вспомогательные функции -->
+    <script>
+        // Мок функции для тестирования
+        window.formatDate = function(dateString) {
+            if (!dateString) return 'Не указано';
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('ru-RU', options);
+        };
+
+        window.getPriorityText = function(priority) {
+            const priorities = {
+                'high': '🔴 Высокий',
+                'medium': '🟡 Средний',
+                'low': '🟢 Низкий'
+            };
+            return priorities[priority] || '🟡 Средний';
+        };
+
+        window.getStatusText = function(status) {
+            const statuses = {
+                'new': '🔵 Новая',
+                'in-progress': '🟡 В работе',
+                'completed': '🟢 Выполнена'
+            };
+            return statuses[status] || '🔵 Новая';
+        };
+
+        window.showNotification = function(message, type) {
+            log(`📢 Notification [${type}]: ${message}`);
+        };
+
+        window.loadTasks = function() {
+            log('📋 Загрузка задач (эмуляция)');
+        };
+
+        window.showEditTaskModal = function(task) {
+            log('✏️ Открытие модального окна редактирования для задачи: ' + task.id);
+        };
+
+        window.currentUser = {
+            id: 'user-1',
+            name: 'Иван',
+            isManager: true
+        };
+
+        // Тестовые данные
+        window.currentTasks = [
+            {
+                id: 'task-1',
+                title: 'Подготовить отчет по продажам',
+                description: 'Необходимо собрать данные за последний квартал и подготовить презентацию для руководства',
+                employee: 'Иван',
+                employeeName: 'Иван Иванов',
+                creator: 'Мария',
+                creatorName: 'Мария Петрова',
+                creatorId: 'user-2',
+                deadline: '2025-12-05',
+                createdAt: '2025-12-01',
+                priority: 'high',
+                status: 'new'
+            },
+            {
+                id: 'task-2',
+                title: 'Исправить баг в системе авторизации',
+                description: 'Пользователи сообщают о проблемах с входом через социальные сети. Нужно исследовать и исправить.',
+                employee: 'Мария',
+                employeeName: 'Мария Сергеева',
+                creator: 'Алексей',
+                creatorName: 'Алексей Смирнов',
+                creatorId: 'user-3',
+                deadline: '2025-12-03',
+                createdAt: '2025-11-28',
+                priority: 'medium',
+                status: 'in-progress'
+            },
+            {
+                id: 'task-3',
+                title: 'Разработать мобильную версию',
+                description: 'Создать адаптивную версию сайта для мобильных устройств с поддержкой основного функционала',
+                employee: 'Алексей',
+                employeeName: 'Алексей Козлов',
+                creator: 'Иван',
+                creatorName: 'Иван Иванов',
+                creatorId: 'user-1',
+                deadline: '2025-12-10',
+                createdAt: '2025-12-01',
+                priority: 'low',
+                status: 'new'
+            }
+        ];
+
+        const debugDiv = document.getElementById('debugOutput');
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `\n[${timestamp}] ${message}`;
+            console.log(message);
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+
+        function clearDebug() {
+            debugDiv.innerHTML = 'Логи очищены...';
+        }
+
+        function testWithMockData() {
+            log('\n=== Тест с моковыми данными ===');
+            if (typeof window.showTaskDetails === 'function') {
+                log('✅ Функция showTaskDetails найдена');
+                try {
+                    window.showTaskDetails('task-1');
+                    log('✅ Модальное окно должно быть открыто');
+                } catch (e) {
+                    log('❌ Ошибка: ' + e.message);
+                }
+            } else {
+                log('❌ Функция showTaskDetails не найдена!');
+            }
+        }
+
+        function checkFunctions() {
+            log('\n=== Проверка доступных функций ===');
+            const functions = [
+                'showTaskDetails',
+                'closeTaskDetailModal',
+                'startTask',
+                'completeTask',
+                'editTaskFromDetail',
+                'deleteTaskFromDetail'
+            ];
+
+            functions.forEach(fn => {
+                if (typeof window[fn] === 'function') {
+                    log('✅ ' + fn + ' - доступна');
+                } else {
+                    log('❌ ' + fn + ' - НЕ НАЙДЕНА');
+                }
+            });
+
+            log('\n=== Проверка DOM ===');
+            const modal = document.getElementById('taskDetailModal');
+            log('taskDetailModal: ' + (modal ? '✅ Найден' : '❌ Не найден'));
+
+            log('\n=== Проверка данных ===');
+            log('currentTasks: ' + (window.currentTasks ? '✅ ' + window.currentTasks.length + ' задач' : '❌ Не найден'));
+        }
+
+        // Проверка при загрузке
+        window.addEventListener('load', () => {
+            log('🚀 Страница загружена, начинаем тестирование...');
+            setTimeout(() => {
+                checkFunctions();
+            }, 500);
+        });
+    </script>
+
+    <!-- Подключаем модальное окно -->
+    <script src="task-detail-modal.js"></script>
+</body>
+</html>

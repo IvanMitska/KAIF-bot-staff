@@ -912,7 +912,6 @@ async function loadTasks() {
             }
             
             currentTasks = tasks; // Сохраняем задачи глобально
-            window.currentTasks = tasks; // Делаем доступными глобально для модального окна
             displayTasks(tasks);
             
             // Проверяем существование функции updateTaskCounts
@@ -1280,7 +1279,6 @@ function displayTasks(tasks) {
         
         return `
             <div class="task-item-modern" data-task-id="${task.id}"
-                 onclick="showTaskDetails('${task.id}')"
                  style="
                     cursor: pointer;
                     background: var(--bg-card);
