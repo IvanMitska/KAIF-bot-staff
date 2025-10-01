@@ -914,6 +914,11 @@ async function loadTasks() {
             currentTasks = tasks; // Сохраняем задачи глобально
             window.currentTasks = tasks; // Делаем доступными глобально для модального окна
             displayTasks(tasks);
+
+            // Добавляем обработчики клика на задачи после отображения
+            setTimeout(() => {
+                addTaskClickHandlers();
+            }, 100);
             
             // Проверяем существование функции updateTaskCounts
             if (typeof updateTaskCounts === 'function') {
@@ -1386,40 +1391,55 @@ function displayTasks(tasks) {
     }).join('');
 
     // Добавляем обработчики событий после создания HTML
-    console.log('🔧 Adding click event listeners to task items...');
+    console.log('🔧 Добавляем обработчики клика для задач...');
     setTimeout(() => {
-        const taskItems = document.querySelectorAll('.task-item-modern[data-task-id]');
-        console.log('📋 Found task items:', taskItems.length);
-
-        taskItems.forEach((item, index) => {
-            const taskId = item.getAttribute('data-task-id');
-            console.log(`🎯 Adding listener to task ${index + 1}:`, taskId);
-
-            // Удаляем старые обработчики если есть
-            item.removeEventListener('click', handleTaskClick);
-
-            // Добавляем новый обработчик
-            item.addEventListener('click', function(event) {
-                console.log('🔥 TASK CLICKED via addEventListener:', taskId);
-                console.log('🔍 Event target:', event.target);
-                console.log('🔍 Current target:', event.currentTarget);
-
-                // Проверяем, что клик не по кнопке
-                if (event.target.closest('.task-action-btn')) {
-                    console.log('⚠️ Click was on action button, ignoring');
-                    return;
-                }
-
-                handleTaskClick(taskId);
-            });
-        });
+        addTaskClickHandlers();
     }, 100);
 }
 
 // Функция обработки клика по задаче
 function handleTaskClick(taskId) {
     console.log('🚀 handleTaskClick called with:', taskId);
-    openTaskDetail(taskId);
+    // Используем showTaskDetails из task-detail-modal.js
+    if (typeof window.showTaskDetails === 'function') {
+        window.showTaskDetails(taskId);
+    } else {
+        console.error('❌ Функция showTaskDetails не найдена!');
+        openTaskDetail(taskId); // Fallback на старую функцию
+    }
+}
+
+// Функция добавления обработчиков клика на задачи
+function addTaskClickHandlers() {
+    const taskItems = document.querySelectorAll('.task-item-modern[data-task-id]');
+    console.log('📋 Добавление обработчиков клика на задачи:', taskItems.length);
+
+    taskItems.forEach((item, index) => {
+        const taskId = item.getAttribute('data-task-id');
+        console.log(`🎯 Добавляем обработчик для задачи ${index + 1}:`, taskId);
+
+        // Удаляем inline onclick если есть
+        item.removeAttribute('onclick');
+
+        // Удаляем старые обработчики
+        const newItem = item.cloneNode(true);
+        item.parentNode.replaceChild(newItem, item);
+
+        // Добавляем новый обработчик клика
+        newItem.style.cursor = 'pointer';
+        newItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Клик по задаче:', taskId);
+
+            // Проверяем, что showTaskDetails доступна
+            if (typeof window.showTaskDetails === 'function') {
+                window.showTaskDetails(taskId);
+            } else {
+                console.error('❌ Функция showTaskDetails не найдена!');
+            }
+        });
+    });
 }
 
 // Обновление счетчиков задач
