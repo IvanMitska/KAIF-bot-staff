@@ -1392,9 +1392,31 @@ function displayTasks(tasks) {
 
     // Добавляем обработчики событий после создания HTML
     console.log('🔧 Добавляем обработчики клика для задач...');
-    setTimeout(() => {
+
+    // Немедленное добавление через requestAnimationFrame для надежности
+    requestAnimationFrame(() => {
         addTaskClickHandlers();
-    }, 100);
+
+        // Дополнительные попытки через интервалы
+        setTimeout(() => addTaskClickHandlers(), 100);
+        setTimeout(() => addTaskClickHandlers(), 500);
+        setTimeout(() => {
+            const items = document.querySelectorAll('.task-item-modern[data-task-id]');
+            console.log(`📋 Финальная проверка: ${items.length} задач на странице`);
+
+            items.forEach(item => {
+                if (!item.hasAttribute('data-click-handler-added')) {
+                    console.log('⚠️ Задача без обработчика:', item.getAttribute('data-task-id'));
+                }
+            });
+
+            // Принудительное добавление если есть задачи без обработчиков
+            if (document.querySelectorAll('.task-item-modern[data-task-id]:not([data-click-handler-added])').length > 0) {
+                console.log('🔄 Принудительное добавление обработчиков...');
+                addTaskClickHandlers();
+            }
+        }, 1000);
+    });
 }
 
 // Функция обработки клика по задаче
@@ -1414,57 +1436,112 @@ function addTaskClickHandlers() {
     const taskItems = document.querySelectorAll('.task-item-modern[data-task-id]');
     console.log('📋 Добавление обработчиков клика на задачи:', taskItems.length);
 
+    if (taskItems.length === 0) {
+        console.warn('⚠️ Задачи не найдены для добавления обработчиков');
+        return;
+    }
+
+    let handlersAdded = 0;
+
     taskItems.forEach((item, index) => {
         const taskId = item.getAttribute('data-task-id');
+
+        // Проверяем, не добавлен ли уже обработчик
+        if (item.getAttribute('data-click-handler-added') === 'true') {
+            console.log(`⏭️ Задача ${taskId} уже имеет обработчик`);
+            return;
+        }
+
         console.log(`🎯 Добавляем обработчик для задачи ${index + 1}:`, taskId);
 
-        // Удаляем inline onclick если есть
+        // Удаляем старые атрибуты и обработчики
         item.removeAttribute('onclick');
+        item.onclick = null;
 
         // Создаем уникальную функцию для клика
         const clickHandler = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🖱️ Клик по задаче:', taskId);
+            console.log('🖱️ КЛИК ПО ЗАДАЧЕ:', taskId);
 
-            // Пробуем разные способы вызова
+            // Немедленно пытаемся вызвать функцию
             if (typeof window.showTaskDetails === 'function') {
-                console.log('✅ Используем window.showTaskDetails');
-                window.showTaskDetails(taskId);
+                console.log('✅ Вызываем window.showTaskDetails');
+                try {
+                    window.showTaskDetails(taskId);
+                    console.log('✅ showTaskDetails вызвана успешно');
+                } catch (error) {
+                    console.error('❌ Ошибка при вызове showTaskDetails:', error);
+                }
             } else {
-                console.log('⚠️ window.showTaskDetails недоступна, ждем...');
-                // Ждем загрузки функции
+                console.log('⚠️ window.showTaskDetails недоступна, ждем загрузки...');
+
+                // Ждем загрузки функции с более агрессивными попытками
                 let attempts = 0;
                 const waitForFunction = setInterval(() => {
                     attempts++;
                     if (typeof window.showTaskDetails === 'function') {
                         clearInterval(waitForFunction);
                         console.log('✅ Функция найдена после ожидания');
-                        window.showTaskDetails(taskId);
-                    } else if (attempts > 10) {
+                        try {
+                            window.showTaskDetails(taskId);
+                        } catch (error) {
+                            console.error('❌ Ошибка при отложенном вызове:', error);
+                        }
+                    } else if (attempts > 20) {
                         clearInterval(waitForFunction);
-                        console.error('❌ Функция showTaskDetails так и не загрузилась');
+                        console.error('❌ Функция showTaskDetails так и не загрузилась за 2 секунды');
+
+                        // Пытаемся альтернативный способ
+                        if (typeof handleTaskClick === 'function') {
+                            console.log('🔄 Пробуем альтернативную функцию handleTaskClick');
+                            handleTaskClick(taskId);
+                        }
                     }
                 }, 100);
             }
         };
 
-        // Удаляем старые обработчики
-        item.onclick = null;
-        item.removeEventListener('click', item._clickHandler);
-
-        // Сохраняем ссылку на обработчик для возможности удаления
-        item._clickHandler = clickHandler;
-
-        // Добавляем новый обработчик клика
+        // Устанавливаем стили для кликабельности
         item.style.cursor = 'pointer';
-        item.addEventListener('click', clickHandler);
+        item.style.userSelect = 'none';
 
-        // Дополнительно добавляем как onclick для надежности
+        // Добавляем визуальные эффекты
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        });
+
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        });
+
+        // Добавляем обработчик клика
+        item.addEventListener('click', clickHandler, true); // true для capture фазы
+
+        // Дополнительно как onclick для максимальной совместимости
         item.onclick = clickHandler;
+
+        // Помечаем, что обработчик добавлен
+        item.setAttribute('data-click-handler-added', 'true');
+        handlersAdded++;
+
+        console.log(`✅ Обработчик добавлен для задачи ${taskId}`);
     });
 
-    console.log('✅ Обработчики клика добавлены ко всем задачам');
+    console.log(`📊 Итого обработчиков добавлено: ${handlersAdded}/${taskItems.length}`);
+
+    // Дополнительная проверка через секунду
+    setTimeout(() => {
+        const unhandledItems = document.querySelectorAll('.task-item-modern[data-task-id]:not([data-click-handler-added="true"])');
+        if (unhandledItems.length > 0) {
+            console.warn(`⚠️ Найдено ${unhandledItems.length} задач без обработчиков, повторяем добавление...`);
+            addTaskClickHandlers();
+        } else {
+            console.log('✅ Все задачи имеют обработчики клика');
+        }
+    }, 1000);
 }
 
 // Обновление счетчиков задач
