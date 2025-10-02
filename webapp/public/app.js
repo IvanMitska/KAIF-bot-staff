@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tasksList = document.getElementById('tasksList');
     if (tasksList) {
         console.log('🎯 Устанавливаем event delegation на tasksList');
+        console.log('🔍 Проверка showTaskDetails при установке delegation:', typeof window.showTaskDetails);
 
         tasksList.addEventListener('click', function(e) {
             // Находим ближайший .task-item-modern
@@ -136,12 +137,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (taskItem) {
                 const taskId = parseInt(taskItem.getAttribute('data-task-id'));
                 console.log('🖱️ КЛИК по задаче через delegation:', taskId);
+                console.log('🔍 Тип window.showTaskDetails:', typeof window.showTaskDetails);
 
                 if (typeof window.showTaskDetails === 'function') {
                     console.log('✅ Вызываем window.showTaskDetails');
-                    window.showTaskDetails(taskId);
+                    try {
+                        window.showTaskDetails(taskId);
+                        console.log('✅ showTaskDetails вызвана без ошибок');
+                    } catch (error) {
+                        console.error('❌ Ошибка при вызове showTaskDetails:', error);
+                    }
                 } else {
-                    console.error('❌ window.showTaskDetails не найдена!');
+                    console.error('❌❌❌ window.showTaskDetails не является функцией!');
                 }
             }
         });

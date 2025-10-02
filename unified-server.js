@@ -80,14 +80,16 @@ const authMiddleware = (req, res, next) => {
   const isTestMode = req.headers.referer?.includes('test=') || req.query?.test;
   if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV || isTestMode) && !initData) {
     console.log('⚠️ Test mode: Allowing test access without Telegram auth');
-    // Используем динамический тестовый пользователь на основе IP или случайный ID
-    const testUserId = Math.floor(Math.random() * 1000000) + 1000000;
+    // Используем один из реальных ID из базы для тестирования
+    // Это Иван - один из пользователей с реальными задачами
+    const testUserId = 1734337242;
     req.telegramUser = {
       id: testUserId,
-      first_name: 'Test',
-      last_name: 'User',
-      username: 'testuser'
+      first_name: 'Иван',
+      last_name: 'Test',
+      username: 'ivan_test'
     };
+    console.log(`🧪 Using test user ID: ${testUserId}`);
     return next();
   }
   

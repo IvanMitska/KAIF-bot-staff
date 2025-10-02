@@ -1,14 +1,9 @@
 // Модальное окно для просмотра деталей задачи
 console.log('📋 Загружен task-detail-modal.js');
+console.log('🔍 Проверка window.showTaskDetails:', typeof window.showTaskDetails);
 
 // Глобальная переменная для текущей задачи
 let currentTaskDetails = null;
-
-// Защищаем функцию от перезаписи
-Object.defineProperty(window, 'showTaskDetails', {
-    writable: true,
-    configurable: false
-});
 
 // Функция для открытия модального окна с деталями задачи
 window.showTaskDetails = function(taskId) {
@@ -437,6 +432,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         addTaskClickHandlers();
     }, 1000);
+
+    // Финальная проверка
+    setTimeout(() => {
+        console.log('🔍 Финальная проверка window.showTaskDetails:', typeof window.showTaskDetails);
+        if (typeof window.showTaskDetails !== 'function') {
+            console.error('❌❌❌ КРИТИЧЕСКАЯ ОШИБКА: window.showTaskDetails не является функцией!');
+        } else {
+            console.log('✅✅✅ window.showTaskDetails доступна и готова к использованию');
+        }
+    }, 2000);
 });
 
 // Добавление обработчиков клика на задачи
