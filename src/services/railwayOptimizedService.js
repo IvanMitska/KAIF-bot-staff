@@ -448,28 +448,34 @@ class RailwayOptimizedService {
   // ========== TASK METHODS ==========
   async createTask(taskData) {
     await this.initialize();
-    
+
     const tempId = `task-${Date.now()}`;
     const taskWithId = { ...taskData, id: tempId, synced: false };
-    
+
     if (this.cache) {
       // Мгновенно сохраняем в кэш
       await this.cache.cacheTask(taskWithId);
       console.log(`✅ Task saved to PostgreSQL cache: ${tempId}`);
     }
-    
+
     // Создаем в Notion в фоне
     try {
       const notionTask = await notionService.createTask(taskData);
-      
+
       if (this.cache && notionTask.id) {
+        // Удаляем временную запись
+        await databasePool.query('DELETE FROM tasks WHERE id = $1', [tempId]);
+        console.log(`🗑️ Deleted temporary task: ${tempId}`);
+
+        // Создаем новую запись с правильным ID из Notion
         await this.cache.cacheTask({
           ...taskData,
           id: notionTask.id,
           synced: true
         });
+        console.log(`✅ Created synced task: ${notionTask.id}`);
       }
-      
+
       return { id: notionTask.id, ...taskData };
     } catch (error) {
       console.error('Notion task creation failed, keeping in cache:', error);
