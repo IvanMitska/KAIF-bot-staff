@@ -245,6 +245,33 @@ class EmployeeDropdown {
     open() {
         this.isOpen = true;
         this.wrapper.classList.add('open');
+
+        // Позиционируем dropdown относительно кнопки
+        const rect = this.wrapper.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = 300; // максимальная высота dropdown
+
+        // Определяем позицию (вверх или вниз от кнопки)
+        let top = rect.bottom + 5;
+        let maxHeight = dropdownHeight;
+
+        // Если не помещается снизу, открываем вверх
+        if (top + dropdownHeight > viewportHeight - 20) {
+            // Проверяем, есть ли место сверху
+            if (rect.top > dropdownHeight + 20) {
+                top = rect.top - dropdownHeight - 5;
+            } else {
+                // Ограничиваем высоту, чтобы поместилось на экране
+                maxHeight = viewportHeight - top - 20;
+            }
+        }
+
+        // Устанавливаем позицию и размеры
+        this.dropdown.style.top = `${top}px`;
+        this.dropdown.style.left = `${rect.left}px`;
+        this.dropdown.style.width = `${rect.width}px`;
+        this.dropdown.style.maxHeight = `${maxHeight}px`;
+
         this.dropdown.classList.add('show');
 
         // Скроллим к выбранному элементу

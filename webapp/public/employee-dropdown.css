@@ -8,26 +8,31 @@
     --avatar-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Контейнер wrapper */
+.custom-select-wrapper {
+    position: relative;
+    /* Фиксируем высоту чтобы не было дёргания */
+    height: auto !important;
+    min-height: 56px;
+}
+
 /* Основной селект когда развернут */
 .custom-select-wrapper.open .custom-select {
-    border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0 !important;
+    border-radius: var(--radius-lg, 12px) !important;
     border-color: var(--primary-color, #667eea) !important;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
 }
 
 /* Кастомный dropdown список */
 .employee-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    position: fixed;
     background: var(--dropdown-bg, #1a1a1f);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--dropdown-border, rgba(255, 255, 255, 0.1));
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-    max-height: 400px;
+    border-radius: 12px;
+    max-height: 300px;
+    min-width: 250px;
     overflow-y: auto;
     z-index: 100001;
     overflow-x: hidden;
