@@ -947,11 +947,6 @@ async function loadTasks() {
             window.currentTasks = tasks; // Делаем доступными глобально для модального окна
             displayTasks(tasks);
 
-            // Добавляем обработчики клика на задачи после отображения
-            setTimeout(() => {
-                addTaskClickHandlers();
-            }, 100);
-            
             // Проверяем существование функции updateTaskCounts
             if (typeof updateTaskCounts === 'function') {
                 updateTaskCounts(tasks);
@@ -1436,117 +1431,7 @@ function handleTaskClick(taskId) {
 }
 
 // Функция добавления обработчиков клика на задачи
-function addTaskClickHandlers() {
-    const taskItems = document.querySelectorAll('.task-item-modern[data-task-id]');
-    console.log('📋 Добавление обработчиков клика на задачи:', taskItems.length);
-
-    if (taskItems.length === 0) {
-        console.warn('⚠️ Задачи не найдены для добавления обработчиков');
-        return;
-    }
-
-    let handlersAdded = 0;
-
-    taskItems.forEach((item, index) => {
-        const taskId = parseInt(item.getAttribute('data-task-id'));
-
-        // Проверяем, не добавлен ли уже обработчик
-        if (item.getAttribute('data-click-handler-added') === 'true') {
-            console.log(`⏭️ Задача ${taskId} уже имеет обработчик`);
-            return;
-        }
-
-        console.log(`🎯 Добавляем обработчик для задачи ${index + 1}:`, taskId);
-
-        // Удаляем старые атрибуты и обработчики
-        item.removeAttribute('onclick');
-        item.onclick = null;
-
-        // Создаем уникальную функцию для клика
-        const clickHandler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🖱️ КЛИК ПО ЗАДАЧЕ:', taskId);
-
-            // Немедленно пытаемся вызвать функцию
-            if (typeof window.showTaskDetails === 'function') {
-                console.log('✅ Вызываем window.showTaskDetails');
-                try {
-                    window.showTaskDetails(taskId);
-                    console.log('✅ showTaskDetails вызвана успешно');
-                } catch (error) {
-                    console.error('❌ Ошибка при вызове showTaskDetails:', error);
-                }
-            } else {
-                console.log('⚠️ window.showTaskDetails недоступна, ждем загрузки...');
-
-                // Ждем загрузки функции с более агрессивными попытками
-                let attempts = 0;
-                const waitForFunction = setInterval(() => {
-                    attempts++;
-                    if (typeof window.showTaskDetails === 'function') {
-                        clearInterval(waitForFunction);
-                        console.log('✅ Функция найдена после ожидания');
-                        try {
-                            window.showTaskDetails(taskId);
-                        } catch (error) {
-                            console.error('❌ Ошибка при отложенном вызове:', error);
-                        }
-                    } else if (attempts > 20) {
-                        clearInterval(waitForFunction);
-                        console.error('❌ Функция showTaskDetails так и не загрузилась за 2 секунды');
-
-                        // Пытаемся альтернативный способ
-                        if (typeof handleTaskClick === 'function') {
-                            console.log('🔄 Пробуем альтернативную функцию handleTaskClick');
-                            handleTaskClick(taskId);
-                        }
-                    }
-                }, 100);
-            }
-        };
-
-        // Устанавливаем стили для кликабельности
-        item.style.cursor = 'pointer';
-        item.style.userSelect = 'none';
-
-        // Добавляем визуальные эффекты
-        item.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
-        });
-
-        item.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-        });
-
-        // Добавляем обработчик клика
-        item.addEventListener('click', clickHandler, true); // true для capture фазы
-
-        // Дополнительно как onclick для максимальной совместимости
-        item.onclick = clickHandler;
-
-        // Помечаем, что обработчик добавлен
-        item.setAttribute('data-click-handler-added', 'true');
-        handlersAdded++;
-
-        console.log(`✅ Обработчик добавлен для задачи ${taskId}`);
-    });
-
-    console.log(`📊 Итого обработчиков добавлено: ${handlersAdded}/${taskItems.length}`);
-
-    // Дополнительная проверка через секунду
-    setTimeout(() => {
-        const unhandledItems = document.querySelectorAll('.task-item-modern[data-task-id]:not([data-click-handler-added="true"])');
-        if (unhandledItems.length > 0) {
-            console.warn(`⚠️ Найдено ${unhandledItems.length} задач без обработчиков, повторяем добавление...`);
-            addTaskClickHandlers();
-        } else {
-            console.log('✅ Все задачи имеют обработчики клика');
-        }
-    }, 1000);
-}
+// Функция addTaskClickHandlers удалена - используется event delegation из DOMContentLoaded
 
 // Обновление счетчиков задач
 function updateTaskCounts(tasks) {
