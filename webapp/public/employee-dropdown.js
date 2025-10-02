@@ -27,16 +27,7 @@ class EmployeeDropdown {
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'employee-dropdown';
 
-        // Добавляем поиск (опционально)
-        if (this.options.length > 5) {
-            const searchDiv = document.createElement('div');
-            searchDiv.className = 'employee-search';
-            searchDiv.innerHTML = `
-                <input type="text" placeholder="Поиск сотрудника..." class="employee-search-input">
-            `;
-            this.dropdown.appendChild(searchDiv);
-            this.searchInput = searchDiv.querySelector('input');
-        }
+        // Строка поиска убрана - у нас мало сотрудников
 
         // Создаем список сотрудников
         this.listContainer = document.createElement('div');
@@ -204,17 +195,7 @@ class EmployeeDropdown {
             }
         });
 
-        // Поиск
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => {
-                this.renderEmployeeList(e.target.value);
-            });
-
-            // Предотвращаем закрытие при клике на поиск
-            this.searchInput.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
+        // Поиск убран - у нас мало сотрудников
 
         // Закрытие при клике вне
         document.addEventListener('click', (e) => {
@@ -266,11 +247,6 @@ class EmployeeDropdown {
         this.wrapper.classList.add('open');
         this.dropdown.classList.add('show');
 
-        // Фокус на поиск если есть
-        if (this.searchInput) {
-            setTimeout(() => this.searchInput.focus(), 100);
-        }
-
         // Скроллим к выбранному элементу
         const selected = this.listContainer.querySelector('.selected');
         if (selected) {
@@ -284,12 +260,6 @@ class EmployeeDropdown {
         this.isOpen = false;
         this.wrapper.classList.remove('open');
         this.dropdown.classList.remove('show');
-
-        // Очищаем поиск
-        if (this.searchInput) {
-            this.searchInput.value = '';
-            this.renderEmployeeList();
-        }
     }
 }
 

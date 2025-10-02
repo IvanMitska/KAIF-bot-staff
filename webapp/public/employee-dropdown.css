@@ -27,9 +27,10 @@
     border: 1px solid var(--dropdown-border, rgba(255, 255, 255, 0.1));
     border-top: none;
     border-radius: 0 0 12px 12px;
-    max-height: 320px;
+    max-height: 400px;
     overflow-y: auto;
     z-index: 100001;
+    overflow-x: hidden;
     opacity: 0;
     transform: translateY(-10px);
     visibility: hidden;
@@ -37,6 +38,9 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     /* Убедимся что содержимое видно */
     color: var(--text-primary, #ffffff);
+    /* Предотвращаем дёргание */
+    -webkit-overflow-scrolling: touch;
+    will-change: transform, opacity;
 }
 
 /* Показ dropdown */
