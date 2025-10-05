@@ -29,17 +29,9 @@ console.log('🎨 Тема заблокирована на темной верс
 // API URL
 const API_URL = window.location.origin;
 
-// Проверяем, есть ли параметр test в URL
-const urlParams = new URLSearchParams(window.location.search);
-const isTestMode = urlParams.has('test') || window.location.search.includes('test=');
-
-// Если мы в тестовом режиме или нет Telegram данных, добавляем параметр test к API запросам
+// Функция для получения URL API
 function getApiUrl(endpoint) {
-    // Всегда добавляем test=1 если нет initData, независимо от isTestMode
-    if (!tg.initData || isTestMode) {
-        const separator = endpoint.includes('?') ? '&' : '?';
-        return `${API_URL}${endpoint}${separator}test=1`;
-    }
+    // Просто возвращаем URL без модификаций
     return `${API_URL}${endpoint}`;
 }
 

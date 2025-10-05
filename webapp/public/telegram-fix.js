@@ -38,52 +38,24 @@
                     }
                 }
                 
-                // Если есть параметр test, включаем тестовый режим
-                if (urlParams.has('test')) {
-                    console.log('🧪 Test mode detected, enabling bypass...');
-                    
-                    // Переопределяем fetch для автоматического добавления test параметра
+                // Режим разработки только для localhost
+                if (window.location.hostname === 'localhost' && urlParams.has('test')) {
+                    console.log('🔧 Development mode on localhost');
+
+                    // В режиме разработки добавляем test параметр
                     const originalFetch = window.fetch;
                     window.fetch = function(url, options = {}) {
                         if (typeof url === 'string' && url.includes('/api/')) {
-                            const separator = url.includes('?') ? '&' : '?';
-                            const newUrl = url + separator + 'test=1';
-                            console.log('🔄 Modified request:', newUrl);
-                            
-                            // Убираем X-Telegram-Init-Data из заголовков если его нет
-                            if (options.headers && options.headers['X-Telegram-Init-Data'] === undefined) {
-                                delete options.headers['X-Telegram-Init-Data'];
+                            // Добавляем test=1 только если его нет
+                            let newUrl = url;
+                            if (!url.includes('test=1')) {
+                                const separator = url.includes('?') ? '&' : '?';
+                                newUrl = url + separator + 'test=1';
                             }
-                            
                             return originalFetch(newUrl, options);
                         }
                         return originalFetch(url, options);
                     };
-                    
-                    // Показываем уведомление о тестовом режиме
-                    setTimeout(() => {
-                        const existing = document.getElementById('test-mode-banner');
-                        if (!existing) {
-                            const banner = document.createElement('div');
-                            banner.id = 'test-mode-banner';
-                            banner.style.cssText = `
-                                position: fixed;
-                                top: 10px;
-                                left: 50%;
-                                transform: translateX(-50%);
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                                padding: 8px 16px;
-                                border-radius: 20px;
-                                font-size: 12px;
-                                z-index: 10000;
-                                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                                animation: slideDown 0.3s ease;
-                            `;
-                            banner.innerHTML = '🧪 Тестовый режим (Пользователь: Иван)';
-                            document.body.appendChild(banner);
-                        }
-                    }, 500);
                 }
             } else {
                 console.log('✅ Telegram initData is present');

@@ -503,23 +503,25 @@ console.log('🚀 Загружается task-modal-final.js');
         return styles[priority] || styles['medium'];
     }
 
-    // Принудительная регистрация функций
+    // Принудительная регистрация функций (только один раз)
     function forceRegisterFunctions() {
-        window.showTaskDetails = showTaskDetails;
-        window.closeTaskDetailModal = closeTaskDetailModal;
-        window.createTaskDetailModal = createTaskDetailModal;
+        if (!window._taskModalFunctionsRegistered) {
+            window.showTaskDetails = showTaskDetails;
+            window.closeTaskDetailModal = closeTaskDetailModal;
+            window.createTaskDetailModal = createTaskDetailModal;
+            window._taskModalFunctionsRegistered = true;
 
-        console.log('🔧 Функции принудительно зарегистрированы:', {
-            showTaskDetails: typeof window.showTaskDetails,
-            closeTaskDetailModal: typeof window.closeTaskDetailModal
-        });
+            console.log('🔧 Функции зарегистрированы:', {
+                showTaskDetails: typeof window.showTaskDetails,
+                closeTaskDetailModal: typeof window.closeTaskDetailModal
+            });
+        }
     }
 
     // Немедленная регистрация
     forceRegisterFunctions();
 
-    // Периодическая перерегистрация
-    setInterval(forceRegisterFunctions, 1000);
+    // Убираем периодическую перерегистрацию - она не нужна
 
     // Регистрация при загрузке DOM
     if (document.readyState === 'loading') {
