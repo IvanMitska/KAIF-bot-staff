@@ -11,22 +11,29 @@
     --glow-color: rgba(102, 126, 234, 0.5);
 }
 
-/* Основной контейнер задач */
+/* Основной контейнер задач с оптимизацией */
 .tasks-container {
     position: relative;
     padding: 20px 0;
+    /* Включаем аппаратное ускорение для плавного скролла */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: scroll-position;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Карточка задачи с liquid glass эффектом */
+/* Карточка задачи с оптимизированным liquid glass эффектом */
 .task-item-modern {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+    background: rgba(255, 255, 255, 0.03) !important;
+    /* Убираем backdrop-filter для производительности */
+    /* backdrop-filter: blur(var(--glass-blur)); */
+    /* -webkit-backdrop-filter: blur(var(--glass-blur)); */
     border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
     position: relative;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    will-change: transform;
 }
 
 /* Градиентный оверлей */
@@ -62,13 +69,11 @@
     pointer-events: none;
 }
 
-/* Эффекты при наведении */
+/* Эффекты при наведении - упрощенные */
 .task-item-modern:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow:
-        0 20px 40px 0 rgba(31, 38, 135, 0.4),
-        0 0 30px var(--glow-color);
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px 0 rgba(31, 38, 135, 0.3);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .task-item-modern:hover::before {
@@ -80,13 +85,12 @@
     transform: scale(1);
 }
 
-/* Статусы с liquid glass */
+/* Статусы с оптимизированным стилем */
 .status-new,
 .status-in-progress,
 .status-completed {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Убираем backdrop-filter для производительности */
+    border: 1px solid rgba(255, 255, 255, 0.15);
     position: relative;
     overflow: hidden;
 }
@@ -106,15 +110,14 @@
     box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
 }
 
-/* Кнопки действий с liquid glass */
+/* Кнопки действий с оптимизированным стилем */
 .task-action-btn {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.05) !important;
+    /* Убираем backdrop-filter для производительности */
     border: 1px solid var(--glass-border) !important;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .task-action-btn::before {
@@ -143,18 +146,21 @@
     left: 100%;
 }
 
-/* Модальное окно с liquid glass */
+/* Модальное окно с оптимизированным стилем */
 #tm-task-detail-modal > div,
 #tm-create-task-modal > div {
-    background: rgba(15, 15, 20, 0.85) !important;
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(15, 15, 20, 0.95) !important;
+    /* Уменьшаем blur для производительности */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-        0 25px 50px 0 rgba(31, 38, 135, 0.5),
-        inset 0 0 30px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 15px 30px 0 rgba(31, 38, 135, 0.4);
     position: relative;
-    overflow: hidden;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    /* Включаем аппаратное ускорение */
+    transform: translateZ(0);
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Градиентная граница для модальных окон - статичная */
@@ -177,13 +183,12 @@
     /* Убрана анимация вращения */
 }
 
-/* Фильтры задач с liquid glass */
+/* Фильтры задач с оптимизированным стилем */
 .filter-btn {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.05);
+    /* Убираем backdrop-filter для производительности */
     border: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, border-color 0.2s ease;
     position: relative;
     overflow: hidden;
 }
@@ -245,7 +250,8 @@
     }
 }
 
-/* Плавающие частицы для фона - статичные */
+/* Фоновые элементы полностью отключены для производительности */
+/*
 .tasks-container::before,
 .tasks-container::after {
     content: '';
@@ -256,31 +262,18 @@
     filter: blur(100px);
     opacity: 0.15;
     pointer-events: none;
-    /* Убрана анимация float */
 }
+*/
 
-.tasks-container::before {
-    background: radial-gradient(circle, #667eea, transparent);
-    top: -100px;
-    left: -100px;
-}
-
-.tasks-container::after {
-    background: radial-gradient(circle, #764ba2, transparent);
-    bottom: -100px;
-    right: -100px;
-}
-
-/* Улучшенные input и textarea с liquid glass */
+/* Улучшенные input и textarea - оптимизированные */
 input[type="text"],
 input[type="date"],
 textarea,
 select {
     background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    /* Убираем backdrop-filter для производительности */
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    transition: all 0.3s ease !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
 }
 
 input[type="text"]:focus,

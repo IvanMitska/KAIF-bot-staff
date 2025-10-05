@@ -113,6 +113,12 @@
             const container = document.getElementById('tasksList');
             if (!container) return;
 
+            // Оптимизация для плавного скролла
+            container.style.transform = 'translateZ(0)';
+            container.style.webkitTransform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.webkitOverflowScrolling = 'touch';
+
             if (!tasks || tasks.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #999;">
