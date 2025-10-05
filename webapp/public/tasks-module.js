@@ -391,6 +391,20 @@
             if (window.lucide) {
                 window.lucide.createIcons();
             }
+
+            // Периодически проверяем интерфейс
+            if (this.interfaceCheckInterval) {
+                clearInterval(this.interfaceCheckInterval);
+            }
+            this.interfaceCheckInterval = setInterval(() => {
+                const activePage = document.querySelector('.page.active');
+                if (activePage && activePage.id === 'tasks') {
+                    this.checkAndRestoreInterface();
+                } else {
+                    // Останавливаем проверку если ушли со страницы
+                    clearInterval(this.interfaceCheckInterval);
+                }
+            }, 1000); // Проверяем каждую секунду
         }
 
         await this.loadTasks();
@@ -479,7 +493,11 @@
         const modal = document.getElementById('tm-task-detail-modal');
         if (modal) {
             modal.style.animation = 'fadeOut 0.2s ease';
-            setTimeout(() => modal.remove(), 200);
+            setTimeout(() => {
+                modal.remove();
+                // Проверяем интерфейс после закрытия
+                this.checkAndRestoreInterface();
+            }, 200);
         }
         TM.selectedTask = null;
     };
@@ -609,7 +627,42 @@
 
     TasksModule.closeCreateTaskModal = function() {
         const modal = document.getElementById('tm-create-task-modal');
-        if (modal) modal.remove();
+        if (modal) {
+            modal.remove();
+            // Проверяем интерфейс после закрытия
+            this.checkAndRestoreInterface();
+        }
+    };
+
+    // Метод проверки и восстановления интерфейса
+    TasksModule.checkAndRestoreInterface = function() {
+        // Проверяем, находимся ли мы на странице задач
+        const tasksPage = document.getElementById('tasks');
+        if (!tasksPage || !tasksPage.classList.contains('active')) {
+            return;
+        }
+
+        // Проверяем, есть ли старые элементы интерфейса
+        const tasksList = document.getElementById('tasksList');
+        const hasOldInterface = tasksList && !tasksList.innerHTML.includes('task-item-modern');
+
+        // Проверяем, есть ли наши кнопки фильтров с правильными обработчиками
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let needsReinit = false;
+
+        filterButtons.forEach(btn => {
+            const onclick = btn.getAttribute('onclick');
+            if (onclick && !onclick.includes('window.TasksModule')) {
+                needsReinit = true;
+            }
+        });
+
+        // Если обнаружен старый интерфейс, переинициализируем
+        if (hasOldInterface || needsReinit) {
+            console.log('⚠️ Обнаружен старый интерфейс, переинициализация...');
+            TM.initialized = false;
+            this.init();
+        }
     };
 
     TasksModule.submitNewTask = async function(event) {
