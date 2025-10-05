@@ -786,8 +786,14 @@ async function submitReport(event) {
     }
 }
 
-// Переключение типа задач
+// СТАРАЯ ФУНКЦИЯ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function switchTaskType(type) {
+    console.log('🔄 Перенаправление на TasksModule.switchTaskType:', type);
+    if (window.TasksModule && window.TasksModule.switchTaskType) {
+        window.TasksModule.switchTaskType(type);
+        return;
+    }
+    // Старый код выполнится только если модуль недоступен
     currentTaskType = type;
     currentFilter = 'all';
     
@@ -825,228 +831,55 @@ function switchTaskType(type) {
     }
 }
 
-// Загрузка задач
+// Загрузка задач - ТОЛЬКО НОВЫЙ МОДУЛЬ
 async function loadTasks() {
-    console.log('🚀 loadTasks() - используем новый модуль');
+    console.log('🚀 loadTasks() - используем ТОЛЬКО новый модуль');
 
     // Используем новый модуль задач
-    if (window.TasksModule && window.TasksModule.loadTasks) {
+    if (window.TasksModule) {
         await window.TasksModule.loadTasks();
         return;
     }
 
-    // Если модуль не загружен, показываем ошибку
-    const tasksList = document.getElementById('tasksList');
-    if (tasksList) {
-        tasksList.innerHTML = `
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p class="loading-text">Загрузка модуля задач...</p>
-            </div>
-        `;
-
-        // Пробуем инициализировать модуль
-        setTimeout(async () => {
-            if (window.TasksModule) {
-                await window.TasksModule.init();
-            }
-        }, 500);
-    }
+    // Если модуль не загружен, ждем его
+    console.log('⏳ Ждем загрузки TasksModule...');
+    setTimeout(() => {
+        if (window.TasksModule) {
+            window.TasksModule.init();
+        }
+    }, 100);
     return;
-
-    try {
-        console.log('🔄 Загрузка задач...', { type: currentTaskType, hasAuth: !!tg.initData });
-        
-        // Если нет Telegram данных, проверяем тестовый режим
-        if (!tg.initData && !isTestMode) {
-            console.warn('⚠️ No Telegram init data and not in test mode');
-            
-            // В режиме разработки пытаемся загрузить без авторизации
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('🔧 Development mode detected, continuing...');
-                // Продолжаем выполнение без initData
-            } else {
-                tasksList.innerHTML = `
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                        <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
-                        <h3 style="margin-bottom: 8px;">Не удалось загрузить задачи</h3>
-                        <p>Приложение должно быть открыто через Telegram бота</p>
-                        <p style="margin-top: 16px; font-size: 14px;">
-                            Перейдите в бота <a href="https://t.me/Report_KAIF_bot" target="_blank">@Report_KAIF_bot</a> 
-                            и используйте кнопку "Открыть приложение"
-                        </p>
-                        <p style="margin-top: 20px;">
-                            <button onclick="window.location.href='?test=1'" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                                🧪 Включить тестовый режим
-                            </button>
-                        </p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-        }
-        
-        const endpoint = currentTaskType === 'my' ? '/api/tasks/my' : '/api/tasks/created';
-        const fullUrl = getApiUrl(endpoint);
-        
-        console.log('📍 Task loading debug:');
-        console.log('  - Endpoint:', endpoint);
-        console.log('  - Full URL:', fullUrl);
-        console.log('  - InitData present:', !!tg.initData);
-        console.log('  - Test mode:', isTestMode);
-        console.log('  - Headers:', { 'X-Telegram-Init-Data': tg.initData ? 'Present' : 'Missing' });
-        
-        // Создаем заголовки в зависимости от наличия initData
-        const headers = {};
-        if (tg.initData) {
-            headers['X-Telegram-Init-Data'] = tg.initData;
-        }
-        
-        const response = await fetch(fullUrl, {
-            headers: headers
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
-        if (response.ok) {
-            let tasks;
-            let rawResponse;
-            try {
-                const responseText = await response.text();
-                console.log('📥 Raw response:', responseText.substring(0, 200));
-                rawResponse = responseText;
-                tasks = JSON.parse(responseText);
-            } catch (jsonError) {
-                console.error('❌ Failed to parse JSON:', jsonError);
-                console.error('❌ Raw response was:', rawResponse);
-                tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: неверный формат ответа от сервера</p>';
-                return;
-            }
-            
-            console.log('✅ Tasks loaded successfully:', tasks?.length || 0);
-            console.log('✅ Task type:', typeof tasks);
-            console.log('✅ Is array:', Array.isArray(tasks));
-            console.log('✅ First task:', tasks?.[0]);
-            
-            if (!tasks || !Array.isArray(tasks)) {
-                console.error('❌ Invalid tasks data:', tasks);
-                tasksList.innerHTML = '<p style="text-align: center; color: red;">Ошибка: получены некорректные данные</p>';
-                return;
-            }
-            
-            currentTasks = tasks; // Сохраняем задачи глобально
-            window.currentTasks = tasks; // Делаем доступными глобально для модального окна
-            displayTasks(tasks);
-
-            // Проверяем существование функции updateTaskCounts
-            if (typeof updateTaskCounts === 'function') {
-                updateTaskCounts(tasks);
-            } else {
-                console.warn('⚠️ updateTaskCounts function not found');
-            }
-        } else {
-            const errorText = await response.text();
-            console.error('❌ Error response:', response.status, errorText);
-            console.error('Full response:', response);
-            
-            // Показываем детальную информацию об ошибке
-            let errorMessage = 'Неизвестная ошибка';
-            let errorDetails = errorText;
-            
-            try {
-                const errorJson = JSON.parse(errorText);
-                errorMessage = errorJson.error || errorJson.message || errorMessage;
-                errorDetails = errorJson.details || errorText;
-            } catch (e) {
-                // Если не JSON, используем как есть
-            }
-            
-            tasksList.innerHTML = `
-                <div style="text-align: center; padding: 20px; background: rgba(255,0,0,0.1); border-radius: 8px; margin: 20px;">
-                    <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 16px; color: red;"></i>
-                    <h3 style="margin-bottom: 8px; color: red;">Не удалось загрузить задачи</h3>
-                    <p style="margin: 10px 0;">${errorMessage}</p>
-                    <div style="font-size: 12px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-top: 10px;">
-                        <div><b>Статус:</b> ${response.status}</div>
-                        <div><b>URL:</b> ${API_URL}${endpoint}</div>
-                        <div><b>InitData:</b> ${tg.initData ? 'Present' : 'Missing'}</div>
-                        <div><b>User ID:</b> ${tg.initDataUnsafe?.user?.id || 'Unknown'}</div>
-                        <div><b>Детали:</b> ${errorDetails.substring(0, 200)}</div>
-                    </div>
-                    <button onclick="loadTasks()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px;">
-                        Попробовать снова
-                    </button>
-                    <button onclick="testDatabaseConnection()" style="margin-top: 10px; margin-left: 10px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px;">
-                        Тест базы данных
-                    </button>
-                </div>
-            `;
-            lucide.createIcons();
-        }
-    } catch (error) {
-        console.error('Error loading tasks:', error);
-        tasksList.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                <i data-lucide="wifi-off" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
-                <h3 style="margin-bottom: 8px;">Ошибка подключения</h3>
-                <p style="margin-bottom: 20px;">Не удалось загрузить задачи. Проверьте интернет-соединение.</p>
-                <button onclick="forceLoadTasks()" class="btn-secondary" style="margin-top: 16px;">
-                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px; margin-right: 8px;"></i>
-                    Попробовать снова
-                </button>
-            </div>
-        `;
-        lucide.createIcons();
-
-        // Показываем контейнер с кнопкой принудительной загрузки
-        const errorContainer = document.getElementById('tasksErrorContainer');
-        if (errorContainer) {
-            errorContainer.style.display = 'block';
-        }
-    }
 }
 
-// Функция открытия деталей задачи
+// Все старые функции задач отключены - используем только TasksModule
+
+// СТАРЫЕ ФУНКЦИИ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function openTaskDetail(taskId) {
-    console.log('🔍 openTaskDetail called with taskId:', taskId);
-    console.log('📋 currentTasks array:', currentTasks);
-    const task = currentTasks.find(t => t.id === taskId);
-    console.log('🎯 Found task:', task);
-    if (task) {
-        console.log('✅ Calling showTaskModal with task:', task.title);
-        showTaskModal(task);
-    } else {
-        console.error('❌ Task not found in currentTasks array for taskId:', taskId);
+    console.log('🔄 Перенаправление на TasksModule.showTaskDetails:', taskId);
+    if (window.TasksModule && window.TasksModule.showTaskDetails) {
+        const task = window.TasksModule.currentTasks.find(t => t.id === taskId);
+        if (task) {
+            window.TasksModule.showTaskDetails(task);
+        }
     }
 }
-
-// Делаем функцию глобально доступной
 window.openTaskDetail = openTaskDetail;
 
-// Принудительная загрузка задач (для кнопки в интерфейсе)
 function forceLoadTasks() {
-    console.log('🔄 Принудительная загрузка задач...');
-
-    // Скрываем контейнер с ошибкой
-    const errorContainer = document.getElementById('tasksErrorContainer');
-    if (errorContainer) {
-        errorContainer.style.display = 'none';
+    console.log('🔄 Перенаправление на TasksModule.loadTasks');
+    if (window.TasksModule && window.TasksModule.loadTasks) {
+        window.TasksModule.loadTasks();
     }
-
-    // Переключаемся на страницу задач если нужно
-    const currentPage = document.querySelector('.page.active');
-    if (currentPage && currentPage.id !== 'tasks') {
-        showPage('tasks');
-    }
-
-    // Загружаем задачи
-    loadTasks();
 }
 
-// Показать модальное окно просмотра задачи
+// СТАРАЯ ФУНКЦИЯ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function showTaskModal(task) {
+    console.log('🔄 Перенаправление на TasksModule.showTaskDetails');
+    if (window.TasksModule && window.TasksModule.showTaskDetails) {
+        window.TasksModule.showTaskDetails(task);
+        return;
+    }
+    // Старый код ниже не выполнится, если модуль доступен
     // Создаем или обновляем модальное окно просмотра задачи
     let modal = document.getElementById('taskDetailModal');
     if (!modal) {
@@ -1247,8 +1080,15 @@ window.showTaskModal = showTaskModal;
 window.closeTaskDetailModal = closeTaskDetailModal;
 window.handleTaskClick = handleTaskClick;
 
-// Отображение задач
+// СТАРАЯ ФУНКЦИЯ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function displayTasks(tasks) {
+    console.log('🔄 Перенаправление на TasksModule для отображения задач');
+    if (window.TasksModule && window.TasksModule.renderTasks) {
+        window.TasksModule.currentTasks = tasks;
+        window.TasksModule.renderTasks(tasks);
+        return;
+    }
+    // Старый код ниже не выполнится, если модуль доступен
     console.log('📋 displayTasks called with', tasks?.length || 0, 'tasks');
     console.log('🔍 Tasks data:', tasks);
     console.log('📍 Current filter:', currentFilter);
@@ -1261,7 +1101,7 @@ function displayTasks(tasks) {
         console.error('❌ tasksList element not found in displayTasks!');
         return;
     }
-    
+
     // Проверяем, что tasks это массив
     if (!Array.isArray(tasks)) {
         console.error('❌ tasks is not an array:', tasks);
@@ -1426,32 +1266,24 @@ function handleTaskClick(taskId) {
 // Функция добавления обработчиков клика на задачи
 // Функция addTaskClickHandlers удалена - используется event delegation из DOMContentLoaded
 
-// Обновление счетчиков задач
+// СТАРЫЕ ФУНКЦИИ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function updateTaskCounts(tasks) {
-    const counts = {
-        all: tasks.length,
-        new: tasks.filter(t => t.status === 'Новая').length,
-        'in-progress': tasks.filter(t => t.status === 'В работе').length,
-        completed: tasks.filter(t => t.status === 'Выполнена').length
-    };
-    
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        const onclickAttr = btn.getAttribute('onclick');
-        if (onclickAttr) {
-            const match = onclickAttr.match(/filterTasks\('(.+?)'/);
-            if (match) {
-                const filter = match[1];
-                const countSpan = btn.querySelector('.count');
-                if (countSpan) {
-                    countSpan.textContent = counts[filter] || 0;
-                }
-            }
-        }
-    });
+    console.log('🔄 Перенаправление на TasksModule.updateCounts');
+    if (window.TasksModule && window.TasksModule.updateTaskCounts) {
+        window.TasksModule.updateTaskCounts(tasks);
+        return;
+    }
+    // Старый код не выполнится, если модуль доступен
 }
 
-// Фильтрация задач с анимациями
+// Фильтрация задач - перенаправляем на новый модуль
 function filterTasks(filter, event) {
+    console.log('🔄 Перенаправление на TasksModule.filterTasks:', filter);
+    if (window.TasksModule && window.TasksModule.filterTasks) {
+        window.TasksModule.filterTasks(filter);
+        return;
+    }
+    // Старый код продолжит выполняться только если модуль недоступен
     console.log('🔍 filterTasks called:', filter, event);
     currentFilter = filter;
     
@@ -2890,8 +2722,14 @@ async function loadEmployeesForSelect(selectedId = null) {
     }
 }
 
-// Упрощенная функция закрытия модального окна
+// СТАРАЯ ФУНКЦИЯ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 function closeTaskModal() {
+    console.log('🔄 Перенаправление на TasksModule для закрытия модального окна');
+    if (window.TasksModule && window.TasksModule.closeCreateTaskModal) {
+        window.TasksModule.closeCreateTaskModal();
+        return;
+    }
+    // Старый код для обратной совместимости
     const modal = document.getElementById('taskModal');
     if (!modal) return;
 
@@ -2912,8 +2750,14 @@ window.closeTaskModal = closeTaskModal;
 // Флаг для предотвращения повторной отправки
 let isSubmittingTask = false;
 
-// Отправить задачу
+// СТАРАЯ ФУНКЦИЯ - ПЕРЕНАПРАВЛЯЕМ НА НОВЫЙ МОДУЛЬ
 async function submitTask(event) {
+    console.log('🔄 Перенаправление на TasksModule.submitCreateTask');
+    if (window.TasksModule && window.TasksModule.submitCreateTask) {
+        await window.TasksModule.submitCreateTask(event);
+        return;
+    }
+    // Старый код для обратной совместимости
     console.log('=== submitTask called ===');
     event.preventDefault();
 

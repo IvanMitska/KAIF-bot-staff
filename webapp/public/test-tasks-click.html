@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест кликов по задачам</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .task-item {
+            background: #16213e;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: #0f3460;
+            transform: translateY(-2px);
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .task-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            background: #e94560;
+            color: white;
+        }
+
+        .task-status.completed {
+            background: #22c55e;
+        }
+
+        .task-status.in-progress {
+            background: #f59e0b;
+        }
+
+        #log {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест кликов по задачам</h1>
+
+    <div id="log">
+        <h3>Консоль событий:</h3>
+    </div>
+
+    <div id="tasks-container">
+        <p>Загрузка задач...</p>
+    </div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+
+        function addLog(message, data = null) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${time}]</strong> ${message}`;
+            if (data) {
+                entry.innerHTML += `<br><code>${JSON.stringify(data, null, 2)}</code>`;
+            }
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Функция для рендеринга задач
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasks-container');
+
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = '<p>Нет задач</p>';
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item" data-task-id="${task.id}" onclick="handleTaskClick('${task.id}')">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-status ${task.status === 'Выполнена' ? 'completed' : task.status === 'В работе' ? 'in-progress' : ''}">${task.status}</div>
+                    <div style="margin-top: 10px; color: #999;">
+                        ID: ${task.id}<br>
+                        Дедлайн: ${task.deadline || 'Не указан'}
+                    </div>
+                </div>
+            `).join('');
+
+            addLog(`Отрендерено ${tasks.length} задач`);
+        }
+
+        // Обработчик клика по задаче
+        function handleTaskClick(taskId) {
+            addLog(`Клик по задаче с ID: ${taskId}`);
+
+            // Проверяем доступность функций
+            if (typeof window.showTaskDetails === 'function') {
+                addLog('✅ showTaskDetails доступна, вызываем...');
+                window.showTaskDetails(taskId);
+            } else if (typeof window.handleTaskClick === 'function') {
+                addLog('✅ handleTaskClick доступна, вызываем...');
+                window.handleTaskClick(taskId);
+            } else {
+                addLog('❌ Функции для открытия деталей задачи не найдены', {
+                    showTaskDetails: typeof window.showTaskDetails,
+                    handleTaskClick: typeof window.handleTaskClick
+                });
+
+                // Показываем простое модальное окно
+                const task = window.testTasks?.find(t => String(t.id) === String(taskId));
+                if (task) {
+                    alert(`Задача: ${task.title}\n\nСтатус: ${task.status}\nID: ${task.id}`);
+                }
+            }
+        }
+
+        // Загружаем задачи
+        async function loadTasks() {
+            addLog('Начинаем загрузку задач...');
+
+            try {
+                const response = await fetch('/api/tasks/my?test=1');
+                addLog(`Ответ сервера: ${response.status}`);
+
+                if (response.ok) {
+                    const tasks = await response.json();
+                    window.testTasks = tasks; // Сохраняем для тестирования
+                    addLog(`Получено задач: ${tasks.length}`);
+                    renderTasks(tasks);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                addLog(`❌ Ошибка загрузки: ${error.message}`);
+
+                // Показываем тестовые данные
+                const testTasks = [
+                    { id: 'test-1', title: 'Тестовая задача 1', status: 'Новая', deadline: '2025-10-10' },
+                    { id: 'test-2', title: 'Тестовая задача 2', status: 'В работе', deadline: '2025-10-12' },
+                    { id: 'test-3', title: 'Тестовая задача 3', status: 'Выполнена', deadline: '2025-10-08' }
+                ];
+                window.testTasks = testTasks;
+                renderTasks(testTasks);
+            }
+        }
+
+        // Проверяем доступность функций каждые 500мс
+        let checkCount = 0;
+        const checkInterval = setInterval(() => {
+            checkCount++;
+            const status = {
+                showTaskDetails: typeof window.showTaskDetails,
+                handleTaskClick: typeof window.handleTaskClick,
+                openTaskDetail: typeof window.openTaskDetail
+            };
+
+            addLog(`Проверка #${checkCount} функций:`, status);
+
+            // Останавливаем после 10 проверок
+            if (checkCount >= 10) {
+                clearInterval(checkInterval);
+                addLog('Остановка проверок');
+            }
+        }, 500);
+
+        // Загружаем задачи при загрузке страницы
+        loadTasks();
+    </script>
+</body>
+</html>

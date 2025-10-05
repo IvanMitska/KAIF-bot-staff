@@ -59,17 +59,21 @@ async function importExcelTasks(excelFilePath) {
 
         // Ищем нужные колонки (могут быть на русском или английском)
         const titleIndex = headers.findIndex(h =>
+            h.toLowerCase() === 'задача' ||
             h.toLowerCase().includes('задач') ||
             h.toLowerCase().includes('title') ||
             h.toLowerCase().includes('название')
         );
 
         const descIndex = headers.findIndex(h =>
+            h.toLowerCase().includes('детали') ||
             h.toLowerCase().includes('описание') ||
-            h.toLowerCase().includes('description')
+            h.toLowerCase().includes('description') ||
+            h.toLowerCase().includes('шаги')
         );
 
         const assigneeIndex = headers.findIndex(h =>
+            h.toLowerCase() === 'ответственный' ||
             h.toLowerCase().includes('исполнитель') ||
             h.toLowerCase().includes('сотрудник') ||
             h.toLowerCase().includes('assignee') ||
@@ -77,11 +81,13 @@ async function importExcelTasks(excelFilePath) {
         );
 
         const priorityIndex = headers.findIndex(h =>
+            h.toLowerCase() === 'приоритет' ||
             h.toLowerCase().includes('приоритет') ||
             h.toLowerCase().includes('priority')
         );
 
         const statusIndex = headers.findIndex(h =>
+            h.toLowerCase() === 'статус' ||
             h.toLowerCase().includes('статус') ||
             h.toLowerCase().includes('status')
         );
@@ -94,6 +100,12 @@ async function importExcelTasks(excelFilePath) {
             throw new Error('Не найдена колонка с исполнителями');
         }
 
+        console.log('\n📊 Найденные индексы колонок:');
+        console.log(`  - Задача: ${titleIndex} (колонка: ${headers[titleIndex]})`);
+        console.log(`  - Детали: ${descIndex} (колонка: ${descIndex !== -1 ? headers[descIndex] : 'не найдена'})`);
+        console.log(`  - Ответственный: ${assigneeIndex} (колонка: ${headers[assigneeIndex]})`);
+        console.log(`  - Приоритет: ${priorityIndex} (колонка: ${priorityIndex !== -1 ? headers[priorityIndex] : 'не найдена'})`);
+        console.log(`  - Статус: ${statusIndex} (колонка: ${statusIndex !== -1 ? headers[statusIndex] : 'не найдена'})`);
         console.log('\n📊 Обработка данных...\n');
 
         let successCount = 0;
@@ -102,11 +114,14 @@ async function importExcelTasks(excelFilePath) {
         const errors = [];
 
         // Обрабатываем каждую строку (начиная со второй)
+        console.log(`Всего строк для обработки: ${jsonData.length - 1}\n`);
+
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
 
             // Пропускаем пустые строки
             if (!row || row.length === 0 || !row[titleIndex]) {
+                console.log(`⏭️  Строка ${i + 1}: пропущена (пустая или без названия задачи)`);
                 continue;
             }
 
