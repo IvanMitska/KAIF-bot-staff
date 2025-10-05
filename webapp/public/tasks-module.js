@@ -328,18 +328,88 @@
         TM.initialized = true;
 
         console.log('📋 Инициализация модуля задач...');
+
+        // Полностью заменяем содержимое страницы задач
+        const tasksPage = document.getElementById('tasks');
+        if (tasksPage) {
+            tasksPage.innerHTML = `
+                <div class="page-header">
+                    <button class="back-btn" onclick="showPage('home')">
+                        <i data-lucide="arrow-left"></i> <span>Назад</span>
+                    </button>
+                    <div class="page-title-section">
+                        <h1 class="page-title">
+                            <i data-lucide="check-square" class="title-icon"></i> Мои задачи
+                        </h1>
+                        <button id="createTaskBtn" class="create-task-btn" onclick="window.TasksModule.showCreateTaskModal()" style="display: ${window.currentUser?.isManager ? 'flex' : 'none'};">
+                            <i data-lucide="plus"></i> <span>Создать</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="task-type-switcher">
+                    <button id="myTasksBtn" class="task-type-btn active" onclick="window.TasksModule.switchTaskType('my')">
+                        <i data-lucide="inbox" class="btn-icon"></i> <span>Мои задачи</span>
+                    </button>
+                    <button id="createdTasksBtn" class="task-type-btn" onclick="window.TasksModule.switchTaskType('created')" style="display: ${window.currentUser?.isManager ? 'block' : 'none'};">
+                        <i data-lucide="send" class="btn-icon"></i> <span>Поставленные</span>
+                    </button>
+                </div>
+
+                <div class="task-filters">
+                    <button class="filter-btn active" onclick="window.TasksModule.filterTasks('all')">
+                        <span class="filter-text">Все</span>
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" onclick="window.TasksModule.filterTasks('new')">
+                        <div class="filter-indicator new"></div>
+                        <span class="filter-text">Новые</span>
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" onclick="window.TasksModule.filterTasks('in-progress')">
+                        <div class="filter-indicator in-progress"></div>
+                        <span class="filter-text">В работе</span>
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn" onclick="window.TasksModule.filterTasks('completed')">
+                        <div class="filter-indicator completed"></div>
+                        <span class="filter-text">Выполнены</span>
+                        <span class="count">0</span>
+                    </button>
+                </div>
+
+                <div id="tasksList" class="tasks-container">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Загрузка задач...</p>
+                    </div>
+                </div>
+            `;
+
+            // Инициализируем иконки Lucide
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
         await this.loadTasks();
     };
 
     TasksModule.loadTasks = async function() {
+        // Если модуль еще не инициализирован, инициализируем
+        if (!TM.initialized) {
+            await this.init();
+            return;
+        }
+
         const tasks = await API.getTasks();
         TM.currentTasks = tasks;
         Render.tasksList(tasks);
-        this.updateCounts(tasks);
+        this.updateTaskCounts(tasks);
         console.log(`✅ Загружено ${tasks.length} задач`);
     };
 
-    TasksModule.updateCounts = function(tasks) {
+    TasksModule.updateTaskCounts = function(tasks) {
         const counts = {
             all: tasks.length,
             new: tasks.filter(t => t.status === 'Новая').length,
@@ -373,6 +443,14 @@
                 badge.style.display = 'none';
             }
         }
+    };
+
+    TasksModule.renderTasks = function(tasks) {
+        if (tasks) {
+            TM.currentTasks = tasks;
+        }
+        Render.tasksList(TM.currentTasks);
+        this.updateTaskCounts(TM.currentTasks);
     };
 
     TasksModule.filterTasks = function(filter) {
