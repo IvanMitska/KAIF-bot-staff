@@ -324,7 +324,8 @@
 
     // Публичные методы модуля
     TasksModule.init = async function() {
-        if (TM.initialized) return;
+        // Удаляем проверку на initialized - всегда переинициализируем интерфейс
+        // if (TM.initialized) return;
         TM.initialized = true;
 
         console.log('📋 Инициализация модуля задач...');
@@ -662,15 +663,48 @@
         TasksModule.closeCreateTaskModal();
     };
 
+    // Метод переключения типа задач
+    TasksModule.switchTaskType = function(type) {
+        TM.currentTaskType = type;
+        TM.currentFilter = 'all';
+
+        // Обновляем кнопки
+        const myBtn = document.getElementById('myTasksBtn');
+        const createdBtn = document.getElementById('createdTasksBtn');
+
+        if (type === 'my') {
+            myBtn?.classList.add('active');
+            createdBtn?.classList.remove('active');
+        } else {
+            createdBtn?.classList.add('active');
+            myBtn?.classList.remove('active');
+        }
+
+        this.loadTasks();
+    };
+
     // Автоматическая инициализация при переходе на страницу задач
     const originalShowPage = window.showPage;
     window.showPage = function(page) {
+        // Сначала сбрасываем модуль при уходе со страницы задач
+        const currentPage = document.querySelector('.page.active');
+        if (currentPage && currentPage.id === 'tasks' && page !== 'tasks') {
+            TM.initialized = false;
+            console.log('🔄 Сброс модуля задач при уходе со страницы');
+        }
+
         if (originalShowPage) {
             originalShowPage(page);
         }
 
+        // Всегда переинициализируем при переходе на задачи
         if (page === 'tasks') {
-            setTimeout(() => TasksModule.init(), 100);
+            console.log('📋 Переход на страницу задач - инициализация модуля');
+            // Небольшая задержка чтобы DOM обновился
+            setTimeout(() => {
+                TM.initialized = false; // Сбрасываем флаг
+                TasksModule.init();
+            }, 50);
         }
     };
 
