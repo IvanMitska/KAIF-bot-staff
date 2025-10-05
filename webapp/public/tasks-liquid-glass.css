@@ -157,36 +157,24 @@
     overflow: hidden;
 }
 
-/* Градиентная граница для модальных окон */
+/* Градиентная граница для модальных окон - статичная */
 #tm-task-detail-modal > div::before,
 #tm-create-task-modal > div::before {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
     background: linear-gradient(
-        45deg,
-        #667eea,
-        #764ba2,
-        #f093fb,
-        #667eea
+        135deg,
+        rgba(102, 126, 234, 0.3),
+        rgba(118, 75, 162, 0.3)
     );
     border-radius: 20px;
-    opacity: 0.5;
+    opacity: 0.7;
     z-index: -1;
-    animation: gradient-rotate 3s ease infinite;
-}
-
-/* Анимация вращения градиента */
-@keyframes gradient-rotate {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    /* Убрана анимация вращения */
 }
 
 /* Фильтры задач с liquid glass */
@@ -225,18 +213,10 @@
         inset 0 0 20px rgba(102, 126, 234, 0.1);
 }
 
-/* Анимация пульсации для новых задач */
+/* Мягкая подсветка для новых задач - без пульсации */
 .status-new {
-    animation: pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    }
-    50% {
-        box-shadow: 0 4px 25px rgba(59, 130, 246, 0.6);
-    }
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    /* Убрана анимация пульсации */
 }
 
 /* Эффект волны при клике */
@@ -265,7 +245,7 @@
     }
 }
 
-/* Плавающие частицы для фона */
+/* Плавающие частицы для фона - статичные */
 .tasks-container::before,
 .tasks-container::after {
     content: '';
@@ -273,10 +253,10 @@
     width: 200px;
     height: 200px;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.3;
+    filter: blur(100px);
+    opacity: 0.15;
     pointer-events: none;
-    animation: float 15s infinite ease-in-out;
+    /* Убрана анимация float */
 }
 
 .tasks-container::before {
@@ -289,19 +269,6 @@
     background: radial-gradient(circle, #764ba2, transparent);
     bottom: -100px;
     right: -100px;
-    animation-delay: 7.5s;
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translate(0, 0) scale(1);
-    }
-    33% {
-        transform: translate(30px, -30px) scale(1.1);
-    }
-    66% {
-        transform: translate(-20px, 20px) scale(0.9);
-    }
 }
 
 /* Улучшенные input и textarea с liquid glass */
