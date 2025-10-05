@@ -827,25 +827,32 @@ function switchTaskType(type) {
 
 // Загрузка задач
 async function loadTasks() {
-    console.log('🚀 loadTasks() function called');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔍 Current page section:', document.querySelector('.tab-content.active')?.id);
+    console.log('🚀 loadTasks() - используем новый модуль');
 
-    const tasksList = document.getElementById('tasksList');
-    console.log('📋 tasksList element found:', !!tasksList);
-
-    if (!tasksList) {
-        console.error('❌ tasksList element not found in DOM!');
+    // Используем новый модуль задач
+    if (window.TasksModule && window.TasksModule.loadTasks) {
+        await window.TasksModule.loadTasks();
         return;
     }
 
-    // Показываем индикатор загрузки
-    tasksList.innerHTML = `
-        <div class="loading">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Загрузка задач...</p>
-        </div>
-    `;
+    // Если модуль не загружен, показываем ошибку
+    const tasksList = document.getElementById('tasksList');
+    if (tasksList) {
+        tasksList.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Загрузка модуля задач...</p>
+            </div>
+        `;
+
+        // Пробуем инициализировать модуль
+        setTimeout(async () => {
+            if (window.TasksModule) {
+                await window.TasksModule.init();
+            }
+        }, 500);
+    }
+    return;
 
     try {
         console.log('🔄 Загрузка задач...', { type: currentTaskType, hasAuth: !!tg.initData });
