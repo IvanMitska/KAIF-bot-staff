@@ -69,8 +69,11 @@
         async updateTaskStatus(taskId, status) {
             try {
                 const tg = window.Telegram?.WebApp;
+                console.log(`🔄 Отправка PUT запроса на ${API_URL}/api/tasks/${taskId}/status`);
+                console.log('📦 Payload:', { status });
+
                 const response = await fetch(`${API_URL}/api/tasks/${taskId}/status`, {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Telegram-Init-Data': tg?.initData || ''
@@ -78,10 +81,19 @@
                     body: JSON.stringify({ status })
                 });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
+                console.log(`📡 Response status: ${response.status}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Server error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Server response:', result);
+                return result;
             } catch (error) {
-                console.error('Error updating task status:', error);
+                console.error('❌ Error updating task status:', error);
                 throw error;
             }
         },
@@ -508,7 +520,9 @@
         }
 
         try {
-            await API.updateTaskStatus(taskId, newStatus);
+            console.log(`📝 Обновляем статус задачи ${taskId} на ${newStatus}`);
+            const result = await API.updateTaskStatus(taskId, newStatus);
+            console.log('✅ Результат обновления:', result);
 
             // Обновляем локальный кэш
             const task = TM.currentTasks.find(t => String(t.id) === String(taskId));
@@ -527,7 +541,8 @@
 
             console.log(`✅ Статус задачи ${taskId} обновлен на ${newStatus}`);
         } catch (error) {
-            alert('Ошибка при обновлении статуса задачи');
+            console.error('❌ Ошибка при обновлении статуса задачи:', error);
+            alert(`Ошибка при обновлении статуса задачи: ${error.message || 'Неизвестная ошибка'}`);
         }
     };
 
