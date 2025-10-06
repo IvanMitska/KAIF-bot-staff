@@ -31,7 +31,13 @@
             return;
         }
 
-        // Очищаем контейнер
+        // Проверяем, что контейнер видим
+        if (container.style.display === 'none') {
+            console.log('📊 Контейнер скрыт, отложена инициализация');
+            return;
+        }
+
+        // Очищаем контейнер и добавляем содержимое
         container.innerHTML = `
             <style>
                 #gantt-container {
@@ -213,6 +219,13 @@
 
     // Загрузка задач
     SimpleGantt.loadTasks = async function() {
+        // Проверяем, что контейнер готов
+        const timeline = document.getElementById('gantt-timeline');
+        if (!timeline) {
+            console.error('Timeline контейнер не готов для загрузки задач');
+            return;
+        }
+
         try {
             const tg = window.Telegram?.WebApp;
             const response = await fetch(`${window.location.origin}/api/tasks/my`, {
@@ -224,8 +237,12 @@
             if (!response.ok) throw new Error('Ошибка загрузки');
             const tasks = await response.json();
 
+            console.log(`📊 Загружено задач: ${tasks.length}`);
+
             // Фильтруем задачи с дедлайнами
             this.tasks = tasks.filter(t => t.deadline);
+
+            console.log(`📊 Задач с дедлайнами: ${this.tasks.length}`);
 
             // Если нет задач с датами, показываем демо
             if (this.tasks.length === 0) {
@@ -262,7 +279,10 @@
     // Отображение задач
     SimpleGantt.renderTasks = function() {
         const container = document.getElementById('gantt-timeline');
-        if (!container) return;
+        if (!container) {
+            console.log('📊 Timeline контейнер не найден');
+            return;
+        }
 
         if (this.tasks.length === 0) {
             container.innerHTML = `

@@ -518,10 +518,18 @@
         const listBtn = document.getElementById('listViewBtn');
         const ganttBtn = document.getElementById('ganttViewBtn');
 
+        console.log(`📊 Переключение на вид: ${view}`);
+
         if (view === 'list') {
             // Показываем список
             if (tasksListContainer) tasksListContainer.style.display = 'block';
-            if (ganttContainer) ganttContainer.style.display = 'none';
+            if (ganttContainer) {
+                ganttContainer.style.display = 'none';
+                // Сбрасываем флаг инициализации при скрытии
+                if (window.SimpleGantt) {
+                    window.SimpleGantt.initialized = false;
+                }
+            }
             if (filtersContainer) filtersContainer.style.display = 'flex';
             if (taskTypeSwitcher) taskTypeSwitcher.style.display = 'flex';
 
@@ -537,13 +545,15 @@
         } else if (view === 'gantt') {
             // Показываем Gantt
             if (tasksListContainer) tasksListContainer.style.display = 'none';
-            if (ganttContainer) {
-                ganttContainer.style.display = 'block';
-                // Очищаем контейнер для переинициализации
-                ganttContainer.innerHTML = '';
-            }
             if (filtersContainer) filtersContainer.style.display = 'none';
             if (taskTypeSwitcher) taskTypeSwitcher.style.display = 'none';
+
+            // Показываем и переинициализируем контейнер
+            if (ganttContainer) {
+                ganttContainer.style.display = 'block';
+                // Всегда очищаем контейнер перед инициализацией
+                ganttContainer.innerHTML = '';
+            }
 
             // Обновляем кнопки
             if (listBtn) {
@@ -556,27 +566,25 @@
             }
 
             // Загружаем и инициализируем Simple Gantt модуль
+            const initGantt = () => {
+                if (window.SimpleGantt) {
+                    // Всегда переинициализируем при переключении
+                    window.SimpleGantt.initialized = false;
+                    window.SimpleGantt.init();
+                }
+            };
+
             if (!document.querySelector('script[src*="gantt-simple.js"]')) {
                 const script = document.createElement('script');
                 script.src = 'gantt-simple.js';
                 script.onload = () => {
                     console.log('📊 Simple Gantt модуль загружен');
-                    setTimeout(() => {
-                        if (window.SimpleGantt && window.SimpleGantt.init) {
-                            window.SimpleGantt.init();
-                        }
-                    }, 100);
+                    setTimeout(initGantt, 100);
                 };
                 document.body.appendChild(script);
             } else {
-                // Если скрипт уже загружен
-                if (window.SimpleGantt) {
-                    if (!window.SimpleGantt.initialized) {
-                        window.SimpleGantt.init();
-                    } else {
-                        window.SimpleGantt.loadTasks();
-                    }
-                }
+                // Скрипт уже загружен, просто инициализируем
+                setTimeout(initGantt, 50);
             }
         }
 
