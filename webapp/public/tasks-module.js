@@ -412,8 +412,8 @@
                     </div>
                 </div>
 
-                <div id="gantt-container" style="display: none;">
-                    <!-- Контейнер для Gantt диаграммы будет создан GanttModule -->
+                <div id="gantt-container" style="display: none; width: 100%;">
+                    <!-- Контейнер для Gantt диаграммы -->
                 </div>
             `;
 
@@ -555,28 +555,26 @@
                 ganttBtn.style.color = 'white';
             }
 
-            // Загружаем и инициализируем Gantt модуль
-            if (!document.querySelector('script[src*="gantt-module.js"]')) {
+            // Загружаем и инициализируем Simple Gantt модуль
+            if (!document.querySelector('script[src*="gantt-simple.js"]')) {
                 const script = document.createElement('script');
-                script.src = 'gantt-module.js';
+                script.src = 'gantt-simple.js';
                 script.onload = () => {
-                    console.log('📊 Gantt модуль загружен');
-                    if (window.GanttModule && window.GanttModule.init) {
-                        // Устанавливаем контейнер на tasks-page
-                        const tasksPage = document.getElementById('tasks');
-                        if (tasksPage) {
-                            window.GanttModule.init();
+                    console.log('📊 Simple Gantt модуль загружен');
+                    setTimeout(() => {
+                        if (window.SimpleGantt && window.SimpleGantt.init) {
+                            window.SimpleGantt.init();
                         }
-                    }
+                    }, 100);
                 };
                 document.body.appendChild(script);
             } else {
                 // Если скрипт уже загружен
-                if (window.GanttModule) {
-                    if (!window.GanttModule.initialized) {
-                        window.GanttModule.init();
+                if (window.SimpleGantt) {
+                    if (!window.SimpleGantt.initialized) {
+                        window.SimpleGantt.init();
                     } else {
-                        window.GanttModule.loadTasks();
+                        window.SimpleGantt.loadTasks();
                     }
                 }
             }
