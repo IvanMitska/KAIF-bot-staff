@@ -83,65 +83,76 @@
         style.id = 'gantt-styles';
         style.textContent = `
             #gantt-container {
-                padding: 16px;
+                padding: 12px;
                 background: var(--bg-primary);
-                min-height: 100vh;
+                min-height: calc(100vh - 70px);
+                overflow-x: hidden;
             }
 
             .gantt-header {
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-                padding: 0 4px;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 16px;
             }
 
             .gantt-title {
-                font-size: 24px;
+                font-size: 20px;
                 font-weight: 600;
                 color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
 
             .gantt-view-selector {
                 display: flex;
-                gap: 8px;
+                gap: 6px;
+                width: 100%;
             }
 
             .gantt-view-btn {
-                padding: 8px 16px;
+                flex: 1;
+                padding: 10px 12px;
                 background: var(--bg-secondary);
                 color: var(--text-primary);
                 border: none;
-                border-radius: 8px;
+                border-radius: 12px;
                 cursor: pointer;
                 transition: all 0.3s;
+                font-size: 14px;
+                font-weight: 500;
+                text-align: center;
             }
 
             .gantt-view-btn.active {
                 background: #3b82f6;
                 color: white;
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
             }
 
             .gantt-chart {
                 background: var(--bg-card);
                 border-radius: 16px;
-                padding: 20px;
+                padding: 12px;
                 overflow-x: auto;
                 position: relative;
+                margin-bottom: 16px;
+                -webkit-overflow-scrolling: touch;
             }
 
             .gantt-grid {
                 position: relative;
-                min-width: 100%;
+                min-width: max-content;
                 display: flex;
                 flex-direction: column;
             }
 
             .gantt-timeline {
                 display: flex;
-                height: 40px;
+                height: 36px;
                 border-bottom: 2px solid var(--border-color);
-                margin-bottom: 10px;
+                margin-bottom: 8px;
                 position: sticky;
                 top: 0;
                 background: var(--bg-card);
@@ -149,13 +160,13 @@
             }
 
             .gantt-timeline-cell {
-                flex: 1;
-                min-width: 40px;
+                flex: 0 0 auto;
+                min-width: 30px;
                 text-align: center;
-                padding: 10px 4px;
-                font-size: 12px;
+                padding: 8px 2px;
+                font-size: 10px;
                 color: var(--text-secondary);
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
             }
 
             .gantt-timeline-cell.weekend {
@@ -170,9 +181,9 @@
 
             .gantt-row {
                 display: flex;
-                height: 50px;
+                height: 44px;
                 position: relative;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             }
 
             .gantt-row:hover {
@@ -180,28 +191,31 @@
             }
 
             .gantt-task-info {
-                position: absolute;
+                position: sticky;
                 left: 0;
-                width: 200px;
-                padding: 12px;
+                width: 100px;
+                padding: 8px 6px;
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                font-size: 14px;
+                font-size: 11px;
                 color: var(--text-primary);
                 background: var(--bg-card);
                 z-index: 5;
+                border-right: 1px solid var(--border-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .gantt-task-bar {
                 position: absolute;
-                height: 32px;
-                top: 9px;
+                height: 28px;
+                top: 8px;
                 border-radius: 6px;
                 display: flex;
                 align-items: center;
-                padding: 0 12px;
-                font-size: 12px;
+                padding: 0 8px;
+                font-size: 10px;
                 color: white;
                 cursor: pointer;
                 transition: all 0.3s;
@@ -234,7 +248,7 @@
                 position: absolute;
                 top: 0;
                 bottom: 0;
-                left: 200px;
+                left: 100px;
                 right: 0;
                 pointer-events: none;
             }
@@ -257,27 +271,28 @@
             }
 
             .gantt-legend {
-                display: flex;
-                gap: 20px;
-                margin-top: 20px;
-                padding: 16px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 12px;
                 background: var(--bg-card);
                 border-radius: 12px;
-                flex-wrap: wrap;
+                margin-top: 12px;
             }
 
             .gantt-legend-item {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                font-size: 14px;
+                gap: 6px;
+                font-size: 12px;
                 color: var(--text-secondary);
             }
 
             .gantt-legend-color {
-                width: 16px;
-                height: 16px;
-                border-radius: 4px;
+                width: 12px;
+                height: 12px;
+                border-radius: 3px;
+                flex-shrink: 0;
             }
 
             .gantt-tooltip {
@@ -285,14 +300,15 @@
                 background: var(--bg-card);
                 border: 1px solid var(--border-color);
                 border-radius: 12px;
-                padding: 12px;
-                font-size: 14px;
+                padding: 10px;
+                font-size: 12px;
                 color: var(--text-primary);
                 z-index: 1000;
                 pointer-events: none;
                 opacity: 0;
                 transition: opacity 0.3s;
-                max-width: 300px;
+                max-width: 250px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             }
 
             .gantt-tooltip.visible {
@@ -301,32 +317,25 @@
 
             .gantt-tooltip-title {
                 font-weight: 600;
-                margin-bottom: 8px;
+                margin-bottom: 6px;
+                font-size: 13px;
             }
 
             .gantt-tooltip-row {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 4px;
+                margin-bottom: 3px;
+                font-size: 11px;
             }
 
             .gantt-tooltip-label {
                 color: var(--text-secondary);
             }
 
-            @media (max-width: 768px) {
-                .gantt-task-info {
-                    width: 120px;
-                    font-size: 12px;
-                }
-
-                .gantt-grid-lines {
-                    left: 120px;
-                }
-
-                .gantt-timeline-cell {
-                    min-width: 30px;
-                    font-size: 10px;
+            /* Скрываем легенду на очень маленьких экранах */
+            @media (max-width: 360px) {
+                .gantt-legend {
+                    grid-template-columns: 1fr;
                 }
             }
         `;
@@ -349,7 +358,10 @@
         // Очищаем контейнер и создаем структуру
         container.innerHTML = `
             <div class="gantt-header">
-                <h2 class="gantt-title">📊 Диаграмма Ганта</h2>
+                <div class="gantt-title">
+                    <span>📊</span>
+                    <span>Диаграмма Ганта</span>
+                </div>
                 <div class="gantt-view-selector">
                     <button class="gantt-view-btn" data-view="Day">День</button>
                     <button class="gantt-view-btn active" data-view="Week">Неделя</button>
@@ -478,7 +490,7 @@
         });
 
         grid.innerHTML = html;
-        grid.style.paddingLeft = '200px';
+        grid.style.paddingLeft = '100px'; // Используем ширину task-info из стилей
 
         // Добавляем обработчики событий
         this.attachEventHandlers();
@@ -489,19 +501,24 @@
         const startOffset = this.getDateOffset(task.start, dates[0]) * cellWidth;
         const duration = DateUtils.getDaysBetween(task.start, task.end) + 1;
         const width = duration * cellWidth;
-        const top = index * 50;
+        const top = index * 44; // Используем высоту из стилей
         const color = statusColors[task.status] || '#64748b';
+        const taskInfoWidth = 100; // Фиксированная ширина для информации о задаче
+
+        // Обрезаем длинные названия
+        const truncatedName = task.name.length > 15 ?
+            task.name.substring(0, 12) + '...' : task.name;
 
         return `
             <div class="gantt-row" style="top: ${top}px">
                 <div class="gantt-task-info">
-                    <span>${task.name}</span>
+                    <span title="${task.name}">${truncatedName}</span>
                 </div>
                 <div class="gantt-task-bar"
                      data-task-id="${task.id}"
-                     style="left: ${200 + startOffset}px; width: ${width}px; background: ${color}">
+                     style="left: ${taskInfoWidth + startOffset}px; width: ${width}px; background: ${color}">
                     <div class="gantt-task-progress" style="width: ${task.progress}%"></div>
-                    <span class="gantt-task-label">${task.name}</span>
+                    <span class="gantt-task-label">${truncatedName}</span>
                 </div>
             </div>
         `;
@@ -560,15 +577,18 @@
 
     // Получение ширины ячейки
     GanttModule.getCellWidth = function() {
+        // Для мобильных устройств используем меньшие значения
+        const isMobile = window.innerWidth <= 768;
+
         switch (this.viewMode) {
             case 'Day':
-                return 120;
+                return isMobile ? 50 : 80;
             case 'Week':
-                return 40;
+                return isMobile ? 25 : 35;
             case 'Month':
-                return 20;
+                return isMobile ? 15 : 20;
             default:
-                return 40;
+                return isMobile ? 25 : 35;
         }
     };
 
