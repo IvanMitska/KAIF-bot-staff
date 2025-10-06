@@ -354,9 +354,23 @@
                         <h1 class="page-title">
                             <i data-lucide="check-square" class="title-icon"></i> Мои задачи
                         </h1>
-                        <button id="createTaskBtn" class="create-task-btn" onclick="window.TasksModule.showCreateTaskModal()" style="display: ${window.currentUser?.isManager ? 'flex' : 'none'};">
-                            <i data-lucide="plus"></i> <span>Создать</span>
-                        </button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="view-switcher" style="display: flex; gap: 8px;">
+                                <button id="listViewBtn" class="view-btn active" onclick="window.TasksModule.switchView('list')"
+                                        style="padding: 8px 16px; background: #3b82f6; color: white; border: none;
+                                               border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 14px;">
+                                    <i data-lucide="list" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Список
+                                </button>
+                                <button id="ganttViewBtn" class="view-btn" onclick="window.TasksModule.switchView('gantt')"
+                                        style="padding: 8px 16px; background: var(--bg-secondary); color: var(--text-primary);
+                                               border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 14px;">
+                                    <i data-lucide="bar-chart-horizontal" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Gantt
+                                </button>
+                            </div>
+                            <button id="createTaskBtn" class="create-task-btn" onclick="window.TasksModule.showCreateTaskModal()" style="display: ${window.currentUser?.isManager ? 'flex' : 'none'};">
+                                <i data-lucide="plus"></i> <span>Создать</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -396,6 +410,10 @@
                         <div class="loading-spinner"></div>
                         <p class="loading-text">Загрузка задач...</p>
                     </div>
+                </div>
+
+                <div id="gantt-container" style="display: none;">
+                    <!-- Контейнер для Gantt диаграммы будет создан GanttModule -->
                 </div>
             `;
 
@@ -489,6 +507,85 @@
             btn.classList.remove('active');
         });
         event.target.closest('.filter-btn').classList.add('active');
+    };
+
+    // Переключение между видами Список/Gantt
+    TasksModule.switchView = function(view) {
+        const tasksListContainer = document.getElementById('tasksList');
+        const ganttContainer = document.getElementById('gantt-container');
+        const filtersContainer = document.querySelector('.task-filters');
+        const taskTypeSwitcher = document.querySelector('.task-type-switcher');
+        const listBtn = document.getElementById('listViewBtn');
+        const ganttBtn = document.getElementById('ganttViewBtn');
+
+        if (view === 'list') {
+            // Показываем список
+            if (tasksListContainer) tasksListContainer.style.display = 'block';
+            if (ganttContainer) ganttContainer.style.display = 'none';
+            if (filtersContainer) filtersContainer.style.display = 'flex';
+            if (taskTypeSwitcher) taskTypeSwitcher.style.display = 'flex';
+
+            // Обновляем кнопки
+            if (listBtn) {
+                listBtn.style.background = '#3b82f6';
+                listBtn.style.color = 'white';
+            }
+            if (ganttBtn) {
+                ganttBtn.style.background = 'var(--bg-secondary)';
+                ganttBtn.style.color = 'var(--text-primary)';
+            }
+        } else if (view === 'gantt') {
+            // Показываем Gantt
+            if (tasksListContainer) tasksListContainer.style.display = 'none';
+            if (ganttContainer) {
+                ganttContainer.style.display = 'block';
+                // Очищаем контейнер для переинициализации
+                ganttContainer.innerHTML = '';
+            }
+            if (filtersContainer) filtersContainer.style.display = 'none';
+            if (taskTypeSwitcher) taskTypeSwitcher.style.display = 'none';
+
+            // Обновляем кнопки
+            if (listBtn) {
+                listBtn.style.background = 'var(--bg-secondary)';
+                listBtn.style.color = 'var(--text-primary)';
+            }
+            if (ganttBtn) {
+                ganttBtn.style.background = '#3b82f6';
+                ganttBtn.style.color = 'white';
+            }
+
+            // Загружаем и инициализируем Gantt модуль
+            if (!document.querySelector('script[src*="gantt-module.js"]')) {
+                const script = document.createElement('script');
+                script.src = 'gantt-module.js';
+                script.onload = () => {
+                    console.log('📊 Gantt модуль загружен');
+                    if (window.GanttModule && window.GanttModule.init) {
+                        // Устанавливаем контейнер на tasks-page
+                        const tasksPage = document.getElementById('tasks');
+                        if (tasksPage) {
+                            window.GanttModule.init();
+                        }
+                    }
+                };
+                document.body.appendChild(script);
+            } else {
+                // Если скрипт уже загружен
+                if (window.GanttModule) {
+                    if (!window.GanttModule.initialized) {
+                        window.GanttModule.init();
+                    } else {
+                        window.GanttModule.loadTasks();
+                    }
+                }
+            }
+        }
+
+        // Обновляем иконки Lucide
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     };
 
     TasksModule.showTaskDetails = function(taskId) {
