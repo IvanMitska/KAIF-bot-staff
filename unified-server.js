@@ -78,25 +78,27 @@ const authMiddleware = (req, res, next) => {
   
   // В режиме разработки или при наличии test параметра разрешаем тестовый доступ
   const isTestMode = req.headers.referer?.includes('test=') || req.query?.test;
-  if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV || isTestMode) && !initData) {
-    console.log('⚠️ Test mode: Allowing test access without Telegram auth');
-    // Используем один из реальных ID из базы для тестирования
-    // Это Иван - один из пользователей с реальными задачами
-    const testUserId = 1734337242;
-    req.telegramUser = {
-      id: testUserId,
-      first_name: 'Иван',
-      last_name: 'Test',
-      username: 'ivan_test'
-    };
-    console.log(`🧪 Using test user ID: ${testUserId}`);
-    return next();
+  if ((process.env.NODE_ENV === 'development' || !process.env.NODE_ENV || isTestMode)) {
+    if (!initData) {
+      console.log('⚠️ Test mode: Allowing test access without Telegram auth');
+      // Используем один из реальных ID из базы для тестирования
+      // Это Иван - один из пользователей с реальными задачами
+      const testUserId = 1734337242;
+      req.telegramUser = {
+        id: testUserId,
+        first_name: 'Иван',
+        last_name: 'Test',
+        username: 'ivan_test'
+      };
+      console.log(`🧪 Using test user ID: ${testUserId}`);
+      return next();
+    }
   }
-  
+
   if (!initData) {
     console.log('❌ No initData provided in production mode');
-    return res.status(401).json({ 
-      error: 'Unauthorized',
+    return res.status(401).json({
+      error: 'Invalid or missing authentication',
       message: 'Please open this app through Telegram bot'
     });
   }
