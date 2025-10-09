@@ -832,23 +832,61 @@ function switchTaskType(type) {
 }
 
 // Загрузка задач - ТОЛЬКО НОВЫЙ МОДУЛЬ
-async function loadTasks() {
-    console.log('🚀 loadTasks() - используем ТОЛЬКО новый модуль');
+let loadTasksAttempts = 0;
+const MAX_LOAD_ATTEMPTS = 3;
 
-    // Используем новый модуль задач
+async function loadTasks() {
+    console.log('🚀 loadTasks() - проверяем доступность модулей');
+
+    // Используем оптимизированный модуль задач
+    if (window.TasksOptimized) {
+        console.log('✅ TasksOptimized доступен, инициализируем если нужно');
+        // Убедимся что модуль инициализирован
+        if (!window.TasksOptimized.initialized) {
+            window.TasksOptimized.init();
+        }
+        loadTasksAttempts = 0; // Сброс счетчика при успехе
+        await window.TasksOptimized.loadTasks();
+        return;
+    }
+
+    // Если модуль не загружен, используем старый
     if (window.TasksModule) {
+        console.log('✅ TasksModule доступен');
+        loadTasksAttempts = 0; // Сброс счетчика при успехе
         await window.TasksModule.loadTasks();
         return;
     }
 
-    // Если модуль не загружен, ждем его
-    console.log('⏳ Ждем загрузки TasksModule...');
-    setTimeout(() => {
-        if (window.TasksModule) {
-            window.TasksModule.init();
+    // Увеличиваем счетчик попыток
+    loadTasksAttempts++;
+
+    // Если превышен лимит попыток, показываем ошибку
+    if (loadTasksAttempts >= MAX_LOAD_ATTEMPTS) {
+        console.error('❌ Модули задач не найдены после', MAX_LOAD_ATTEMPTS, 'попыток');
+        const container = document.getElementById('tasksList');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <p>Ошибка загрузки модуля задач</p>
+                    <button onclick="location.reload()"
+                            style="margin-top: 16px; padding: 8px 16px;
+                                   background: #667eea; color: white;
+                                   border: none; border-radius: 8px; cursor: pointer;">
+                        Перезагрузить страницу
+                    </button>
+                </div>
+            `;
         }
-    }, 100);
-    return;
+        loadTasksAttempts = 0; // Сброс счетчика после ошибки
+        return;
+    }
+
+    // Если модуль не загружен, ждем его и пробуем снова
+    console.log('⏳ Модули не загружены, попытка', loadTasksAttempts, 'из', MAX_LOAD_ATTEMPTS);
+    setTimeout(async () => {
+        await loadTasks();
+    }, 500);
 }
 
 // Все старые функции задач отключены - используем только TasksModule
@@ -881,13 +919,40 @@ function updateTaskCounts(tasks) {
     window.TasksModule?.updateTaskCounts?.(tasks);
 }
 
-function filterTasks(filter) {
-    window.TasksModule?.filterTasks?.(filter);
+function filterTasks(filter, event) {
+    // Используем оптимизированный модуль если доступен
+    if (window.TasksOptimized) {
+        window.TasksOptimized.filterTasks(filter, event);
+        return;
+    }
+    // Fallback на старый модуль
+    window.TasksModule?.filterTasks?.(filter, event);
 }
 
 function handleTaskClick(taskId) {
     window.TasksModule?.showTaskDetails?.(window.TasksModule.currentTasks.find(t => t.id === taskId));
 }
+
+// Переключение типа задач - глобальная функция
+window.switchTaskType = function(type) {
+    console.log('🔄 Переключение типа задач на:', type);
+
+    // Используем оптимизированный модуль если доступен
+    if (window.TasksOptimized) {
+        window.TasksOptimized.switchTaskType(type);
+        return;
+    }
+
+    // Fallback на старый модуль
+    if (window.TasksModule) {
+        window.TasksModule.switchTaskType(type);
+        return;
+    }
+
+    // Обновляем старые переменные для совместимости
+    currentTaskType = type;
+    loadTasks();
+};
 
 // Глобальные переменные для обратной совместимости
 window.openTaskDetail = openTaskDetail;
@@ -895,6 +960,7 @@ window.showTaskModal = showTaskModal;
 window.closeTaskDetailModal = closeTaskDetailModal;
 window.displayTasks = displayTasks;
 window.handleTaskClick = handleTaskClick;
+window.filterTasks = filterTasks;
 
 // ========== КОНЕЦ ЗАГЛУШЕК ДЛЯ ЗАДАЧ ==========
 // Весь старый код задач удален, используется только TasksModule
