@@ -16,9 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.Telegram?.WebApp) {
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
-      Telegram.WebApp.setHeaderColor('#B8956A');
-      Telegram.WebApp.setBackgroundColor('#1A1A1A');
+      Telegram.WebApp.setHeaderColor('#0D0D0D');
+      Telegram.WebApp.setBackgroundColor('#0D0D0D');
     }
+
+    // Set current date in header
+    setCurrentDate();
 
     // Setup navigation
     setupNavigation();
@@ -46,9 +49,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   } catch (error) {
     console.error('Init error:', error);
-    showError('Ошибка загрузки приложения');
+    document.getElementById('loading').innerHTML = `
+      <div class="empty-icon">⚠️</div>
+      <p>Ошибка загрузки</p>
+      <span class="empty-hint">${error.message}</span>
+    `;
   }
 });
+
+function setCurrentDate() {
+  const now = new Date();
+  const options = { weekday: 'long', day: 'numeric', month: 'long' };
+  const dateStr = now.toLocaleDateString('ru-RU', options);
+  document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+}
 
 // ============================================
 // API CALLS
@@ -93,19 +107,26 @@ async function loadProfile() {
     const data = await apiCall('/profile');
     currentUser = data.user;
 
-    document.getElementById('user-name').textContent = currentUser.name;
+    const initial = (currentUser.name || 'U').charAt(0).toUpperCase();
+
+    // Update header avatar
+    document.getElementById('user-avatar').textContent = initial;
+
+    // Update profile page
+    document.getElementById('profile-avatar').textContent = initial;
+    document.getElementById('profile-name').textContent = currentUser.name;
 
     const roleNames = {
-      'admin': 'Админ',
-      'sales': 'Продажи',
+      'admin': 'Администратор',
+      'sales': 'Отдел продаж',
       'bath_attendant': 'Банщик'
     };
-    document.getElementById('user-role').textContent = roleNames[currentUser.role] || currentUser.role;
+    document.getElementById('profile-role').textContent = roleNames[currentUser.role] || currentUser.role;
 
     // Show/hide add button based on role
     const addBtn = document.getElementById('add-booking-btn');
     if (currentUser.role === 'admin' || currentUser.role === 'sales') {
-      addBtn.style.display = 'block';
+      addBtn.style.display = 'flex';
       addBtn.addEventListener('click', () => openModal());
     } else {
       addBtn.style.display = 'none';
@@ -113,16 +134,22 @@ async function loadProfile() {
 
   } catch (error) {
     console.error('Load profile error:', error);
+    throw error;
   }
 }
 
 async function loadTodayBookings() {
   try {
     const data = await apiCall('/bookings/today');
-    renderBookings(data.bookings, 'today-list');
+    renderBookings(data.bookings, 'today-list', true);
   } catch (error) {
     console.error('Load today error:', error);
-    document.getElementById('today-list').innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
+    document.getElementById('today-list').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <p>Ошибка загрузки</p>
+      </div>
+    `;
   }
 }
 
@@ -132,7 +159,12 @@ async function loadWeekBookings() {
     renderBookingsWithDates(data.bookings, 'week-list');
   } catch (error) {
     console.error('Load week error:', error);
-    document.getElementById('week-list').innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
+    document.getElementById('week-list').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <p>Ошибка загрузки</p>
+      </div>
+    `;
   }
 }
 
@@ -144,7 +176,12 @@ async function loadAllBookings() {
     renderBookingsWithDates(data.bookings, 'all-list');
   } catch (error) {
     console.error('Load all error:', error);
-    document.getElementById('all-list').innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
+    document.getElementById('all-list').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <p>Ошибка загрузки</p>
+      </div>
+    `;
   }
 }
 
@@ -156,6 +193,10 @@ async function loadStats() {
     document.getElementById('stat-today').textContent = stats.today_count || 0;
     document.getElementById('stat-new').textContent = stats.new_count || 0;
     document.getElementById('stat-confirmed').textContent = stats.confirmed_count || 0;
+
+    // Profile stats
+    document.getElementById('profile-total').textContent = stats.total_count || 0;
+    document.getElementById('profile-completed').textContent = stats.completed_count || 0;
   } catch (error) {
     console.error('Load stats error:', error);
   }
@@ -165,11 +206,20 @@ async function loadStats() {
 // RENDERING
 // ============================================
 
-function renderBookings(bookings, containerId) {
+function renderBookings(bookings, containerId, isToday = false) {
   const container = document.getElementById(containerId);
 
   if (!bookings || bookings.length === 0) {
-    container.innerHTML = '<div class="empty-state"><p>Нет записей</p></div>';
+    const emptyIcon = isToday ? '📋' : '📝';
+    const emptyText = isToday ? 'Нет записей на сегодня' : 'Нет записей';
+    const hint = isToday ? '<span class="empty-hint">Нажмите + чтобы создать</span>' : '';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">${emptyIcon}</div>
+        <p>${emptyText}</p>
+        ${hint}
+      </div>
+    `;
     return;
   }
 
@@ -180,7 +230,12 @@ function renderBookingsWithDates(bookings, containerId) {
   const container = document.getElementById(containerId);
 
   if (!bookings || bookings.length === 0) {
-    container.innerHTML = '<div class="empty-state"><p>Нет записей</p></div>';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <p>Нет записей</p>
+      </div>
+    `;
     return;
   }
 
@@ -205,28 +260,37 @@ function createBookingCard(booking) {
   const statusLabels = {
     'new': 'Новая',
     'confirmed': 'Подтв.',
-    'in_progress': 'В процессе',
-    'completed': 'Завершена',
-    'cancelled': 'Отменена'
+    'in_progress': 'В работе',
+    'completed': 'Готово',
+    'cancelled': 'Отмена'
   };
+
+  let metaHtml = '';
+  if (booking.steam_type) {
+    metaHtml += `<span class="booking-meta-item">🧖 ${escapeHtml(booking.steam_type)}</span>`;
+  }
+  if (booking.duration) {
+    metaHtml += `<span class="booking-meta-item">⏱ ${booking.duration} мин</span>`;
+  }
+  if (booking.guests_count > 1) {
+    metaHtml += `<span class="booking-meta-item">👥 ${booking.guests_count}</span>`;
+  }
+  if (booking.price) {
+    metaHtml += `<span class="booking-meta-item">💰 ${booking.price}₽</span>`;
+  }
 
   return `
     <div class="booking-card" onclick="openDetailModal(${booking.id})">
-      <div class="booking-header">
-        <div>
-          <div class="booking-time">${formatTime(booking.booking_time)}</div>
-          <div class="booking-date">${formatDate(booking.booking_date)}</div>
+      <div class="booking-top">
+        <div class="booking-time-block">
+          <span class="booking-time">${formatTime(booking.booking_time)}</span>
+          <span class="booking-date">${formatDate(booking.booking_date)}</span>
         </div>
         <span class="booking-status ${booking.status}">${statusLabels[booking.status] || booking.status}</span>
       </div>
       <div class="booking-client">${escapeHtml(booking.client_name)}</div>
       <div class="booking-phone">${escapeHtml(booking.client_phone)}</div>
-      <div class="booking-details">
-        ${booking.steam_type ? `<span class="booking-detail">🧖 ${escapeHtml(booking.steam_type)}</span>` : ''}
-        ${booking.duration ? `<span class="booking-detail">⏱ ${booking.duration} мин</span>` : ''}
-        ${booking.guests_count > 1 ? `<span class="booking-detail">👥 ${booking.guests_count}</span>` : ''}
-        ${booking.price ? `<span class="booking-detail">💰 ${booking.price} ฿</span>` : ''}
-      </div>
+      ${metaHtml ? `<div class="booking-meta">${metaHtml}</div>` : ''}
     </div>
   `;
 }
@@ -236,7 +300,7 @@ function createBookingCard(booking) {
 // ============================================
 
 function setupNavigation() {
-  document.querySelectorAll('.nav-btn').forEach(btn => {
+  document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const page = btn.dataset.page;
       showPage(page);
@@ -245,8 +309,8 @@ function setupNavigation() {
 }
 
 function showPage(pageName) {
-  // Update nav buttons
-  document.querySelectorAll('.nav-btn').forEach(btn => {
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.page === pageName);
   });
 
@@ -258,10 +322,13 @@ function showPage(pageName) {
   // Load data for the page
   if (pageName === 'today') {
     loadTodayBookings();
+    loadStats();
   } else if (pageName === 'week') {
     loadWeekBookings();
   } else if (pageName === 'all') {
     loadAllBookings();
+  } else if (pageName === 'profile') {
+    loadStats();
   }
 }
 
@@ -279,7 +346,7 @@ function openModal(booking = null) {
   document.getElementById('booking-id').value = '';
 
   if (booking) {
-    title.textContent = 'Редактировать запись';
+    title.textContent = 'Редактировать';
     document.getElementById('booking-id').value = booking.id;
     document.getElementById('booking-date').value = booking.booking_date.split('T')[0];
     document.getElementById('booking-time').value = booking.booking_time;
@@ -344,7 +411,7 @@ function setupFormHandlers() {
 
     } catch (error) {
       console.error('Save error:', error);
-      showError('Ошибка сохранения: ' + error.message);
+      showError('Ошибка: ' + error.message);
     }
   });
 }
@@ -365,7 +432,7 @@ async function openDetailModal(bookingId) {
 
   } catch (error) {
     console.error('Load booking error:', error);
-    showError('Ошибка загрузки записи');
+    showError('Ошибка загрузки');
   }
 }
 
@@ -402,7 +469,7 @@ function renderDetailModal(booking) {
     </div>
     <div class="detail-row">
       <span class="detail-label">Телефон</span>
-      <span class="detail-value"><a href="tel:${booking.client_phone}">${escapeHtml(booking.client_phone)}</a></span>
+      <span class="detail-value"><a href="tel:${booking.client_phone}" style="color: var(--primary)">${escapeHtml(booking.client_phone)}</a></span>
     </div>
   `;
 
@@ -437,16 +504,16 @@ function renderDetailModal(booking) {
     html += `
       <div class="detail-row">
         <span class="detail-label">Цена</span>
-        <span class="detail-value">${booking.price} ฿</span>
+        <span class="detail-value">${booking.price} ₽</span>
       </div>
     `;
   }
 
-  if (booking.prepayment > 0) {
+  if (booking.prepayment) {
     html += `
       <div class="detail-row">
         <span class="detail-label">Предоплата</span>
-        <span class="detail-value">${booking.prepayment} ฿</span>
+        <span class="detail-value">${booking.prepayment} ₽</span>
       </div>
     `;
   }
@@ -460,24 +527,34 @@ function renderDetailModal(booking) {
     `;
   }
 
-  // Action buttons
+  // Action buttons based on status and user role
   html += '<div class="detail-actions">';
 
-  // Edit button (admin/sales)
-  if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'sales')) {
-    html += `<button class="btn-secondary" onclick="editBooking()">Редактировать</button>`;
+  const canEdit = currentUser && (currentUser.role === 'admin' || currentUser.role === 'sales');
+  const canChangeStatus = currentUser && (currentUser.role === 'admin' || currentUser.role === 'bath_attendant');
+
+  if (booking.status === 'new') {
+    if (canChangeStatus) {
+      html += '<button class="btn-status confirm" onclick="changeStatus(\'confirmed\')">Подтвердить</button>';
+    }
+    if (canEdit) {
+      html += '<button class="btn-status cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
+    }
+  } else if (booking.status === 'confirmed') {
+    if (canChangeStatus) {
+      html += '<button class="btn-status start" onclick="changeStatus(\'in_progress\')">Начать</button>';
+    }
+    if (canEdit) {
+      html += '<button class="btn-status cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
+    }
+  } else if (booking.status === 'in_progress') {
+    if (canChangeStatus) {
+      html += '<button class="btn-status complete" onclick="changeStatus(\'completed\')">Завершить</button>';
+    }
   }
 
-  // Status change buttons
-  if (booking.status === 'new') {
-    html += `
-      <button class="btn-status confirm" onclick="changeStatus('confirmed')">Подтвердить</button>
-      <button class="btn-status cancel" onclick="changeStatus('cancelled')">Отклонить</button>
-    `;
-  } else if (booking.status === 'confirmed') {
-    html += `<button class="btn-status start" onclick="changeStatus('in_progress')">Начать</button>`;
-  } else if (booking.status === 'in_progress') {
-    html += `<button class="btn-status complete" onclick="changeStatus('completed')">Завершить</button>`;
+  if (canEdit && booking.status !== 'completed' && booking.status !== 'cancelled') {
+    html += `<button class="btn-secondary" onclick="editBooking()">Изменить</button>`;
   }
 
   html += '</div>';
@@ -494,14 +571,14 @@ async function changeStatus(newStatus) {
       body: JSON.stringify({ status: newStatus })
     });
 
-    showSuccess('Статус обновлён');
+    showSuccess('Статус изменён');
     closeDetailModal();
     refreshCurrentPage();
     loadStats();
 
   } catch (error) {
     console.error('Status change error:', error);
-    showError('Ошибка обновления статуса');
+    showError('Ошибка: ' + error.message);
   }
 }
 
@@ -512,27 +589,32 @@ function editBooking() {
 }
 
 // ============================================
-// HELPERS
+// UTILITIES
 // ============================================
 
 function refreshCurrentPage() {
   const activePage = document.querySelector('.page.active');
   if (activePage) {
-    if (activePage.id === 'page-today') loadTodayBookings();
-    else if (activePage.id === 'page-week') loadWeekBookings();
-    else if (activePage.id === 'page-all') loadAllBookings();
+    const pageName = activePage.id.replace('page-', '');
+    if (pageName === 'today') loadTodayBookings();
+    else if (pageName === 'week') loadWeekBookings();
+    else if (pageName === 'all') loadAllBookings();
   }
 }
 
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  return timeStr.substring(0, 5);
+}
+
 function formatDate(dateStr) {
+  if (!dateStr) return '';
   const date = new Date(dateStr);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit'
-  });
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
 function formatDateLong(dateStr) {
+  if (!dateStr) return '';
   const date = new Date(dateStr);
   const today = new Date();
   const tomorrow = new Date(today);
@@ -551,11 +633,6 @@ function formatDateLong(dateStr) {
   });
 }
 
-function formatTime(timeStr) {
-  if (!timeStr) return '';
-  return timeStr.substring(0, 5);
-}
-
 function escapeHtml(text) {
   if (!text) return '';
   const div = document.createElement('div');
@@ -565,11 +642,7 @@ function escapeHtml(text) {
 
 function showSuccess(message) {
   if (window.Telegram?.WebApp) {
-    Telegram.WebApp.showPopup({
-      title: 'Успешно',
-      message: message,
-      buttons: [{ type: 'ok' }]
-    });
+    Telegram.WebApp.showAlert(message);
   } else {
     alert(message);
   }
@@ -577,20 +650,8 @@ function showSuccess(message) {
 
 function showError(message) {
   if (window.Telegram?.WebApp) {
-    Telegram.WebApp.showPopup({
-      title: 'Ошибка',
-      message: message,
-      buttons: [{ type: 'ok' }]
-    });
+    Telegram.WebApp.showAlert(message);
   } else {
-    alert('Ошибка: ' + message);
+    alert(message);
   }
 }
-
-// Make functions global for onclick handlers
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.openDetailModal = openDetailModal;
-window.closeDetailModal = closeDetailModal;
-window.changeStatus = changeStatus;
-window.editBooking = editBooking;
