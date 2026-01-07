@@ -1,10 +1,9 @@
 // ============================================
-// SAUNA BOOKING APP - MAIN JS
+// PREMIUM SAUNA BOOKING APP
 // ============================================
 
 const API_BASE = '/api';
 let currentUser = null;
-let bookings = [];
 
 // ============================================
 // INITIALIZATION
@@ -16,11 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.Telegram?.WebApp) {
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
-      Telegram.WebApp.setHeaderColor('#0D0D0D');
-      Telegram.WebApp.setBackgroundColor('#0D0D0D');
+      Telegram.WebApp.setHeaderColor('#000000');
+      Telegram.WebApp.setBackgroundColor('#000000');
     }
 
-    // Set current date in header
+    // Set greeting based on time
+    setGreeting();
+
+    // Set current date
     setCurrentDate();
 
     // Setup navigation
@@ -29,70 +31,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup form handlers
     setupFormHandlers();
 
-    // Setup filter handler
+    // Setup filter
     document.getElementById('filter-status').addEventListener('change', () => {
       loadAllBookings();
     });
 
-    // Load user profile
+    // Load profile
     await loadProfile();
 
-    // Load initial data
+    // Load data
     await Promise.all([
       loadTodayBookings(),
       loadStats()
     ]);
 
-    // Hide loading, show content
+    // Hide loading
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
 
   } catch (error) {
     console.error('Init error:', error);
     document.getElementById('loading').innerHTML = `
-      <div class="empty-icon">⚠️</div>
-      <p>Ошибка загрузки</p>
-      <span class="empty-hint">${error.message}</span>
+      <div class="loading-content">
+        <div class="empty-icon">⚠️</div>
+        <p class="loading-text">${error.message || 'Ошибка загрузки'}</p>
+      </div>
     `;
   }
 });
 
+function setGreeting() {
+  const hour = new Date().getHours();
+  let greeting = 'Добрый день';
+  if (hour < 6) greeting = 'Доброй ночи';
+  else if (hour < 12) greeting = 'Доброе утро';
+  else if (hour >= 18) greeting = 'Добрый вечер';
+  document.getElementById('greeting').textContent = greeting;
+}
+
 function setCurrentDate() {
   const now = new Date();
-  const options = { weekday: 'long', day: 'numeric', month: 'long' };
-  const dateStr = now.toLocaleDateString('ru-RU', options);
-  document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  const options = { day: 'numeric', month: 'long' };
+  document.getElementById('current-date').textContent = now.toLocaleDateString('ru-RU', options);
 }
 
 // ============================================
-// API CALLS
+// API
 // ============================================
 
 async function apiCall(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
-
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   };
 
-  // Add Telegram init data
   if (window.Telegram?.WebApp?.initData) {
     headers['X-Telegram-Init-Data'] = Telegram.WebApp.initData;
   }
 
-  // Test mode
   const testMode = new URLSearchParams(window.location.search).get('test') === '1';
-  const finalUrl = testMode ? `${url}${url.includes('?') ? '&' : '?'}test=1` : url;
+  const url = `${API_BASE}${endpoint}${testMode ? (endpoint.includes('?') ? '&' : '?') + 'test=1' : ''}`;
 
-  const response = await fetch(finalUrl, {
-    ...options,
-    headers
-  });
+  const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || 'API Error');
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Ошибка сервера');
   }
 
   return response.json();
@@ -103,38 +107,34 @@ async function apiCall(endpoint, options = {}) {
 // ============================================
 
 async function loadProfile() {
-  try {
-    const data = await apiCall('/profile');
-    currentUser = data.user;
+  const data = await apiCall('/profile');
+  currentUser = data.user;
 
-    const initial = (currentUser.name || 'U').charAt(0).toUpperCase();
+  const initial = (currentUser.name || 'U').charAt(0).toUpperCase();
+  const firstName = currentUser.name?.split(' ')[0] || currentUser.name;
 
-    // Update header avatar
-    document.getElementById('user-avatar').textContent = initial;
+  // Header
+  document.getElementById('user-name-header').textContent = firstName;
+  document.getElementById('user-avatar').innerHTML = `<span>${initial}</span>`;
 
-    // Update profile page
-    document.getElementById('profile-avatar').textContent = initial;
-    document.getElementById('profile-name').textContent = currentUser.name;
+  // Profile page
+  document.getElementById('profile-avatar').textContent = initial;
+  document.getElementById('profile-name').textContent = currentUser.name;
 
-    const roleNames = {
-      'admin': 'Администратор',
-      'sales': 'Отдел продаж',
-      'bath_attendant': 'Банщик'
-    };
-    document.getElementById('profile-role').textContent = roleNames[currentUser.role] || currentUser.role;
+  const roleNames = {
+    'admin': 'Администратор',
+    'sales': 'Отдел продаж',
+    'bath_attendant': 'Банщик'
+  };
+  document.getElementById('profile-role').textContent = roleNames[currentUser.role] || currentUser.role;
 
-    // Show/hide add button based on role
-    const addBtn = document.getElementById('add-booking-btn');
-    if (currentUser.role === 'admin' || currentUser.role === 'sales') {
-      addBtn.style.display = 'flex';
-      addBtn.addEventListener('click', () => openModal());
-    } else {
-      addBtn.style.display = 'none';
-    }
-
-  } catch (error) {
-    console.error('Load profile error:', error);
-    throw error;
+  // FAB visibility
+  const fab = document.getElementById('fab-add');
+  if (currentUser.role === 'admin' || currentUser.role === 'sales') {
+    fab.style.display = 'flex';
+    fab.addEventListener('click', () => openModal());
+  } else {
+    fab.style.display = 'none';
   }
 }
 
@@ -143,13 +143,7 @@ async function loadTodayBookings() {
     const data = await apiCall('/bookings/today');
     renderBookings(data.bookings, 'today-list', true);
   } catch (error) {
-    console.error('Load today error:', error);
-    document.getElementById('today-list').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p>Ошибка загрузки</p>
-      </div>
-    `;
+    document.getElementById('today-list').innerHTML = renderEmpty('Ошибка загрузки');
   }
 }
 
@@ -158,13 +152,7 @@ async function loadWeekBookings() {
     const data = await apiCall('/bookings/week');
     renderBookingsWithDates(data.bookings, 'week-list');
   } catch (error) {
-    console.error('Load week error:', error);
-    document.getElementById('week-list').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p>Ошибка загрузки</p>
-      </div>
-    `;
+    document.getElementById('week-list').innerHTML = renderEmpty('Ошибка загрузки');
   }
 }
 
@@ -175,13 +163,7 @@ async function loadAllBookings() {
     const data = await apiCall(`/bookings${params}`);
     renderBookingsWithDates(data.bookings, 'all-list');
   } catch (error) {
-    console.error('Load all error:', error);
-    document.getElementById('all-list').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p>Ошибка загрузки</p>
-      </div>
-    `;
+    document.getElementById('all-list').innerHTML = renderEmpty('Ошибка загрузки');
   }
 }
 
@@ -194,11 +176,10 @@ async function loadStats() {
     document.getElementById('stat-new').textContent = stats.new_count || 0;
     document.getElementById('stat-confirmed').textContent = stats.confirmed_count || 0;
 
-    // Profile stats
     document.getElementById('profile-total').textContent = stats.total_count || 0;
     document.getElementById('profile-completed').textContent = stats.completed_count || 0;
   } catch (error) {
-    console.error('Load stats error:', error);
+    console.error('Stats error:', error);
   }
 }
 
@@ -206,20 +187,21 @@ async function loadStats() {
 // RENDERING
 // ============================================
 
+function renderEmpty(text = 'Нет записей', showHint = false) {
+  return `
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p class="empty-title">${text}</p>
+      ${showHint ? '<p class="empty-text">Нажмите + чтобы создать</p>' : ''}
+    </div>
+  `;
+}
+
 function renderBookings(bookings, containerId, isToday = false) {
   const container = document.getElementById(containerId);
 
-  if (!bookings || bookings.length === 0) {
-    const emptyIcon = isToday ? '📋' : '📝';
-    const emptyText = isToday ? 'Нет записей на сегодня' : 'Нет записей';
-    const hint = isToday ? '<span class="empty-hint">Нажмите + чтобы создать</span>' : '';
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">${emptyIcon}</div>
-        <p>${emptyText}</p>
-        ${hint}
-      </div>
-    `;
+  if (!bookings?.length) {
+    container.innerHTML = renderEmpty(isToday ? 'Нет записей на сегодня' : 'Нет записей', isToday);
     return;
   }
 
@@ -229,17 +211,11 @@ function renderBookings(bookings, containerId, isToday = false) {
 function renderBookingsWithDates(bookings, containerId) {
   const container = document.getElementById(containerId);
 
-  if (!bookings || bookings.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📝</div>
-        <p>Нет записей</p>
-      </div>
-    `;
+  if (!bookings?.length) {
+    container.innerHTML = renderEmpty();
     return;
   }
 
-  // Group by date
   const grouped = {};
   bookings.forEach(b => {
     const date = b.booking_date.split('T')[0];
@@ -265,32 +241,24 @@ function createBookingCard(booking) {
     'cancelled': 'Отмена'
   };
 
-  let metaHtml = '';
-  if (booking.steam_type) {
-    metaHtml += `<span class="booking-meta-item">🧖 ${escapeHtml(booking.steam_type)}</span>`;
-  }
-  if (booking.duration) {
-    metaHtml += `<span class="booking-meta-item">⏱ ${booking.duration} мин</span>`;
-  }
-  if (booking.guests_count > 1) {
-    metaHtml += `<span class="booking-meta-item">👥 ${booking.guests_count}</span>`;
-  }
-  if (booking.price) {
-    metaHtml += `<span class="booking-meta-item">💰 ${booking.price}₽</span>`;
-  }
+  let tags = '';
+  if (booking.steam_type) tags += `<span class="booking-tag">${booking.steam_type}</span>`;
+  if (booking.duration) tags += `<span class="booking-tag">${booking.duration} мин</span>`;
+  if (booking.guests_count > 1) tags += `<span class="booking-tag">${booking.guests_count} гостей</span>`;
+  if (booking.price) tags += `<span class="booking-tag">${booking.price} ₽</span>`;
 
   return `
     <div class="booking-card" onclick="openDetailModal(${booking.id})">
-      <div class="booking-top">
-        <div class="booking-time-block">
-          <span class="booking-time">${formatTime(booking.booking_time)}</span>
-          <span class="booking-date">${formatDate(booking.booking_date)}</span>
+      <div class="booking-row">
+        <div>
+          <div class="booking-time">${formatTime(booking.booking_time)}</div>
+          <div class="booking-date">${formatDate(booking.booking_date)}</div>
         </div>
-        <span class="booking-status ${booking.status}">${statusLabels[booking.status] || booking.status}</span>
+        <span class="booking-status ${booking.status}">${statusLabels[booking.status]}</span>
       </div>
       <div class="booking-client">${escapeHtml(booking.client_name)}</div>
       <div class="booking-phone">${escapeHtml(booking.client_phone)}</div>
-      ${metaHtml ? `<div class="booking-meta">${metaHtml}</div>` : ''}
+      ${tags ? `<div class="booking-meta">${tags}</div>` : ''}
     </div>
   `;
 }
@@ -301,35 +269,30 @@ function createBookingCard(booking) {
 
 function setupNavigation() {
   document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const page = btn.dataset.page;
-      showPage(page);
-    });
+    btn.addEventListener('click', () => showPage(btn.dataset.page));
   });
 }
 
-function showPage(pageName) {
-  // Update nav items
+function showPage(page) {
   document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.page === pageName);
+    btn.classList.toggle('active', btn.dataset.page === page);
   });
 
-  // Update pages
-  document.querySelectorAll('.page').forEach(page => {
-    page.classList.toggle('active', page.id === `page-${pageName}`);
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.toggle('active', p.id === `page-${page}`);
   });
 
-  // Load data for the page
-  if (pageName === 'today') {
-    loadTodayBookings();
-    loadStats();
-  } else if (pageName === 'week') {
-    loadWeekBookings();
-  } else if (pageName === 'all') {
-    loadAllBookings();
-  } else if (pageName === 'profile') {
-    loadStats();
+  // Show/hide FAB
+  const fab = document.getElementById('fab-add');
+  if (fab && currentUser?.role !== 'bath_attendant') {
+    fab.style.display = page === 'profile' ? 'none' : 'flex';
   }
+
+  // Load data
+  if (page === 'today') { loadTodayBookings(); loadStats(); }
+  else if (page === 'week') loadWeekBookings();
+  else if (page === 'all') loadAllBookings();
+  else if (page === 'profile') loadStats();
 }
 
 // ============================================
@@ -341,7 +304,6 @@ function openModal(booking = null) {
   const form = document.getElementById('booking-form');
   const title = document.getElementById('modal-title');
 
-  // Reset form
   form.reset();
   document.getElementById('booking-id').value = '';
 
@@ -360,9 +322,7 @@ function openModal(booking = null) {
     document.getElementById('comment').value = booking.comment || '';
   } else {
     title.textContent = 'Новая запись';
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('booking-date').value = today;
+    document.getElementById('booking-date').value = new Date().toISOString().split('T')[0];
   }
 
   modal.classList.remove('hidden');
@@ -373,6 +333,14 @@ function closeModal() {
 }
 
 function setupFormHandlers() {
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', () => {
+      closeModal();
+      closeDetailModal();
+    });
+  });
+
   document.getElementById('booking-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -392,32 +360,24 @@ function setupFormHandlers() {
 
     try {
       if (bookingId) {
-        await apiCall(`/bookings/${bookingId}`, {
-          method: 'PUT',
-          body: JSON.stringify(data)
-        });
-        showSuccess('Запись обновлена');
+        await apiCall(`/bookings/${bookingId}`, { method: 'PUT', body: JSON.stringify(data) });
+        showToast('Запись обновлена');
       } else {
-        await apiCall('/bookings', {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        showSuccess('Запись создана');
+        await apiCall('/bookings', { method: 'POST', body: JSON.stringify(data) });
+        showToast('Запись создана');
       }
 
       closeModal();
       refreshCurrentPage();
       loadStats();
-
     } catch (error) {
-      console.error('Save error:', error);
-      showError('Ошибка: ' + error.message);
+      showToast('Ошибка: ' + error.message);
     }
   });
 }
 
 // ============================================
-// MODAL - BOOKING DETAIL
+// MODAL - DETAIL
 // ============================================
 
 let currentDetailBooking = null;
@@ -426,13 +386,10 @@ async function openDetailModal(bookingId) {
   try {
     const data = await apiCall(`/bookings/${bookingId}`);
     currentDetailBooking = data.booking;
-
     renderDetailModal(currentDetailBooking);
     document.getElementById('detail-modal').classList.remove('hidden');
-
   } catch (error) {
-    console.error('Load booking error:', error);
-    showError('Ошибка загрузки');
+    showToast('Ошибка загрузки');
   }
 }
 
@@ -469,92 +426,47 @@ function renderDetailModal(booking) {
     </div>
     <div class="detail-row">
       <span class="detail-label">Телефон</span>
-      <span class="detail-value"><a href="tel:${booking.client_phone}" style="color: var(--primary)">${escapeHtml(booking.client_phone)}</a></span>
+      <span class="detail-value"><a href="tel:${booking.client_phone}">${escapeHtml(booking.client_phone)}</a></span>
     </div>
   `;
 
   if (booking.steam_type) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Тип парения</span>
-        <span class="detail-value">${escapeHtml(booking.steam_type)}</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Тип парения</span><span class="detail-value">${escapeHtml(booking.steam_type)}</span></div>`;
   }
-
   if (booking.duration) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Длительность</span>
-        <span class="detail-value">${booking.duration} мин</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Длительность</span><span class="detail-value">${booking.duration} мин</span></div>`;
   }
-
   if (booking.guests_count > 1) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Гостей</span>
-        <span class="detail-value">${booking.guests_count}</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Гостей</span><span class="detail-value">${booking.guests_count}</span></div>`;
   }
-
   if (booking.price) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Цена</span>
-        <span class="detail-value">${booking.price} ₽</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Цена</span><span class="detail-value">${booking.price} ₽</span></div>`;
   }
-
   if (booking.prepayment) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Предоплата</span>
-        <span class="detail-value">${booking.prepayment} ₽</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Предоплата</span><span class="detail-value">${booking.prepayment} ₽</span></div>`;
   }
-
   if (booking.comment) {
-    html += `
-      <div class="detail-row">
-        <span class="detail-label">Комментарий</span>
-        <span class="detail-value">${escapeHtml(booking.comment)}</span>
-      </div>
-    `;
+    html += `<div class="detail-row"><span class="detail-label">Комментарий</span><span class="detail-value">${escapeHtml(booking.comment)}</span></div>`;
   }
 
-  // Action buttons based on status and user role
+  // Actions
   html += '<div class="detail-actions">';
 
-  const canEdit = currentUser && (currentUser.role === 'admin' || currentUser.role === 'sales');
-  const canChangeStatus = currentUser && (currentUser.role === 'admin' || currentUser.role === 'bath_attendant');
+  const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'sales';
+  const canChangeStatus = currentUser?.role === 'admin' || currentUser?.role === 'bath_attendant';
 
   if (booking.status === 'new') {
-    if (canChangeStatus) {
-      html += '<button class="btn-status confirm" onclick="changeStatus(\'confirmed\')">Подтвердить</button>';
-    }
-    if (canEdit) {
-      html += '<button class="btn-status cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
-    }
+    if (canChangeStatus) html += '<button class="btn btn-confirm" onclick="changeStatus(\'confirmed\')">Подтвердить</button>';
+    if (canEdit) html += '<button class="btn btn-cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
   } else if (booking.status === 'confirmed') {
-    if (canChangeStatus) {
-      html += '<button class="btn-status start" onclick="changeStatus(\'in_progress\')">Начать</button>';
-    }
-    if (canEdit) {
-      html += '<button class="btn-status cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
-    }
+    if (canChangeStatus) html += '<button class="btn btn-start" onclick="changeStatus(\'in_progress\')">Начать</button>';
+    if (canEdit) html += '<button class="btn btn-cancel" onclick="changeStatus(\'cancelled\')">Отменить</button>';
   } else if (booking.status === 'in_progress') {
-    if (canChangeStatus) {
-      html += '<button class="btn-status complete" onclick="changeStatus(\'completed\')">Завершить</button>';
-    }
+    if (canChangeStatus) html += '<button class="btn btn-complete" onclick="changeStatus(\'completed\')">Завершить</button>';
   }
 
-  if (canEdit && booking.status !== 'completed' && booking.status !== 'cancelled') {
-    html += `<button class="btn-secondary" onclick="editBooking()">Изменить</button>`;
+  if (canEdit && !['completed', 'cancelled'].includes(booking.status)) {
+    html += '<button class="btn btn-secondary" onclick="editBooking()">Изменить</button>';
   }
 
   html += '</div>';
@@ -571,14 +483,12 @@ async function changeStatus(newStatus) {
       body: JSON.stringify({ status: newStatus })
     });
 
-    showSuccess('Статус изменён');
+    showToast('Статус изменён');
     closeDetailModal();
     refreshCurrentPage();
     loadStats();
-
   } catch (error) {
-    console.error('Status change error:', error);
-    showError('Ошибка: ' + error.message);
+    showToast('Ошибка: ' + error.message);
   }
 }
 
@@ -595,16 +505,15 @@ function editBooking() {
 function refreshCurrentPage() {
   const activePage = document.querySelector('.page.active');
   if (activePage) {
-    const pageName = activePage.id.replace('page-', '');
-    if (pageName === 'today') loadTodayBookings();
-    else if (pageName === 'week') loadWeekBookings();
-    else if (pageName === 'all') loadAllBookings();
+    const page = activePage.id.replace('page-', '');
+    if (page === 'today') loadTodayBookings();
+    else if (page === 'week') loadWeekBookings();
+    else if (page === 'all') loadAllBookings();
   }
 }
 
 function formatTime(timeStr) {
-  if (!timeStr) return '';
-  return timeStr.substring(0, 5);
+  return timeStr?.substring(0, 5) || '';
 }
 
 function formatDate(dateStr) {
@@ -620,17 +529,10 @@ function formatDateLong(dateStr) {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  if (date.toDateString() === today.toDateString()) {
-    return 'Сегодня';
-  } else if (date.toDateString() === tomorrow.toDateString()) {
-    return 'Завтра';
-  }
+  if (date.toDateString() === today.toDateString()) return 'Сегодня';
+  if (date.toDateString() === tomorrow.toDateString()) return 'Завтра';
 
-  return date.toLocaleDateString('ru-RU', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'long'
-  });
+  return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
 }
 
 function escapeHtml(text) {
@@ -640,15 +542,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function showSuccess(message) {
-  if (window.Telegram?.WebApp) {
-    Telegram.WebApp.showAlert(message);
-  } else {
-    alert(message);
-  }
-}
-
-function showError(message) {
+function showToast(message) {
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.showAlert(message);
   } else {
