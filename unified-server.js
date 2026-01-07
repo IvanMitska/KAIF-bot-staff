@@ -95,6 +95,7 @@ function validateTelegramWebAppData(initData) {
 
 async function authMiddleware(req, res, next) {
   const initData = req.headers['x-telegram-init-data'];
+  console.log('Auth middleware - path:', req.path, 'initData present:', !!initData);
 
   // Test mode
   if (process.env.NODE_ENV === 'development' && req.query.test === '1') {
@@ -108,8 +109,10 @@ async function authMiddleware(req, res, next) {
 
   const telegramUser = validateTelegramWebAppData(initData);
   if (!telegramUser) {
+    console.error('Auth failed - invalid initData');
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  console.log('Auth success - user:', telegramUser.id);
 
   // Check if user is allowed
   const telegramId = String(telegramUser.id);
@@ -190,11 +193,13 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
 // Get today's bookings
 app.get('/api/bookings/today', authMiddleware, async (req, res) => {
   try {
+    console.log('Loading today bookings for user:', req.user?.telegram_id);
     const bookings = await bookingService.getTodayBookings();
+    console.log('Today bookings result:', bookings?.length || 0, 'items');
     res.json({ success: true, bookings });
   } catch (error) {
-    console.error('Get today bookings error:', error);
-    res.status(500).json({ error: 'Failed to get bookings' });
+    console.error('Get today bookings error:', error.message, error.stack);
+    res.status(500).json({ error: 'Failed to get bookings: ' + error.message });
   }
 });
 
