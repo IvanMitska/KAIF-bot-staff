@@ -39,11 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load profile
     await loadProfile();
 
-    // Load data
-    await Promise.all([
-      loadTodayBookings(),
-      loadStats()
-    ]);
+    // Load data sequentially (debug)
+    await loadStats();
+    await loadTodayBookings();
 
     // Hide loading
     document.getElementById('loading').classList.add('hidden');
@@ -151,7 +149,7 @@ async function loadTodayBookings() {
     renderBookings(data.bookings, 'today-list', true);
   } catch (error) {
     console.error('loadTodayBookings error:', error);
-    document.getElementById('today-list').innerHTML = renderEmpty('Ошибка загрузки');
+    document.getElementById('today-list').innerHTML = renderEmpty('Ошибка: ' + error.message);
   }
 }
 
