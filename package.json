@@ -1,65 +1,29 @@
 {
-  "name": "daily-reports-bot",
-  "version": "1.0.0",
-  "description": "Telegram bot for collecting daily employee reports with Notion integration",
-  "main": "src/app.js",
+  "name": "sauna-booking-bot",
+  "version": "2.0.0",
+  "description": "Telegram bot for sauna booking management",
+  "main": "unified-server.js",
   "scripts": {
     "start": "node unified-server.js",
-    "start:unified": "node unified-server.js",
-    "start:optimized": "node start-optimized.js",
-    "start:full": "node railway-server.js",
-    "start:local": "node start.js",
-    "start:bot": "node src/app.js",
-    "start:webapp": "node webapp/server.js",
-    "start:webapp-optimized": "node webapp/server-optimized.js",
     "dev": "nodemon unified-server.js",
-    "dev:bot": "nodemon src/app.js",
-    "webapp": "node webapp/server.js",
-    "webapp:dev": "nodemon webapp/server.js",
-    "all": "concurrently \"npm run dev\" \"npm run webapp:dev\"",
-    "migrate": "node migrate-to-optimized.js",
-    "init:cache": "node init-optimized.js",
-    "build": "webpack --mode production",
-    "build:dev": "webpack --mode development",
-    "watch": "webpack --mode development --watch",
-    "clean": "rm -rf webapp/public/dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "telegram",
     "bot",
-    "notion",
-    "reports"
+    "sauna",
+    "booking"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@notionhq/client": "^2.2.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "googleapis": "^156.0.0",
-    "moment-timezone": "^0.5.43",
-    "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.64.0",
-    "pg": "^8.16.3",
-    "sqlite3": "^5.1.7",
-    "xlsx": "^0.18.5"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.3",
-    "@babel/preset-env": "^7.23.3",
-    "babel-loader": "^9.1.3",
-    "clean-webpack-plugin": "^4.0.0",
-    "concurrently": "^9.2.0",
-    "css-loader": "^6.8.1",
-    "html-webpack-plugin": "^5.5.3",
-    "localtunnel": "^2.0.2",
-    "mini-css-extract-plugin": "^2.7.6",
-    "nodemon": "^3.0.1",
-    "style-loader": "^3.3.3",
-    "terser-webpack-plugin": "^5.3.9",
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "nodemon": "^3.0.1"
   },
   "engines": {
     "node": ">=16.0.0"

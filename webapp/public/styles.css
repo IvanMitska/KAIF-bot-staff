@@ -1,2578 +1,628 @@
-/* ===== LIQUID GLASS DESIGN SYSTEM ===== */
-/* Современный дизайн в стиле iOS 26 Liquid Glass */
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Предотвращение горизонтального скролла */
-html {
-    overflow-x: hidden;
-    width: 100%;
-    position: relative;
-}
-
-html, body {
-    max-width: 100%;
-    overflow-x: hidden;
-}
+/* ============================================
+   SAUNA BOOKING APP - STYLES
+   ============================================ */
 
 :root {
-    /* ===== ОСНОВНАЯ ЦВЕТОВАЯ СХЕМА ===== */
-    /* Градиенты в стиле iOS */
-    --gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-    --gradient-secondary: linear-gradient(135deg, #7C3AED 0%, #F472B6 100%);
-    --gradient-accent: linear-gradient(135deg, #A855F7 0%, #F9A8D4 100%);
-    --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
-    --gradient-danger: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
-    --gradient-info: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-    
-    /* Основные цвета */
-    --primary: #8B5CF6;
-    --primary-dark: #7C3AED;
-    --primary-light: #A78BFA;
-    --secondary: #EC4899;
-    --secondary-dark: #DB2777;
-    --secondary-light: #F9A8D4;
-    
-    /* Фоновые градиенты */
-    --bg-gradient-main: linear-gradient(180deg, #1A0033 0%, #2D0050 50%, #4A0080 100%);
-    --bg-gradient-soft: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
-    
-    /* Стекло */
-    --glass-white: rgba(255, 255, 255, 0.1);
-    --glass-white-strong: rgba(255, 255, 255, 0.2);
-    --glass-dark: rgba(0, 0, 0, 0.3);
-    --glass-purple: rgba(139, 92, 246, 0.1);
-    --glass-pink: rgba(236, 72, 153, 0.1);
-    
-    /* Текст */
-    --text-primary: rgba(255, 255, 255, 0.95);
-    --text-secondary: rgba(255, 255, 255, 0.75);
-    --text-muted: rgba(255, 255, 255, 0.5);
-    --text-accent: #F472B6;
-    
-    /* Границы */
-    --border-glass: rgba(255, 255, 255, 0.2);
-    --border-glow: rgba(139, 92, 246, 0.5);
-    
-    /* Тени и свечение */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.2);
-    --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.25);
-    --shadow-glow-purple: 0 0 40px rgba(139, 92, 246, 0.4);
-    --shadow-glow-pink: 0 0 40px rgba(236, 72, 153, 0.4);
-    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-    
-    /* Размытие */
-    --blur-sm: 8px;
-    --blur-md: 16px;
-    --blur-lg: 24px;
-    --blur-xl: 32px;
-    
-    /* Анимации */
-    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    
-    /* Скругления */
-    --radius-sm: 12px;
-    --radius-md: 16px;
-    --radius-lg: 20px;
-    --radius-xl: 24px;
-    --radius-2xl: 32px;
-    --radius-full: 9999px;
+  --primary: #D4A574;
+  --primary-dark: #B8956A;
+  --primary-light: #E8C9A8;
+  --success: #4CAF50;
+  --warning: #FF9800;
+  --danger: #F44336;
+  --info: #2196F3;
+
+  --bg-primary: #1A1A1A;
+  --bg-secondary: #242424;
+  --bg-card: #2D2D2D;
+  --bg-input: #363636;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+  --text-muted: #808080;
+
+  --border-color: #404040;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ===== БАЗОВЫЕ СТИЛИ ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    background: var(--bg-gradient-main);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-}
-
-/* Анимированный фон */
-body::before {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
-    animation: gradientShift 20s ease infinite;
-    z-index: -1;
-}
-
-@keyframes gradientShift {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    33% { transform: rotate(120deg) scale(1.1); }
-    66% { transform: rotate(240deg) scale(0.9); }
-}
-
-/* ===== КОНТЕЙНЕР ===== */
-.container {
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 16px;
-    padding-bottom: 80px;
-}
-
-/* ===== НАВИГАЦИЯ ===== */
-.navigation {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-xl));
-    -webkit-backdrop-filter: blur(var(--blur-xl));
-    border-top: 1px solid var(--border-glass);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 8px 0;
-    padding-bottom: env(safe-area-inset-bottom, 8px);
-    z-index: 1000;
-    box-shadow: 
-        0 -4px 20px rgba(139, 92, 246, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.nav-btn {
-    position: relative;
-    flex: 1;
-    padding: 8px 4px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    transition: all var(--transition-normal);
-    max-width: 80px;
-}
-
-.nav-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-xl);
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.nav-btn:hover {
-    color: var(--text-primary);
-    transform: translateY(-2px);
-}
-
-.nav-btn.active {
-    color: white;
-}
-
-.nav-btn.active::before {
-    opacity: 1;
-}
-
-.nav-icon-wrapper {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-}
-
-.nav-icon-wrapper i {
-    width: 20px;
-    height: 20px;
-    stroke-width: 2px;
-}
-
-.nav-btn.active .nav-icon-wrapper i {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
-}
-
-.nav-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    position: relative;
-    z-index: 1;
-}
-
-/* ===== СТЕКЛЯННЫЕ КАРТОЧКИ ===== */
-.glass-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 
-        var(--shadow-lg),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all var(--transition-normal);
-}
-
-.glass-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255, 255, 255, 0.5) 50%, 
-        transparent 100%);
-}
-
-.glass-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 40px rgba(139, 92, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    border-color: var(--border-glow);
-}
-
-/* ===== ЗАГОЛОВОК СТРАНИЦЫ ===== */
-.page-header {
-    margin-bottom: 24px;
-    text-align: center;
-    position: relative;
-}
-
-.greeting-text {
-    font-size: 32px;
-    font-weight: 800;
-    background: var(--gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.3));
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-}
-
-.welcome-subtitle {
-    font-size: 16px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-/* ===== ГЛАВНОЕ МЕНЮ ===== */
-.action-grid {
-    display: grid;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.action-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 20px;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-height: 80px;
-}
-
-.action-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gradient-primary);
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.action-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    border-color: var(--border-glow);
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 50px rgba(139, 92, 246, 0.3);
-}
-
-.action-card:hover::after {
-    opacity: 0.05;
-}
-
-.action-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 
-        var(--shadow-md),
-        0 0 20px rgba(139, 92, 246, 0.4);
-    position: relative;
-    z-index: 1;
-}
-
-.action-icon {
-    width: 24px;
-    height: 24px;
-    color: white;
-    stroke-width: 2px;
-}
-
-.action-content {
-    flex: 1;
-    position: relative;
-    z-index: 1;
-}
-
-.action-content h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: var(--text-primary);
-}
-
-.action-content p {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-/* ===== КНОПКИ УЧЕТА ВРЕМЕНИ ===== */
-.attendance-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.attendance-btn {
-    padding: 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 80px;
-}
-
-.attendance-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.attendance-btn.check-in::before {
-    background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-}
-
-.attendance-btn.check-out::before {
-    background: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
-}
-
-.attendance-btn:hover:not(:disabled) {
-    transform: translateY(-4px) scale(1.02);
-    border-color: var(--border-glow);
-}
-
-.attendance-btn:hover:not(:disabled)::before {
-    opacity: 0.1;
-}
-
-.attendance-btn .btn-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-}
-
-.attendance-btn.check-in .btn-icon-wrapper {
-    background: var(--gradient-success);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-}
-
-.attendance-btn.check-out .btn-icon-wrapper {
-    background: var(--gradient-danger);
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-}
-
-.attendance-btn .btn-icon {
-    width: 24px;
-    height: 24px;
-    color: white;
-}
-
-.attendance-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ===== ФОРМЫ ===== */
-.form-group {
-    margin-bottom: 24px;
-}
-
-.form-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-}
-
-.form-input,
-.form-textarea,
-.form-select {
-    width: 100%;
-    padding: 14px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 16px;
-    transition: all var(--transition-normal);
-    font-family: inherit;
-    box-sizing: border-box;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.2),
-        var(--shadow-glow-purple);
-}
-
-.form-input::placeholder,
-.form-textarea::placeholder {
-    color: var(--text-muted);
-}
-
-/* ===== КНОПКИ ===== */
-.btn-primary,
-.submit-btn {
-    width: 100%;
-    padding: 16px 24px;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: var(--radius-lg);
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 
-        var(--shadow-md),
-        0 0 30px rgba(139, 92, 246, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 
-        var(--shadow-lg),
-        0 0 40px rgba(139, 92, 246, 0.5);
-}
-
-.btn-primary:active::before {
-    width: 300px;
-    height: 300px;
-}
-
-.btn-secondary {
-    padding: 16px 32px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-.btn-secondary:hover {
-    background: var(--glass-white-strong);
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-/* ===== ЗАДАЧИ ===== */
-.task-item {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all var(--transition-normal);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.task-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--gradient-primary);
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.task-item:hover {
-    transform: translateX(8px);
-    border-color: var(--border-glow);
-    box-shadow: 
-        var(--shadow-lg),
-        0 0 30px rgba(139, 92, 246, 0.2);
-}
-
-.task-item:hover::before {
-    opacity: 1;
-}
-
-.task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.task-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.task-status {
-    padding: 6px 12px;
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: 600;
-    backdrop-filter: blur(var(--blur-sm));
-    -webkit-backdrop-filter: blur(var(--blur-sm));
-}
-
-.task-status.new {
-    background: rgba(239, 68, 68, 0.2);
-    color: #FCA5A5;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.task-status.in-progress {
-    background: rgba(245, 158, 11, 0.2);
-    color: #FCD34D;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.task-status.completed {
-    background: rgba(16, 185, 129, 0.2);
-    color: #6EE7B7;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-/* ===== МОДАЛЬНЫЕ ОКНА ===== */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(var(--blur-sm));
-    -webkit-backdrop-filter: blur(var(--blur-sm));
-    /* КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: используем flex по умолчанию и скрываем через opacity */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
-}
-
-.modal-overlay.show {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
-
-.modal-container {
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(var(--blur-xl));
-    -webkit-backdrop-filter: blur(var(--blur-xl));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-2xl);
-    padding: 32px;
-    width: 90%;
-    max-width: 480px;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 60px rgba(139, 92, 246, 0.3);
-    animation: slideUp 0.4s var(--spring);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-glass);
-}
-
-.modal-title {
-    font-size: 24px;
-    font-weight: 700;
-    background: var(--gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.modal-close {
-    width: 36px;
-    height: 36px;
-    background: var(--glass-white);
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-close:hover {
-    background: var(--glass-white-strong);
-    color: var(--text-primary);
-    transform: rotate(90deg);
-}
-
-/* ===== СТАТИСТИКА ===== */
-.stat-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 20px;
-    text-align: center;
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: var(--gradient-primary);
-    opacity: 0.05;
-    transform: rotate(45deg);
-    transition: all var(--transition-slow);
-}
-
-.stat-card:hover::before {
-    transform: rotate(45deg) translateY(50%);
-}
-
-.stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    background: var(--gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 4px;
-    line-height: 1;
-}
-
-.stat-label {
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* ===== ПЛАВАЮЩАЯ КНОПКА ===== */
-.floating-actions {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    z-index: 999;
-}
-
-.fab-main {
-    width: 56px;
-    height: 56px;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    box-shadow: 
-        var(--shadow-lg),
-        0 0 30px rgba(139, 92, 246, 0.4);
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.fab-main::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: var(--gradient-secondary);
-    border-radius: 50%;
-    opacity: 0;
-    z-index: -1;
-    transition: opacity var(--transition-normal);
-}
-
-.fab-main:hover {
-    transform: scale(1.1) rotate(90deg);
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 40px rgba(139, 92, 246, 0.6);
-}
-
-.fab-main:hover::before {
-    opacity: 1;
-}
-
-.fab-main.active {
-    transform: rotate(135deg);
-}
-
-/* ===== АНИМАЦИИ ===== */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
-    }
-    50% {
-        box-shadow: 0 0 0 20px transparent;
-    }
-}
-
-@keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
-/* ===== ЭФФЕКТ СВЕЧЕНИЯ ДЛЯ АКТИВНЫХ ЭЛЕМЕНТОВ ===== */
-.glow-effect {
-    position: relative;
-}
-
-.glow-effect::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: var(--gradient-primary);
-    border-radius: inherit;
-    opacity: 0.3;
-    filter: blur(8px);
-    z-index: -1;
-    transition: all var(--transition-normal);
-}
-
-.glow-effect:hover::after {
-    opacity: 0.5;
-    filter: blur(12px);
-}
-
-/* ===== АДАПТИВНОСТЬ ===== */
-@media (max-width: 768px) {
-    .attendance-buttons {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .greeting-text {
-        font-size: 28px;
-    }
-    
-    .modal-container {
-        width: 95%;
-        padding: 24px;
-    }
-    
-    .stat-card {
-        padding: 16px;
-        min-height: 100px;
-    }
-    
-    .stat-value {
-        font-size: 28px;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 12px;
-        padding-bottom: 70px;
-    }
-    
-    .nav-label {
-        font-size: 9px;
-    }
-    
-    .nav-btn {
-        padding: 8px 2px;
-    }
-    
-    .nav-icon-wrapper i {
-        width: 18px;
-        height: 18px;
-    }
-    
-    .action-card {
-        padding: 16px;
-        min-height: 70px;
-    }
-    
-    .action-icon-wrapper {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .action-icon {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .greeting-text {
-        font-size: 24px;
-    }
-    
-    .attendance-btn {
-        padding: 12px;
-        min-height: 70px;
-    }
-    
-    .attendance-btn .btn-icon-wrapper {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .stat-value {
-        font-size: 24px;
-    }
-}
-
-/* ===== СПЕЦИАЛЬНЫЕ ЭФФЕКТЫ ===== */
-/* Эффект мерцания для уведомлений */
-.notification-badge,
-.nav-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--gradient-danger);
-    color: white;
-    border-radius: var(--radius-full);
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 700;
-    min-width: 18px;
-    text-align: center;
-    animation: pulse 2s infinite;
-    box-shadow: var(--shadow-md);
-}
-
-/* Эффект загрузки */
-.loading-skeleton {
-    background: linear-gradient(
-        90deg,
-        var(--glass-white) 0%,
-        var(--glass-white-strong) 50%,
-        var(--glass-white) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: var(--radius-md);
-}
-
-/* Эффект для выбранных элементов */
-.selected-item {
-    background: var(--glass-purple);
-    border-color: var(--primary);
-    box-shadow: 
-        var(--shadow-md),
-        0 0 20px rgba(139, 92, 246, 0.3),
-        inset 0 0 20px rgba(139, 92, 246, 0.1);
-}
-
-/* ===== ДОПОЛНИТЕЛЬНЫЕ КОМПОНЕНТЫ ===== */
-/* Переключатели */
-.switch {
-    position: relative;
-    width: 56px;
-    height: 32px;
-    background: var(--glass-white);
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-full);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-.switch-slider {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 24px;
-    height: 24px;
-    background: white;
-    border-radius: 50%;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-sm);
-}
-
-.switch.active {
-    background: var(--gradient-primary);
-    border-color: transparent;
-}
-
-.switch.active .switch-slider {
-    transform: translateX(24px);
-    box-shadow: 
-        var(--shadow-md),
-        0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-/* Чекбоксы */
-.checkbox {
-    width: 24px;
-    height: 24px;
-    background: var(--glass-white);
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    position: relative;
-}
-
-.checkbox.checked {
-    background: var(--gradient-primary);
-    border-color: transparent;
-}
-
-.checkbox.checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-/* Прогресс бар */
-.progress-bar {
-    height: 8px;
-    background: var(--glass-white);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-    position: relative;
-}
-
-.progress-fill {
-    height: 100%;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-full);
-    transition: width var(--transition-slow);
-    position: relative;
-    overflow: hidden;
-}
-
-.progress-fill::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-    );
-    animation: shimmer 2s infinite;
-}
-
-/* Тултипы */
-.tooltip {
-    position: absolute;
-    background: var(--glass-dark);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-md);
-    padding: 8px 12px;
-    color: var(--text-primary);
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-lg);
-    z-index: 3000;
-}
-
-.tooltip.show {
-    opacity: 1;
-}
-
-/* ===== ТЕМА ЗАБЛОКИРОВАНА НА ТЕМНОЙ ВЕРСИИ ===== */
-/* Светлая тема удалена - приложение всегда использует темную тему */
-/* ===== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ ИСПРАВЛЕНИЯ ВЕРСТКИ ===== */
-
-/* Секции и заголовки */
-.section-header {
-    margin-bottom: 16px;
-}
-
-.section-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 0;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-icon {
-    width: 18px;
-    height: 18px;
-    color: var(--primary);
-}
-
-/* Статистика */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.stat-icon {
-    width: 20px;
-    height: 20px;
-    color: var(--primary);
-    margin-bottom: 8px;
-}
-
-/* Кнопки учета времени */
-.btn-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-    color: var(--text-primary);
-}
-
-.btn-time {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    height: 14px;
-}
-
-.btn-text {
-    flex: 1;
-    text-align: left;
-}
-
-/* Кнопка назад */
-.back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    padding: 10px 16px;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    margin-bottom: 16px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--glass-white-strong);
-    color: var(--text-primary);
-    transform: translateY(-1px);
-}
-
-/* Исправления для страниц */
-.page {
-    display: none;
-}
-
-.page.active {
-    display: block;
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Статус дня */
-.daily-status {
-    margin-bottom: 24px;
-}
-
-.status-grid {
-    display: grid;
-    gap: 12px;
-}
-
-.status-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-glass);
-}
-
-/* Быстрые действия */
-.quick-actions {
-    margin-bottom: 24px;
-}
-
-/* Плавающее меню */
-.fab-menu {
-    position: absolute;
-    bottom: 70px;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(20px);
-    transition: all var(--transition-normal);
-}
-
-.fab-menu.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.fab-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-full);
-    padding: 12px 20px;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-md);
-    white-space: nowrap;
-}
-
-.fab-item:hover {
-    background: var(--glass-white-strong);
-    transform: translateX(-4px);
-    box-shadow: var(--shadow-lg);
-}
-
-/* Исправления для форм */
-.form-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 24px;
-}
-
-.form-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-}
-
-.label-icon {
-    width: 16px;
-    height: 16px;
-    color: var(--primary);
-}
-
-/* Загрузка */
-.loading {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ============================================
+   LOADING SCREEN
+   ============================================ */
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  z-index: 9999;
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--glass-white);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 16px;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--bg-card);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-.loading-text {
-    font-size: 14px;
-    font-weight: 500;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* Исправление для safe area на iOS */
-@supports (padding: max(0px)) {
-    .container {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-    }
-    
-    .navigation {
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-    }
+.loading-screen p {
+  margin-top: 16px;
+  color: var(--text-secondary);
 }
 
-/* ===== ИСПРАВЛЕНИЯ ДЛЯ РАЗДЕЛА ЗАДАЧ ===== */
+/* ============================================
+   HEADER
+   ============================================ */
 
-/* Список задач */
-.tasks-container {
-    min-height: 200px;
-    padding-bottom: 20px;
+.header {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-/* Описание задачи */
-.task-description {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* Мета информация задачи */
-.task-meta {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-glass);
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
 }
 
-.task-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-muted);
+.header-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
-.task-meta-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--text-muted);
+#user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
 }
 
-/* Информация о задаче */
-.task-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 8px;
+.user-role {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
-.task-assignee {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.nav {
+  display: flex;
+  background: var(--bg-secondary);
+  padding: 8px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.task-assignee-icon {
-    width: 16px;
-    height: 16px;
-    color: var(--primary);
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.task-date {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.nav-btn:active {
+  transform: scale(0.95);
 }
 
-.task-date-icon {
-    width: 16px;
-    height: 16px;
-    color: var(--text-muted);
+.nav-btn.active {
+  background: var(--primary);
+  color: white;
 }
 
-/* Приоритет задачи */
-.task-priority {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 11px;
-    font-weight: 600;
+.nav-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
-.task-priority.high {
-    background: rgba(239, 68, 68, 0.1);
-    color: #EF4444;
+/* ============================================
+   CONTENT
+   ============================================ */
+
+.content {
+  padding: 16px;
+  padding-bottom: 80px;
 }
 
-.task-priority.medium {
-    background: rgba(245, 158, 11, 0.1);
-    color: #F59E0B;
+.page {
+  display: none;
 }
 
-.task-priority.low {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10B981;
+.page.active {
+  display: block;
 }
 
-/* Фильтры задач */
-.task-filters {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.task-filters::-webkit-scrollbar {
-    display: none;
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.filter-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-full);
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    white-space: nowrap;
-    flex-shrink: 0;
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.filter-btn.active {
-    background: var(--gradient-primary);
-    border-color: transparent;
-    color: white;
+.btn-primary:active {
+  background: var(--primary-dark);
+  transform: scale(0.98);
 }
 
-.filter-btn:hover:not(.active) {
-    background: var(--glass-white-strong);
-    transform: translateY(-1px);
+.btn-secondary {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.filter-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
+.btn-secondary:active {
+  background: var(--bg-card);
 }
 
-.filter-indicator.new {
-    background: #EF4444;
+.btn-status {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.filter-indicator.in-progress {
-    background: #F59E0B;
+.btn-status.confirm {
+  background: var(--success);
+  color: white;
 }
 
-.filter-indicator.completed {
-    background: #10B981;
+.btn-status.cancel {
+  background: var(--danger);
+  color: white;
 }
 
-.filter-btn .count {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 2px 6px;
-    border-radius: var(--radius-full);
-    font-size: 11px;
-    font-weight: 600;
-    min-width: 18px;
-    text-align: center;
+.btn-status.start {
+  background: var(--info);
+  color: white;
 }
 
-/* Переключатель типа задач */
-.task-type-switcher {
-    display: flex;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-md);
-    padding: 4px;
-    margin-bottom: 16px;
+.btn-status.complete {
+  background: var(--primary);
+  color: white;
 }
 
-.task-type-btn {
-    flex: 1;
-    padding: 10px 16px;
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+/* ============================================
+   BOOKINGS LIST
+   ============================================ */
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.task-type-btn.active {
-    background: var(--gradient-primary);
-    color: white;
-    box-shadow: var(--shadow-sm);
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
 }
 
-.task-type-btn .btn-icon {
-    width: 16px;
-    height: 16px;
+.booking-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-/* Детальный просмотр задачи */
-.task-detail-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-xl);
-    padding: 20px;
-    margin-bottom: 20px;
+.booking-card:active {
+  transform: scale(0.98);
 }
 
-.task-detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-glass);
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
-.task-detail-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-    flex: 1;
-    margin-right: 16px;
-    color: var(--text-primary);
+.booking-time {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
 }
 
-/* Кнопка создания задачи */
-.create-task-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--gradient-primary);
-    border: none;
-    color: white;
-    padding: 8px 14px;
-    border-radius: var(--radius-full);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-md);
+.booking-date {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
-.create-task-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+.booking-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-/* Пустое состояние */
-.empty-tasks {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
+.booking-status.new {
+  background: rgba(33, 150, 243, 0.2);
+  color: #64B5F6;
 }
 
-.empty-tasks-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 16px;
-    opacity: 0.5;
+.booking-status.confirmed {
+  background: rgba(76, 175, 80, 0.2);
+  color: #81C784;
 }
 
-.empty-tasks-text {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: var(--text-secondary);
+.booking-status.in_progress {
+  background: rgba(255, 152, 0, 0.2);
+  color: #FFB74D;
 }
 
-.empty-tasks-hint {
-    font-size: 14px;
-    color: var(--text-muted);
+.booking-status.completed {
+  background: rgba(212, 165, 116, 0.2);
+  color: var(--primary-light);
 }
 
-/* Действия с задачей */
-.task-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-glass);
+.booking-status.cancelled {
+  background: rgba(244, 67, 54, 0.2);
+  color: #E57373;
 }
 
-.task-action-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+.booking-client {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.task-action-btn.start {
-    background: var(--gradient-secondary);
-    color: white;
+.booking-phone {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
-.task-action-btn.complete {
-    background: var(--gradient-success);
-    color: white;
+.booking-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
-.task-action-btn.edit {
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    color: var(--text-primary);
+.booking-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.task-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+/* Date Separator */
+.date-separator {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 0;
+  margin-top: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.task-action-btn .btn-icon {
-    width: 16px;
-    height: 16px;
+/* ============================================
+   STATS BAR
+   ============================================ */
+
+.stats-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  background: var(--bg-secondary);
+  padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-area-bottom));
+  border-top: 1px solid var(--border-color);
 }
 
-/* Адаптивность для задач */
-@media (max-width: 480px) {
-    .task-item {
-        padding: 14px;
-    }
-    
-    .task-title {
-        font-size: 15px;
-    }
-    
-    .task-status {
-        font-size: 10px;
-        padding: 3px 8px;
-    }
-    
-    .task-meta {
-        gap: 12px;
-    }
-    
-    .task-meta-item {
-        font-size: 11px;
-    }
-    
-    .filter-btn {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-    
-    .task-type-btn {
-        padding: 8px 12px;
-        font-size: 13px;
-    }
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ЗАДАЧИ ===== */
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
 
-/* Современная форма в модальном окне */
-.modern-form {
-    padding: 24px;
+.stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   FILTERS
+   ============================================ */
+
+.filters {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+
+#booking-form {
+  padding: 20px;
 }
 
 .form-group {
-    margin-bottom: 20px;
-}
-
-.form-group.half-width {
-    flex: 1;
+  margin-bottom: 16px;
 }
 
 .form-row {
-    display: flex;
-    gap: 16px;
+  display: flex;
+  gap: 12px;
 }
 
-/* Кастомный селект для исполнителя */
-.custom-select-wrapper {
-    position: relative;
-    width: 100%;
+.form-row .form-group {
+  flex: 1;
 }
 
-.custom-select {
-    width: 100%;
-    padding: 14px 40px 14px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+/* ============================================
+   DETAIL MODAL
+   ============================================ */
+
+#detail-content {
+  padding: 20px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.detail-value {
+  font-weight: 500;
+  font-size: 14px;
+  text-align: right;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.detail-actions button {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (min-width: 600px) {
+  .modal-content {
     border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 15px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
+    max-height: 80vh;
+  }
 
-.custom-select:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: var(--glass-white-strong);
-}
-
-.custom-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        var(--shadow-glow-purple);
-}
-
-.select-arrow {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color: var(--text-secondary);
-    transition: all var(--transition-normal);
-}
-
-.custom-select:focus ~ .select-arrow {
-    color: var(--primary);
-    transform: translateY(-50%) rotate(180deg);
-}
-
-/* Стилизация опций */
-.custom-select option {
-    background: #2D0050;
-    color: var(--text-primary);
-    padding: 12px;
-}
-
-.custom-select option:hover {
-    background: var(--primary);
-}
-
-/* Календарь (date input) */
-input[type="date"] {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 15px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-}
-
-input[type="date"]:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: var(--glass-white-strong);
-}
-
-input[type="date"]:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        var(--shadow-glow-purple);
-}
-
-/* Стилизация приоритета */
-.priority-select {
-    position: relative;
-}
-
-.priority-option {
-    display: flex;
+  .modal {
     align-items: center;
-    gap: 8px;
-}
-
-.priority-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.priority-dot.high {
-    background: #EF4444;
-}
-
-.priority-dot.medium {
-    background: #F59E0B;
-}
-
-.priority-dot.low {
-    background: #10B981;
-}
-
-/* Текстовые поля */
-.form-input,
-.form-textarea {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 15px;
-    font-family: inherit;
-    transition: all var(--transition-normal);
-    resize: vertical;
-}
-
-.form-input::placeholder,
-.form-textarea::placeholder {
-    color: var(--text-muted);
-    opacity: 0.7;
-}
-
-.form-input:hover,
-.form-textarea:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: var(--glass-white-strong);
-}
-
-.form-input:focus,
-.form-textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        var(--shadow-glow-purple);
-}
-
-/* Опциональная метка */
-.optional-label {
-    color: var(--text-muted);
-    font-weight: 400;
-    font-size: 11px;
-    text-transform: none;
-    margin-left: 4px;
-}
-
-/* Кнопки в модальном окне */
-.modal-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-glass);
-}
-
-.modal-actions .btn-secondary {
-    flex: 1;
-    padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.modal-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: var(--text-primary);
-    transform: translateY(-1px);
-    border-color: rgba(139, 92, 246, 0.3);
-}
-
-.modal-actions .submit-btn {
-    flex: 2;
-    padding: 14px 20px;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: var(--radius-lg);
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 
-        var(--shadow-md),
-        0 0 20px rgba(139, 92, 246, 0.3);
-}
-
-.modal-actions .submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        var(--shadow-lg),
-        0 0 30px rgba(139, 92, 246, 0.5);
-}
-
-/* Иконки в форме */
-.label-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--primary);
-    opacity: 0.8;
-}
-
-.btn-icon {
-    width: 16px;
-    height: 16px;
-}
-
-/* Улучшенная анимация модального окна */
-@keyframes modalSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.modal-container {
-    animation: modalSlideUp 0.4s var(--spring);
-}
-
-/* Адаптивность модального окна */
-@media (max-width: 480px) {
-    .modal-container {
-        width: 95%;
-        max-height: 90vh;
-        border-radius: var(--radius-xl);
-    }
-    
-    .modern-form {
-        padding: 20px;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-    
-    .form-group.half-width {
-        width: 100%;
-    }
-    
-    .modal-header {
-        padding: 20px 20px 16px;
-    }
-    
-    .modal-title {
-        font-size: 20px;
-    }
-    
-    .form-input,
-    .form-textarea,
-    .custom-select,
-    input[type="date"] {
-        font-size: 16px; /* Предотвращает зум на iOS */
-    }
-}
-
-/* Стиль для заблокированных полей */
-.form-input:disabled,
-.form-textarea:disabled,
-.custom-select:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: var(--glass-white);
-}
-
-/* Индикатор загрузки в селекте */
-.select-loading {
-    position: absolute;
-    right: 40px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--glass-white);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-/* Пустое состояние селекта */
-.custom-select:invalid {
-    color: var(--text-muted);
-}
-
-.custom-select option[value=""] {
-    color: var(--text-muted);
-}
-
-/* Фокус на всей форме */
-.form-group:focus-within .form-label {
-    color: var(--primary);
-}
-
-/* Валидация */
-.form-input.error,
-.form-textarea.error,
-.custom-select.error {
-    border-color: rgba(239, 68, 68, 0.5);
-}
-
-.form-error {
-    font-size: 12px;
-    color: #EF4444;
-    margin-top: 4px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.form-error-icon {
-    width: 12px;
-    height: 12px;
-}
-
-/* ===== КАСТОМНЫЕ DROPDOWN И DATE PICKER ===== */
-
-/* Кастомный dropdown контейнер */
-.custom-dropdown {
-    position: relative;
-    width: 100%;
-}
-
-.custom-dropdown-trigger {
-    width: 100%;
-    padding: 14px 40px 14px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 15px;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-}
-
-.custom-dropdown-trigger:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: var(--glass-white-strong);
-}
-
-.custom-dropdown-trigger.active {
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        var(--shadow-glow-purple);
-}
-
-.custom-dropdown-icon {
-    width: 16px;
-    height: 16px;
-    color: var(--text-secondary);
-    transition: transform var(--transition-normal);
-}
-
-.custom-dropdown-trigger.active .custom-dropdown-icon {
-    transform: rotate(180deg);
-    color: var(--primary);
-}
-
-/* Dropdown меню */
-.custom-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    right: 0;
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(var(--blur-xl));
-    -webkit-backdrop-filter: blur(var(--blur-xl));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 40px rgba(139, 92, 246, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-normal);
-    z-index: 1000;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.custom-dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.custom-dropdown-option {
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.custom-dropdown-option:last-child {
-    border-bottom: none;
-}
-
-.custom-dropdown-option:hover {
-    background: rgba(139, 92, 246, 0.1);
-    padding-left: 20px;
-}
-
-.custom-dropdown-option.selected {
-    background: rgba(139, 92, 246, 0.15);
-    color: var(--primary);
-}
-
-.custom-dropdown-option .check-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--primary);
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.custom-dropdown-option.selected .check-icon {
-    opacity: 1;
-}
-
-/* Приоритет dropdown опции */
-.priority-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.priority-indicator.low {
-    background: #10B981;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-}
-
-.priority-indicator.medium {
-    background: #F59E0B;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
-}
-
-.priority-indicator.high {
-    background: #EF4444;
-    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-}
-
-/* Кастомный Date Picker */
-.custom-datepicker {
-    position: relative;
-    width: 100%;
-}
-
-.custom-datepicker-trigger {
-    width: 100%;
-    padding: 14px 40px 14px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    border: 2px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: 15px;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-}
-
-.custom-datepicker-trigger:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    background: var(--glass-white-strong);
-}
-
-.custom-datepicker-trigger.active {
-    border-color: var(--primary);
-    background: var(--glass-white-strong);
-    box-shadow: 
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        var(--shadow-glow-purple);
-}
-
-.calendar-icon {
-    width: 16px;
-    height: 16px;
-    color: var(--text-secondary);
-}
-
-/* Календарь */
-.custom-calendar {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(var(--blur-xl));
-    -webkit-backdrop-filter: blur(var(--blur-xl));
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-lg);
-    box-shadow: 
-        var(--shadow-xl),
-        0 0 40px rgba(139, 92, 246, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px) scale(0.95);
-    transition: all var(--transition-normal);
-    z-index: 1000;
-    padding: 16px;
-    min-width: 280px;
-}
-
-.custom-calendar.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-glass);
-}
-
-.calendar-month-year {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.calendar-nav {
-    display: flex;
-    gap: 8px;
-}
-
-.calendar-nav-btn {
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.calendar-nav-btn:hover {
-    background: rgba(139, 92, 246, 0.2);
-    color: var(--primary);
-    transform: scale(1.1);
-}
-
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-bottom: 8px;
-}
-
-.calendar-weekday {
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 4px;
-    text-transform: uppercase;
-}
-
-.calendar-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-}
-
-.calendar-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 13px;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    position: relative;
-}
-
-.calendar-day:hover {
-    background: rgba(139, 92, 246, 0.1);
-    transform: scale(1.1);
-}
-
-.calendar-day.other-month {
-    color: var(--text-muted);
-    opacity: 0.4;
-}
-
-.calendar-day.today {
-    background: rgba(139, 92, 246, 0.1);
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.calendar-day.today::after {
-    content: '';
-    position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--primary);
-}
-
-.calendar-day.selected {
-    background: var(--gradient-primary);
-    color: white;
-    font-weight: 600;
-    box-shadow: 
-        var(--shadow-md),
-        0 0 12px rgba(139, 92, 246, 0.4);
-}
-
-.calendar-day:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.calendar-day:disabled:hover {
-    background: transparent;
-    transform: none;
-}
-
-/* Мобильная адаптация */
-@media (max-width: 480px) {
-    .custom-dropdown-menu,
-    .custom-calendar {
-        position: fixed;
-        top: auto !important;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        transform: translateY(100%);
-        max-height: 70vh;
-        animation: none;
-    }
-    
-    .custom-dropdown-menu.show,
-    .custom-calendar.show {
-        transform: translateY(0);
-        animation: slideUp 0.3s ease-out;
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-    }
-    
-    /* Оверлей для мобильных */
-    .custom-dropdown.active::before,
-    .custom-datepicker.active::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 999;
-    }
-    
-    .custom-calendar {
-        padding: 24px;
-        padding-bottom: env(safe-area-inset-bottom, 24px);
-    }
-    
-    .calendar-days {
-        gap: 8px;
-    }
-    
-    .calendar-day {
-        font-size: 14px;
-    }
-}
-
-/* Анимация появления опций */
-@keyframes dropdownOptionFade {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.custom-dropdown-menu.show .custom-dropdown-option {
-    animation: dropdownOptionFade 0.3s ease-out forwards;
-    animation-delay: calc(var(--index) * 0.03s);
-}
-
-/* Скроллбар для dropdown */
-.custom-dropdown-menu::-webkit-scrollbar {
-    width: 4px;
-}
-
-.custom-dropdown-menu::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.custom-dropdown-menu::-webkit-scrollbar-thumb {
-    background: rgba(139, 92, 246, 0.3);
-    border-radius: 2px;
-}
-
-.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 92, 246, 0.5);
-}
-
-/* Закрывающая кнопка для мобильных */
-.dropdown-mobile-close {
-    display: none;
-    width: 100%;
-    padding: 16px;
-    background: var(--gradient-primary);
-    border: none;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    margin-top: 12px;
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-@media (max-width: 480px) {
-    .dropdown-mobile-close {
-        display: block;
-    }
-    
-    .dropdown-mobile-close:hover {
-        transform: scale(1.02);
-        box-shadow: var(--shadow-lg);
-    }
+  }
 }
