@@ -37,6 +37,7 @@ class UserService {
        ON CONFLICT (telegram_id) DO UPDATE SET
          name = EXCLUDED.name,
          username = EXCLUDED.username,
+         role = COALESCE(users.role, EXCLUDED.role),
          is_active = true
        RETURNING *`,
       [String(telegram_id), name, username, role]
