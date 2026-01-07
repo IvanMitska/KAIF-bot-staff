@@ -26,7 +26,9 @@ const ALLOWED_IDS = [...new Set([...ADMIN_IDS, ...SALES_IDS, ...BATH_ATTENDANT_I
 // BOT INITIALIZATION
 // ============================================
 
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+// Disable polling for local development (bot runs on Railway)
+const DISABLE_BOT = process.env.DISABLE_BOT === 'true';
+const bot = DISABLE_BOT ? null : new TelegramBot(BOT_TOKEN, { polling: true });
 
 // ============================================
 // EXPRESS SERVER
@@ -423,6 +425,8 @@ async function sendNotificationToUser(telegramId, booking, type) {
     ]);
   }
 
+  if (!bot) return; // Bot disabled for local dev
+
   try {
     await bot.sendMessage(telegramId, message, {
       parse_mode: 'Markdown',
@@ -446,6 +450,7 @@ function formatDate(dateStr) {
 // BOT HANDLERS
 // ============================================
 
+if (bot) {
 // /start command
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
@@ -553,6 +558,7 @@ bot.on('callback_query', async (query) => {
     });
   }
 });
+} // end if (bot)
 
 // ============================================
 // START SERVER
@@ -568,7 +574,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`📱 WebApp URL: ${WEBAPP_URL}`);
-      console.log(`🤖 Bot is polling...`);
+      console.log(`🤖 Bot: ${bot ? 'polling...' : 'DISABLED (DISABLE_BOT=true)'}`);
       console.log(`\n👥 Allowed users: ${ALLOWED_IDS.length || 'all'}`);
       console.log(`   Admins: ${ADMIN_IDS.join(', ') || 'none'}`);
       console.log(`   Sales: ${SALES_IDS.join(', ') || 'none'}`);
