@@ -92,10 +92,15 @@ async function apiCall(endpoint, options = {}) {
   const testMode = new URLSearchParams(window.location.search).get('test') === '1';
   const url = `${API_BASE}${endpoint}${testMode ? (endpoint.includes('?') ? '&' : '?') + 'test=1' : ''}`;
 
+  console.log('API call:', url, 'initData:', !!headers['X-Telegram-Init-Data']);
+
   const response = await fetch(url, { ...options, headers });
+
+  console.log('API response:', url, response.status);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    console.error('API error:', url, error);
     throw new Error(error.error || 'Ошибка сервера');
   }
 
@@ -140,9 +145,12 @@ async function loadProfile() {
 
 async function loadTodayBookings() {
   try {
+    console.log('Loading today bookings...');
     const data = await apiCall('/bookings/today');
+    console.log('Today bookings loaded:', data);
     renderBookings(data.bookings, 'today-list', true);
   } catch (error) {
+    console.error('loadTodayBookings error:', error);
     document.getElementById('today-list').innerHTML = renderEmpty('Ошибка загрузки');
   }
 }
@@ -169,7 +177,9 @@ async function loadAllBookings() {
 
 async function loadStats() {
   try {
+    console.log('Loading stats...');
     const data = await apiCall('/bookings/stats');
+    console.log('Stats loaded:', data);
     const stats = data.stats;
 
     document.getElementById('stat-today').textContent = stats.today_count || 0;
@@ -179,7 +189,7 @@ async function loadStats() {
     document.getElementById('profile-total').textContent = stats.total_count || 0;
     document.getElementById('profile-completed').textContent = stats.completed_count || 0;
   } catch (error) {
-    console.error('Stats error:', error);
+    console.error('loadStats error:', error);
   }
 }
 
