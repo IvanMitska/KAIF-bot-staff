@@ -217,11 +217,13 @@ app.get('/api/bookings/week', authMiddleware, async (req, res) => {
 // Get booking stats
 app.get('/api/bookings/stats', authMiddleware, async (req, res) => {
   try {
+    console.log('Loading stats for user:', req.user?.telegram_id);
     const stats = await bookingService.getStats();
+    console.log('Stats result:', stats);
     res.json({ success: true, stats });
   } catch (error) {
-    console.error('Get stats error:', error);
-    res.status(500).json({ error: 'Failed to get stats' });
+    console.error('Get stats error:', error.message, error.stack);
+    res.status(500).json({ error: 'Failed to get stats: ' + error.message });
   }
 });
 
