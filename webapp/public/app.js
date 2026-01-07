@@ -341,6 +341,20 @@ function setupFormHandlers() {
     });
   });
 
+  // Auto-fill price and duration when steam type is selected
+  document.getElementById('steam-type').addEventListener('change', (e) => {
+    const selected = e.target.selectedOptions[0];
+    const price = selected?.dataset.price;
+    const duration = selected?.dataset.duration;
+
+    if (price) {
+      document.getElementById('price').value = price;
+    }
+    if (duration) {
+      document.getElementById('duration').value = duration;
+    }
+  });
+
   document.getElementById('booking-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 

@@ -228,23 +228,35 @@
           </div>
 
           <div class="form-section">
+            <label class="form-label">Тип парения</label>
+            <select id="steam-type" class="form-input" style="margin-bottom: 10px;">
+              <option value="" data-price="" data-duration="">Выберите тип</option>
+              <option value="Детское-ознакомительное" data-price="1000" data-duration="10">Детское-ознакомительное (1000₽)</option>
+              <option value="Дамское" data-price="1500" data-duration="15">Дамское (1500₽)</option>
+              <option value="Классическое" data-price="1800" data-duration="15">Классическое (1800₽)</option>
+              <option value="Артезианское" data-price="2250" data-duration="20">Артезианское (2250₽)</option>
+              <option value="Гравитация" data-price="2250" data-duration="20">Гравитация (2250₽)</option>
+              <option value="Начало пожара" data-price="2250" data-duration="20">Начало пожара (2250₽)</option>
+              <option value="В 4 руки" data-price="2500" data-duration="20">В 4 руки (2500₽)</option>
+              <option value="Спортивное" data-price="2500" data-duration="20">Спортивное (2500₽)</option>
+              <option value="Сталевара" data-price="3000" data-duration="20">Сталевара (3000₽)</option>
+              <option value="Путь воина" data-price="3500" data-duration="25">Путь воина (3500₽)</option>
+              <option value="С медом" data-price="3500" data-duration="20">С медом (3500₽)</option>
+              <option value="Королевское" data-price="4000" data-duration="30">Королевское (4000₽)</option>
+              <option value="Вальхалла (коллективное)" data-price="3500" data-duration="20">Вальхалла - коллективное (3500₽)</option>
+            </select>
+          </div>
+
+          <div class="form-section">
             <label class="form-label">Детали</label>
             <div class="form-row">
-              <select id="steam-type" class="form-input">
-                <option value="">Тип парения</option>
-                <option value="Классическое">Классическое</option>
-                <option value="Веничное">Веничное</option>
-                <option value="Ароматическое">Ароматическое</option>
-                <option value="Контрастное">Контрастное</option>
-                <option value="VIP">VIP</option>
-              </select>
-              <input type="number" id="duration" value="60" min="30" step="30" placeholder="Мин" class="form-input">
+              <input type="number" id="duration" value="60" min="10" step="5" placeholder="Минут" class="form-input">
+              <input type="number" id="guests-count" value="1" min="1" max="10" placeholder="Гостей" class="form-input">
             </div>
             <div class="form-row">
-              <input type="number" id="guests-count" value="1" min="1" max="10" placeholder="Гостей" class="form-input">
               <input type="number" id="price" placeholder="Цена ₽" step="100" class="form-input">
+              <input type="number" id="prepayment" value="0" step="100" placeholder="Предоплата ₽" class="form-input">
             </div>
-            <input type="number" id="prepayment" value="0" step="100" placeholder="Предоплата ₽" class="form-input">
           </div>
 
           <div class="form-section">
