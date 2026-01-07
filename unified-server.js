@@ -51,6 +51,13 @@ app.use((req, res, next) => {
 // Static files
 app.use('/webapp', express.static(path.join(__dirname, 'webapp', 'public')));
 
+// Redirect /webapp/public to /webapp (fix for incorrect URL)
+app.get('/webapp/public', (req, res) => res.redirect('/webapp'));
+app.get('/webapp/public/*', (req, res) => {
+  const newPath = req.path.replace('/webapp/public', '/webapp');
+  res.redirect(newPath);
+});
+
 // ============================================
 // TELEGRAM AUTH MIDDLEWARE
 // ============================================
